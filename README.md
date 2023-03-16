@@ -44,7 +44,7 @@ origin  https://github.com/Tanzu-Solutions-Engineering/tanzu-ese-poc-guides.git 
 ```
 ### Contributions
 
-* Please always use Github Issues to document your work. Example: [Issue-2](https://github.com/Tanzu-Solutions-Engineering/tanzu-ese-poc-guides/issues/2)
+* Please always use Github Issues to document your work. Example: [Issue-2](https://github.com/Tanzu-Solutions-Engineering/cPodFactory/issues/2)
   * Assign contributers to the issue
   * Use lables like e.g. `wip` or `documentation`
 * Name branches after the appropriate issue: `git checkout -b issue-2`

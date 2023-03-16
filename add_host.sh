@@ -92,7 +92,7 @@ SHELL_SCRIPT=add_esx.sh
 SCRIPT_DIR=/tmp/scripts
 SCRIPT=/tmp/scripts/$$
 
-ROOT_PASSWD=$( grep "${CPODNAME_LOWER}" "/etc/hosts" | awk '{print $4}' )
+GEN_PASSWD=$( grep "${CPODNAME_LOWER}" "/etc/hosts" | awk '{print $4}' )
 
 mkdir -p ${SCRIPT_DIR} 
 cp "${COMPUTE_DIR}"/${SHELL_SCRIPT} ${SCRIPT}

@@ -25,7 +25,7 @@ done
 
 if [ ${NUM_ESX} -ge 1 ]; then
 	echo "waiting a bit ..."
-	sleep 160
+	sleep 60
 fi
 
 I=$( cat ${DHCP_LEASE} | wc -l )

@@ -2,6 +2,7 @@
 #goldyck@vmware.com
 
 #This script adds a given number of ESXi hosts to an existing cPOD and configure them with the next available IP starting from 20.
+#It depends on GOVC to retrieve the temporary IP of the host to be added and uses functions from ./extra/functions.
 
 # $1 : Name of cpod to modify
 # $2 : Number of ESXi hosts to add

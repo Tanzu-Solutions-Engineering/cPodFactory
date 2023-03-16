@@ -122,7 +122,7 @@ for ((i=1; i<=NUM_ESX; i++)); do
   #wait for ESXCLI to become available 
   while [ "$SSHOK" != 0 ]
   do  
-    SSHOK=$( sshpass -p "${ROOT_PASSWD}" ssh -o "StrictHostKeyChecking=no" -o "ConnectTimeout=5" root@"${DHCPIP}" exit >/dev/null 2>&1; echo $? ) 
+    SSHOK=$( sshpass -p "${ROOT_PASSWD}" ssh -o "StrictHostKeyChecking=no" -o "ConnectTimeout=5" -o "UserKnownHostsFile=/dev/null" root@"${DHCPIP}" exit >/dev/null 2>&1; echo $? ) 
     echo "SSH is not ready on $DHCPIP ===$SSHOK==="
     sleep 10
     TIMEOUT=$((TIMEOUT + 1))

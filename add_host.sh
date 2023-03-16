@@ -102,6 +102,7 @@ for ((i=1; i<=NUM_ESX; i++)); do
   DHCPIP=""
   SSHOK=1
   TIMEOUT=0
+  
   #wait for DHCPIP to become available 
 
 

@@ -1,0 +1,9 @@
+<?php
+
+if($token != 'xxxxxxxxxxxxxxxxxxxx'){
+  $msg = "The token for the slash command doesn't match. Check your script.";
+  die($msg);
+  echo $msg;
+}
+
+?>

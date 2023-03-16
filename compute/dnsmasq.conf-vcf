@@ -1,0 +1,14 @@
+interface=lo,eth0,eth1,eth2.###VLANID###
+bind-interfaces
+expand-hosts
+bogus-priv
+domain=###CPOD###.###DOMAIN###
+local=/###CPOD###.###DOMAIN###/
+server=/###ROOT_DOMAIN###/###TRANSIT_GW###
+server=###TRANSIT_GW###
+no-dhcp-interface=lo,eth1
+dhcp-range=10.###VLAN###.3.10,10.###VLAN###.3.254,255.255.255.0,12h
+dhcp-option=option:router,10.###VLAN###.3.1
+dhcp-option=option:ntp-server,###SUBNET###.1
+dhcp-option=option:domain-search,###CPOD###.###DOMAIN###
+#add reverse for wd: server=/5.17.172.in-addr.arpa/172.17.5.1 

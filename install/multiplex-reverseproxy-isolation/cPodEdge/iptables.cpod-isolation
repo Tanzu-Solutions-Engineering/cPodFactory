@@ -1,0 +1,6 @@
+#!/bin/bash
+#bdereims@vmware.com
+
+# eth4 is the cpod-transit-diode, a one-way connectivity from entire Lab to Public cPod
+iptables -I FORWARD 1 -i eth4 -j DROP
+iptables -I FORWARD 1 -i eth4 -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT

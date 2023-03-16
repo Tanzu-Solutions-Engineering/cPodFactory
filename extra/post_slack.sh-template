@@ -1,0 +1,12 @@
+#!/bin/bash
+#bdereims@vmware.com
+
+
+[ "${1}" == "" ] && echo "usage: ${0} text_of_the_message" && exit 1
+
+CONTENT_FILE=/tmp/$$
+echo "{\"text\":\"${1}\"}" > ${CONTENT_FILE}
+
+curl -X POST -H 'Content-type: application/json' --data @${CONTENT_FILE} https://hooks.slack.com/services/...
+
+rm ${CONTENT_FILE}

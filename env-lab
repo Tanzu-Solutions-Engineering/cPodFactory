@@ -1,0 +1,63 @@
+#!/bin/bash
+#bdereims@vmware.com
+
+# this file is not synced in git
+. ./env.passwd
+
+SLACK=NO
+LEASE=NO
+
+# NSX-V | NSX-T | VLAN
+BACKEND_NETWORK=VLAN
+
+# Only for VLAN backend
+BACKEND_VDS="VDSCPOD"
+BACKEND_VLAN_OFFSET=1000
+VLAN_SHIFT=0
+
+SPEC=LAB
+
+# Could be ATSIDE of cPodRouter or NESTED, Default is NESTED
+VCSA_PLACEMENT=${VCSA_PLACEMENT:-"ATSIDE"}
+CLOUDBUILDER_PLACEMENT=${CLOUDBUILDER_PLACEMENT:-"ATSIDE"}
+JUMPBOX_PLACEMENT=${JUMPBOX_PLACEMENT:-"ATSIDE"}
+
+export ROOT_DOMAIN="az-lab.cloud-garage.net"
+
+# Transit LS for cPodRouter connectivity
+TRANSIT=172.40
+HEADER_ASN=652
+ASN=${HEADER_ASN}00
+
+TRANSIT_NET="172.30"
+TRANSIT_GW="${TRANSIT_NET}.1.1"
+DNS=${TRANSIT_GW}
+
+CLUSTER="LAB"
+HEADER="cPod"
+
+NETWORK_DIR=network
+COMPUTE_DIR=compute
+EXTRA_DIR=extra
+
+#NSX=10.1.0.156
+#NSX_ADMIN="admin"
+NSX_TRANSPORTZONE="TransportZone"
+#NSX_TRANSPORTZONE_ID="xxx"
+
+ISO_BANK_SERVER="10.1.0.51"
+ISO_BANK_DIR="/VNXeDatastore/ISO-Bank"
+
+VCENTER=10.1.0.19
+VCENTER_ADMIN="cpod@vsphere.local"
+VCENTER_DATACENTER="Franklin"
+VCENTER_CLUSTER="AZ-LAB"
+TEMPLATE_VM="template-cPodRouter"
+#TEMPLATE_ESX="template-ESX67U3"
+#TEMPLATE_ESX="template-ESX70beta"
+TEMPLATE_FILER="template-cPodFiler"
+DATASTORE=${DATASTORE:="vsanDatastore"}
+VCENTER_DATASTORE=${DATASTORE}
+export CPODEDGE_DATASTORE="/data/BITS"
+export TEMPLATE_FOLDER="Template"
+export TEMPLATE_RESOURCEPOOL="cPod-Management"

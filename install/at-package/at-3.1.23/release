@@ -1,0 +1,19 @@
+#!/bin/bash
+
+set -e
+
+VERSION=$(grep AC_INIT configure.ac | cut -f 2 -d , | tr -d ")" | tr -d " ")
+echo "Going to release version: $VERSION"
+echo "Press enter to continue:"
+read enter
+autoconf
+if ! git diff --exit-code ; then
+    echo
+    echo "Changes present, please commit before continue"
+    exit 1
+fi
+git tag -u $DEBSIGN_KEYID --message "Release $VERSION" release/$VERSION
+git archive --format=tar --prefix=at-$VERSION/ --output=../at_$VERSION.orig.tar release/$VERSION
+gzip -v9 ../at_$VERSION.orig.tar
+git checkout debian
+gbp import-orig --verbose --keyid=$DEBSIGN_KEYID -u$VERSION --pristine-tar ../at_$VERSION.orig.tar.gz

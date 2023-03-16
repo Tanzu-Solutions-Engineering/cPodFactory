@@ -1,0 +1,40 @@
+.TH AT.ALLOW 5 "Sep 1997" "" "Linux Programmer's Manual"
+.SH NAME
+at.allow, at.deny \- determine who can submit jobs via at or batch
+.SH DESCRIPTION
+The
+.I /etc/at.allow
+and
+.I /etc/at.deny
+files determine which user can submit commands for later execution via
+.BR at (1)
+or
+.BR batch (1) .
+.PP
+The format of the files is a list of usernames, one on each line.  Whitespace
+is not permitted.
+.PP
+If the file
+.I @ETCDIR@/at.allow
+exists, only usernames mentioned in it are allowed to use
+.BR at .
+.PP
+If
+.I @ETCDIR@/at.allow
+does not exist,
+.I @ETCDIR@/at.deny
+is checked, every username not mentioned in it is then allowed
+to use
+.BR at .
+.PP
+An empty
+.I @ETCDIR@/at.deny
+means that every user may use
+.BR at .
+.PP
+If neither exists, only the superuser is allowed to use at.
+.SH "SEE ALSO"
+.BR at (1),
+.BR cron (8),
+.BR crontab (1),
+.BR atd (8).

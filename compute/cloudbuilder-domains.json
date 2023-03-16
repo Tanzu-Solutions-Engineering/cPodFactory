@@ -1,0 +1,70 @@
+{
+    "domainName" : "Domain1",
+    "vcenterSpec" : {
+      "name" : "###VCENTER-NAME###",
+      "networkDetailsSpec" : {
+        "ipAddress" : "###VCENTER-IP###",
+        "dnsName" : "###VCENTER-FQDN###",
+        "gateway" : "###MGMT-GW###",
+        "subnetMask" : "255.255.255.0"
+      },
+      "rootPassword" : "###PASSWORD###",
+      "datacenterName" : "###DC-NAME###"
+    },
+    "computeSpec" : {
+      "clusterSpecs" : [ {
+        "name" : "###WLDCLUSTERNAME###",
+        "hostSpecs" : [
+        ],
+        "datastoreSpec" : {
+          "vsanDatastoreSpec" : {
+            "failuresToTolerate" : 1,
+            "licenseKey" : "###LIC_VSAN###",
+            "datastoreName" : "###WLD-DS-NAME###"
+          }
+        },
+        "networkSpec" : {
+          "vdsSpecs" : [ {
+            "name" : "###WLD-VDS###",
+            "portGroupSpecs" : [ {
+              "name" : "###WLD###-DPortGroup-Mgmt",
+              "transportType" : "MANAGEMENT"
+            }, {
+              "name" : "###WLD###-DPortGroup-VSAN",
+              "transportType" : "VSAN"
+            }, {
+              "name" : "###WLD###-DPortGroup-vMotion",
+              "transportType" : "VMOTION"
+            } ]
+          } ],
+          "nsxClusterSpec" : {
+            "nsxVClusterSpec" : {
+              "vlanId" : 9999999,
+              "vdsNameForVxlanConfig" : "###WLD-VDS###"
+            }
+          }
+        }
+      } ]
+    },
+    "nsxVSpec" : {
+      "nsxManagerSpec" : {
+        "name" : "nsx-manager-2",
+        "networkDetailsSpec" : {
+          "ipAddress" : "10.0.0.44",
+          "dnsName" : "nsx-manager-2.sfo01.rainpole.local",
+          "gateway" : "###MGMT-GW###",
+          "subnetMask" : "255.255.255.0"
+        }
+      },
+      "nsxVControllerSpec" : {
+        "nsxControllerIps" : [ "10.0.0.45", "10.0.0.46", "10.0.0.47" ],
+        "nsxControllerPassword" : "###PASSWORD###",
+        "nsxControllerGateway" : "###MGMT-GW###",
+        "nsxControllerSubnetMask" : "255.255.255.0"
+      },
+      "licenseKey" : "###LIC_NSXT###",
+      "nsxManagerAdminPassword" : "###PASSWORD###",
+      "nsxManagerEnablePassword" : "###PASSWORD###"
+    }
+  }
+  

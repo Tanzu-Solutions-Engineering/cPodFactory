@@ -1,0 +1,60 @@
+#!/bin/bash
+#bdereims@vmware.com
+
+# this file is not synced in git
+. ./env.passwd
+
+SLACK=NO
+LEASE=NO
+FORCE=1
+
+# NSX-V | NSX-T | VLAN
+BACKEND_NETWORK=NSX-T
+# Only for VLAN backend
+BACKEND_VDS="vds01"
+BACKEND_VLAN_OFFSET=100
+
+# Some Specs
+SPEC=DXB
+
+# Could be ATSIDE of cPodRouter or NESTED, Default is NESTED
+VCSA_PLACEMENT=${VCSA_PLACEMENT:-"ATSIDE"}
+CLOUDBUILDER_PLACEMENT=${CLOUDBUILDER_PLACEMENT:-"ATSIDE"}
+JUMPBOX_PLACEMENT=${JUMPBOX_PLACEMENT:-"ATSIDE"}
+
+ROOT_DOMAIN="az-dxb.cloud-garage.net"
+
+# Transit LS for cPodRouter connectivity
+TRANSIT=172.26
+TRANSIT_SUBNET=${TRANSIT}.2
+HEADER_ASN=655
+ASN=${HEADER_ASN}00
+
+TRANSIT_NET="172.16"
+TRANSIT_GW="${TRANSIT_NET}.2.1"
+DNS=${TRANSIT_GW}
+
+CLUSTER="DXB"
+HEADER="cPod"
+
+NETWORK_DIR=network
+COMPUTE_DIR=compute
+EXTRA_DIR=extra
+
+NSX=nsx-1.vsphere.local
+NSX_ADMIN="admin"
+NSX_TRANSPORTZONE="cpod-tz"
+NSX_TRANSPORTZONE_ID="3edd0672-4b81-4b77-8c7b-271ccde05db9"
+
+ISO_BANK_SERVER="forty-two.az-dxb.cloud-garage.net"
+ISO_BANK_DIR="/data/BITS"
+
+export VCENTER=vcsa.vsphere.local
+export VCENTER_ADMIN="administrator@vsphere.local"
+export VCENTER_DATACENTER="Datacenter"
+export VCENTER_CLUSTER="Cluster"
+TEMPLATE_VM="template-cPodRouter"
+TEMPLATE_ESX=${TEMPLATE_ESX:-"template-ESX70U2a"}
+TEMPLATE_FILER="template-cPodFiler"
+export DATASTORE=${DATASTORE:-"vsanDatastore"}
+export VCENTER_DATASTORE=${DATASTORE}

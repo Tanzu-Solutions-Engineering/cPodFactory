@@ -1,0 +1,7 @@
+{
+    "spoofguard_profile_path" : "/infra/spoofguard-profiles/default-spoofguard-profile",
+    "segment_security_profile_path" : "/infra/segment-security-profiles/new-segment-security-profile",
+    "resource_type": "SegmentSecurityProfileBindingMap",
+    "id": "segment_security_binding_map_1",
+    "display_name": "segment_security_binding_map_1"
+}

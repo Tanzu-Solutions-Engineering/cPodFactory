@@ -1,0 +1,21 @@
+#!/bin/bash
+#bdereims@vmware.com
+
+# eth4 is the cpod-transit-diode, a one-way connectivity to Public cPod
+iptables -I FORWARD 1 -o eth4 -j DROP
+iptables -I FORWARD 1 -i eth4 -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+
+#iptables -I FORWARD 1 -i eth2 -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+#iptables -I FORWARD 1 -i eth0 -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+
+### SAND BOX Isolation ###
+#iptables -I INPUT 2 -i eth2 -s 172.16.1.15 -j DROP
+#iptables -I INPUT 2 -i eth2 -s 172.19.5.0/24 -j DROP
+#iptables -I FORWARD 2 -i eth2 -s 172.16.1.15 -j DROP
+#iptables -I FORWARD 2 -i eth2 -s 172.19.5.0/24 -j DROP
+
+### CHARMING-WARM Isolation ###
+#iptables -I INPUT 2 -i eth2 -s 172.16.1.18 -j DROP
+#iptables -I INPUT 2 -i eth2 -s 172.19.8.0/24 -j DROP
+#iptables -I FORWARD 2 -i eth2 -s 172.16.1.18 -j DROP
+#iptables -I FORWARD 2 -i eth2 -s 172.19.8.0/24 -j DROP

@@ -1,0 +1,150 @@
+global
+	user haproxy
+	group haproxy
+	daemon
+	tune.ssl.default-dh-param 2048
+	maxconn 2000
+
+defaults
+	log	global
+	mode	http
+	option	dontlognull
+        timeout connect 5000
+        timeout client 50000
+        timeout server 50000
+	errorfile 400 /etc/haproxy/errors/400.http
+	errorfile 403 /etc/haproxy/errors/403.http
+	errorfile 408 /etc/haproxy/errors/408.http
+	errorfile 500 /etc/haproxy/errors/500.http
+	errorfile 502 /etc/haproxy/errors/502.http
+	errorfile 503 /etc/haproxy/errors/503.http
+	errorfile 504 /etc/haproxy/errors/504.http
+
+frontend www
+	bind 0.0.0.0:8081
+	option http-server-close
+	reqadd X-Forwarded-Proto:\ http
+	default_backend web-backend
+
+frontend wwws
+	mode tcp
+	bind 0.0.0.0:443 name frontend-ssl 
+	tcp-request inspect-delay 2s
+	tcp-request content accept if { req.ssl_hello_type 1 }
+	#use_backend ws1 if { req_ssl_sni -i ws1.elasticsky.biz }
+	#use_backend airwatch if { req_ssl_sni -i airwatch.elasticsky.biz }
+	#use_backend horizon if { req_ssl_sni -i horizon.elasticsky.biz }
+	#use_backend harbor if { req_ssl_sni -i harbor.elasticsky.biz }
+	#use_backend dashboard if { req_ssl_sni -i dashboard.elasticsky.biz }
+	use_backend openvpn if !{ req.ssl_hello_type 1 } !{ req.len 0 } 
+	default_backend main-ssl
+
+#frontend front_rdp
+#	bind *:3389 name rdp
+#	mode tcp
+#	timeout client 1h
+#	timeout client-fin 1m
+#	log global
+#	option tcplog
+#	option logasap
+#	tcp-request inspect-delay 5s
+#	tcp-request content accept if RDP_COOKIE
+#	default_backend back_rdp
+#	maxconn 10
+
+#backend back_rdp
+#	mode tcp
+#	balance leastconn
+#	persist rdp-cookie
+#	timeout server 1h
+#	timeout connect 5s
+#	timeout server-fin 1m
+#	#log global
+#	option tcplog
+#	option tcp-check
+#	default-server inter 3s rise 2 fall 3
+#	server jumpbox 172.19.5.9:3389 weight 10
+
+frontend main
+        bind 127.0.0.1:9443 ssl crt /etc/haproxy/cpodedge.pem
+        mode http
+        option forwardfor
+        reqadd X-Forwarded-Proto:\ https
+        #acl url_nextcloud_s path_beg /nextcloud
+	#acl url_sandbox_s hdr(host) -i sandbox.shwrfr.com 
+        #use_backend nextcloud-backend if url_nextcloud_s
+	#use_backend sandbox-backend if url_sandbox_s 
+	#acl url_blog_s hdr(host) -i blog.cloud-garage.net 
+	use_backend blog-backend if { hdr(Host) -i blog.cloud-garage.net }
+	use_backend ingress-backend if { hdr(Host) -i ingress.cloud-garage.net }
+        default_backend web-backend
+
+backend main-ssl
+	mode tcp 
+	server main-ssl-1 127.0.0.1:9443
+
+backend openvpn
+	mode tcp 
+	server openvpn-cpodedge 127.0.0.1:1195
+
+backend web-backend
+	mode http
+	server web-cpodedge 127.0.0.1:8080 check
+
+#backend ws1 
+#	mode tcp 
+#	server ws1-cpod-vbc-euc 172.18.4.150
+
+#backend airwatch
+#	mode tcp 
+#	server airwatch-cpod-vbc-euc 172.18.4.120
+
+#backend horizon 
+#	mode tcp 
+#	server horizon-cpod-vbc-euc 172.18.4.101
+
+#backend harbor
+#	mode tcp
+#	server harbor-cpod-vbc-sddc 10.172.0.4
+
+#backend dashboard 
+#	mode tcp
+#	server dashboard-cpod-vbc-sddc dashboard.cpod-vbc-sddc.rax.lab:8443 
+
+#backend nextcloud-backend
+#        reqrep ^([^\ :]*)\ /nextcloud/(.*) \1\ /\2
+#        reqadd X-Script-Name:\ /nextcloud
+#        option httpclose
+#        option forwardfor
+#        server nextcloud 172.20.2.5:8081 check
+
+#backend sandbox-backend
+        #reqrep ^([^\ :]*)\ /nextcloud/(.*) \1\ /\2
+        #reqadd X-Script-Name:\ /nextcloud
+        #option httpclose
+        #option forwardfor
+	#http-request set-header Host sandbox.shwrfr.com
+	#option ssl-hello-chk
+        #server vcsa vcsa.cpod-sandbox.az-demo.shwrfr.com:443 check
+
+backend blog-backend
+        mode http
+        option httpclose
+        option forwardfor
+        http-request set-header X-Client-IP %[src] 
+        server ghost ghost.az-rbx.cloud-garage.net:80 check
+
+backend ingress-backend
+	mode http
+        option httpclose
+        option forwardfor
+        http-request set-header X-Client-IP %[src]
+        server ghost 10.12.6.3:80 check
+
+listen stats
+	bind *:9090
+	balance
+	mode http
+	stats enable
+	stats auth admin:VMware1!
+	stats uri /stats

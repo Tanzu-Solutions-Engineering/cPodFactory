@@ -1,0 +1,918 @@
+!Current Configuration:
+
+!
+
+!System Description "XSM7224S - 24-Port 10G SFP+ Layer 2 Stackable Managed Switch with four 10G combo ports"
+
+!System Software Version "9.0.1.46"
+
+!System Up Time          "0 days 0 hrs 52 mins 31 secs"
+
+!Additional Packages     FASTPATH QOS,FASTPATH Stacking
+
+!Current SNTP Synchronized Time: OCT 21 13:47:05 202 UTC
+
+!
+
+enable password a6d3560bcc3c6148edb050771772b25abd0c56baab1067584b6c358d5fea25bf0ac8da6710464913223b58f4dc13429ac6a68e1b886b9184ce803338e03d0276 encrypted
+
+network protocol none
+
+network parms 10.1.0.99 255.255.255.0 10.1.0.150
+
+vlan database
+
+vlan 10,200
+
+vlan name 10 "Management"
+
+vlan name 200 "Internet"
+
+exit
+
+network mgmt_vlan 10
+
+configure
+
+sntp client mode unicast
+
+! sntp server status is Success
+
+sntp server "10.1.0.150"
+
+! sntp server status is Request Timed Out
+
+sntp server "10.1.0.160"
+
+stack
+
+member 1 1
+
+exit
+
+no ip domain lookup
+
+ip name server 10.1.0.150 10.1.0.160
+
+slot 1/0 3
+
+set slot power 1/0
+
+no set slot disable 1/0
+
+ip routing
+
+no username "guest"
+
+username admin password a6d3560bcc3c6148edb050771772b25abd0c56baab1067584b6c358d5fea25bf0ac8da6710464913223b58f4dc13429ac6a68e1b886b9184ce803338e03d0276 level 15 encrypted
+
+aaa authentication enable "enableList" enable
+
+line console
+
+password a6d3560bcc3c6148edb050771772b25abd0c56baab1067584b6c358d5fea25bf0ac8da6710464913223b58f4dc13429ac6a68e1b886b9184ce803338e03d0276 encrypted
+
+exit
+
+line telnet
+
+password a6d3560bcc3c6148edb050771772b25abd0c56baab1067584b6c358d5fea25bf0ac8da6710464913223b58f4dc13429ac6a68e1b886b9184ce803338e03d0276 encrypted
+
+exit
+
+line ssh
+
+password a6d3560bcc3c6148edb050771772b25abd0c56baab1067584b6c358d5fea25bf0ac8da6710464913223b58f4dc13429ac6a68e1b886b9184ce803338e03d0276 encrypted
+
+exit
+
+no storm-control broadcast
+
+spanning-tree configuration name "80-37-73-FF-FF-94"
+
+snmp-server sysname "netgear"
+
+snmp-server location "29th floor"
+
+!
+
+interface 1/0/1
+
+no storm-control broadcast
+
+no port lacpmode
+
+mtu 9216
+
+vlan pvid 10
+
+vlan participation auto 1
+
+vlan participation include 10,200
+
+vlan tagging 200
+
+exit
+
+interface 1/0/2
+
+no storm-control broadcast
+
+no port lacpmode
+
+mtu 9216
+
+vlan pvid 10
+
+vlan participation auto 1
+
+vlan participation include 10,200
+
+vlan tagging 200
+
+exit
+
+interface 1/0/3
+
+no storm-control broadcast
+
+no port lacpmode
+
+shutdown
+
+mtu 9216
+
+vlan participation include 10,200
+
+vlan tagging 10,200
+
+exit
+
+interface 1/0/4
+
+no auto-negotiate
+
+no storm-control broadcast
+
+mtu 9216
+
+vlan participation include 10,200
+
+vlan tagging 10,200
+
+exit
+
+interface 1/0/5
+
+no auto-negotiate
+
+no storm-control broadcast
+
+shutdown
+
+mtu 9216
+
+vlan participation include 10,200
+
+vlan tagging 10,200
+
+exit
+
+interface 1/0/6
+
+no auto-negotiate
+
+no storm-control broadcast
+
+shutdown
+
+mtu 9216
+
+vlan participation include 10,200
+
+vlan tagging 10,200
+
+exit
+
+interface 1/0/7
+
+no auto-negotiate
+
+no storm-control broadcast
+
+shutdown
+
+mtu 9216
+
+vlan participation include 10,200
+
+vlan tagging 10,200
+
+exit
+
+interface 1/0/8
+
+no auto-negotiate
+
+no storm-control broadcast
+
+no port lacpmode
+
+set igmp
+
+set igmp fast-leave
+
+mtu 9216
+
+vlan participation include 10,200
+
+vlan tagging 10,200
+
+exit
+
+interface 1/0/9
+
+no auto-negotiate
+
+no storm-control broadcast
+
+no port lacpmode
+
+set igmp
+
+set igmp fast-leave
+
+mtu 9216
+
+vlan participation include 10,200
+
+vlan tagging 10,200
+
+exit
+
+interface 1/0/10
+
+no auto-negotiate
+
+no storm-control broadcast
+
+no port lacpmode
+
+set igmp
+
+set igmp fast-leave
+
+mtu 9216
+
+vlan participation include 10,200
+
+vlan tagging 10,200
+
+exit
+
+interface 1/0/11
+
+no auto-negotiate
+
+no storm-control broadcast
+
+no port lacpmode
+
+set igmp
+
+set igmp fast-leave
+
+mtu 9216
+
+vlan participation include 10,200
+
+vlan tagging 10,200
+
+exit
+
+interface 1/0/12
+
+no auto-negotiate
+
+no storm-control broadcast
+
+no port lacpmode
+
+set igmp
+
+set igmp fast-leave
+
+mtu 9216
+
+vlan participation include 10,200
+
+vlan tagging 10,200
+
+exit
+
+interface 1/0/13
+
+no auto-negotiate
+
+no storm-control broadcast
+
+no port lacpmode
+
+set igmp
+
+set igmp fast-leave
+
+mtu 9216
+
+vlan participation include 10,200
+
+vlan tagging 10,200
+
+exit
+
+interface 1/0/14
+
+no auto-negotiate
+
+no storm-control broadcast
+
+no port lacpmode
+
+set igmp
+
+set igmp fast-leave
+
+mtu 9216
+
+vlan participation include 10,200
+
+vlan tagging 10,200
+
+exit
+
+interface 1/0/15
+
+no auto-negotiate
+
+no storm-control broadcast
+
+no port lacpmode
+
+set igmp
+
+set igmp fast-leave
+
+mtu 9216
+
+vlan participation include 10,200
+
+vlan tagging 10,200
+
+exit
+
+interface 1/0/16
+
+no auto-negotiate
+
+no storm-control broadcast
+
+no port lacpmode
+
+set igmp
+
+set igmp fast-leave
+
+mtu 9216
+
+vlan participation include 10,200
+
+vlan tagging 10,200
+
+exit
+
+interface 1/0/17
+
+no auto-negotiate
+
+no storm-control broadcast
+
+no port lacpmode
+
+set igmp
+
+set igmp fast-leave
+
+mtu 9216
+
+vlan participation include 10,200
+
+vlan tagging 10,200
+
+exit
+
+interface 1/0/18
+
+no auto-negotiate
+
+no storm-control broadcast
+
+no port lacpmode
+
+set igmp
+
+set igmp fast-leave
+
+mtu 9216
+
+vlan participation include 10,200
+
+vlan tagging 10,200
+
+exit
+
+interface 1/0/19
+
+no auto-negotiate
+
+no storm-control broadcast
+
+no port lacpmode
+
+mtu 9216
+
+vlan participation include 10,200
+
+vlan tagging 10,200
+
+exit
+
+interface 1/0/20
+
+no auto-negotiate
+
+no storm-control broadcast
+
+no port lacpmode
+
+mtu 9216
+
+vlan participation include 10,200
+
+vlan tagging 10,200
+
+exit
+
+interface 1/0/21
+
+no storm-control broadcast
+
+no port lacpmode
+
+mtu 9216
+
+vlan participation include 10,200
+
+vlan tagging 10,200
+
+exit
+
+interface 1/0/22
+
+no storm-control broadcast
+
+no port lacpmode
+
+mtu 9216
+
+vlan participation include 10,200
+
+vlan tagging 10,200
+
+exit
+
+interface 1/0/23
+
+no storm-control broadcast
+
+no port lacpmode
+
+mtu 9216
+
+vlan participation include 10,200
+
+vlan tagging 10,200
+
+exit
+
+interface 1/0/24
+
+no auto-negotiate
+
+no storm-control broadcast
+
+no port lacpmode
+
+description 'Uplink'
+
+mtu 9216
+
+vlan participation auto 1
+
+vlan participation include 10,200
+
+vlan tagging 10,200
+
+exit
+
+interface lag 1
+
+description 'LAG MLNX'
+
+vlan participation auto 1
+
+vlan participation include 10,200
+
+vlan tagging 10,200
+
+exit
+
+interface lag 2
+
+vlan participation auto 1
+
+exit
+
+interface lag 3
+
+vlan participation auto 1
+
+exit
+
+interface lag 4
+
+vlan participation auto 1
+
+exit
+
+interface lag 5
+
+vlan participation auto 1
+
+exit
+
+interface lag 6
+
+vlan participation auto 1
+
+exit
+
+interface lag 7
+
+vlan participation auto 1
+
+exit
+
+interface lag 8
+
+vlan participation auto 1
+
+exit
+
+interface lag 9
+
+vlan participation auto 1
+
+exit
+
+interface lag 10
+
+vlan participation auto 1
+
+exit
+
+interface lag 11
+
+vlan participation auto 1
+
+exit
+
+interface lag 12
+
+vlan participation auto 1
+
+exit
+
+interface lag 13
+
+vlan participation auto 1
+
+exit
+
+interface lag 14
+
+vlan participation auto 1
+
+exit
+
+interface lag 15
+
+vlan participation auto 1
+
+exit
+
+interface lag 16
+
+vlan participation auto 1
+
+exit
+
+interface lag 17
+
+vlan participation auto 1
+
+exit
+
+interface lag 18
+
+vlan participation auto 1
+
+exit
+
+interface lag 19
+
+vlan participation auto 1
+
+exit
+
+interface lag 20
+
+vlan participation auto 1
+
+exit
+
+interface lag 21
+
+vlan participation auto 1
+
+exit
+
+interface lag 22
+
+vlan participation auto 1
+
+exit
+
+interface lag 23
+
+vlan participation auto 1
+
+exit
+
+interface lag 24
+
+vlan participation auto 1
+
+exit
+
+interface lag 25
+
+vlan participation auto 1
+
+exit
+
+interface lag 26
+
+vlan participation auto 1
+
+exit
+
+interface lag 27
+
+vlan participation auto 1
+
+exit
+
+interface lag 28
+
+vlan participation auto 1
+
+exit
+
+interface lag 29
+
+vlan participation auto 1
+
+exit
+
+interface lag 30
+
+vlan participation auto 1
+
+exit
+
+interface lag 31
+
+vlan participation auto 1
+
+exit
+
+interface lag 32
+
+vlan participation auto 1
+
+exit
+
+interface lag 33
+
+vlan participation auto 1
+
+exit
+
+interface lag 34
+
+vlan participation auto 1
+
+exit
+
+interface lag 35
+
+vlan participation auto 1
+
+exit
+
+interface lag 36
+
+vlan participation auto 1
+
+exit
+
+interface lag 37
+
+vlan participation auto 1
+
+exit
+
+interface lag 38
+
+vlan participation auto 1
+
+exit
+
+interface lag 39
+
+vlan participation auto 1
+
+exit
+
+interface lag 40
+
+vlan participation auto 1
+
+exit
+
+interface lag 41
+
+vlan participation auto 1
+
+exit
+
+interface lag 42
+
+vlan participation auto 1
+
+exit
+
+interface lag 43
+
+vlan participation auto 1
+
+exit
+
+interface lag 44
+
+vlan participation auto 1
+
+exit
+
+interface lag 45
+
+vlan participation auto 1
+
+exit
+
+interface lag 46
+
+vlan participation auto 1
+
+exit
+
+interface lag 47
+
+vlan participation auto 1
+
+exit
+
+interface lag 48
+
+vlan participation auto 1
+
+exit
+
+interface lag 49
+
+vlan participation auto 1
+
+exit
+
+interface lag 50
+
+vlan participation auto 1
+
+exit
+
+interface lag 51
+
+vlan participation auto 1
+
+exit
+
+interface lag 52
+
+vlan participation auto 1
+
+exit
+
+interface lag 53
+
+vlan participation auto 1
+
+exit
+
+interface lag 54
+
+vlan participation auto 1
+
+exit
+
+interface lag 55
+
+vlan participation auto 1
+
+exit
+
+interface lag 56
+
+vlan participation auto 1
+
+exit
+
+interface lag 57
+
+vlan participation auto 1
+
+exit
+
+interface lag 58
+
+vlan participation auto 1
+
+exit
+
+interface lag 59
+
+vlan participation auto 1
+
+exit
+
+interface lag 60
+
+vlan participation auto 1
+
+exit
+
+interface lag 61
+
+vlan participation auto 1
+
+exit
+
+interface lag 62
+
+vlan participation auto 1
+
+exit
+
+interface lag 63
+
+vlan participation auto 1
+
+exit
+
+interface lag 64
+
+vlan participation auto 1
+
+exit
+
+exit
+

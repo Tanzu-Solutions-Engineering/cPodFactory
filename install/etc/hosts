@@ -1,0 +1,30 @@
+# Begin /etc/hosts (network card version)
+
+::1         localhost ipv6-localhost ipv6-loopback
+127.0.0.1   localhost.localdomain
+127.0.0.1	localhost
+# End /etc/hosts (network card version)
+172.16.184.6	starships
+62.23.45.214	vco
+10.50.0.3	cpodedge mgmt-cpodrouter cpod-mgmt
+10.50.0.6	cpodrouter-gateway-214	cpod-gateway-214
+172.16.0.13	cpod-common	#bdereims	VMware1!
+172.16.0.14	cpod-vr	#ahugla	VMware1!
+172.16.0.21	cpod-cld	#cdavin	VMware1!
+172.16.0.22	cpod-hja-dc1	#hjanasik	VMware1!
+172.16.0.31	cpod-nasser	#nzitout	MZVD7Dsfo4jbmzS!
+172.16.0.15	cpod-gv	#vmeoc	Qo90epGwdxHnyw7!
+172.16.0.29	cpod-prosegur	#jhuerta	IdNRbo0zoidxQyJ!
+172.16.0.16	cpod-velocloud	#adeleporte	265kA2278w2HycY!
+172.16.0.20	cpod-mbe-dc1	#mohamedb	zKizAVq7ZOT6SCk!
+172.16.0.28	cpod-cld-t	#cdavin	tqGOyCFaRh6dBgr!
+172.16.0.37	cpod-djaenv	#djakubowicz	0hC7mO8eYqVfAM7!
+172.16.0.38	cpod-vcn	#adeleporte	OCQ9RbjFe3dCWWD!
+172.16.0.23	cpod-cde-dc1	#cdelbosc	6m631XordqTqqTs!
+172.16.0.26	cpod-bbrundert01	#bbrundert01	zuYwbRkkg2H1a7k!
+172.16.0.24	cpod-aca-dc1	#acaussignac	SSL4uJzp9fpjqnC!
+172.16.0.18	cpod-workshop	#bdereims	BAb75oLzJd1iAtj!
+172.16.0.25	cpod-openshift	#bdereims	FcP3u4ircHgp5C2!
+172.16.0.17	cpod-goodvibes	#vmeoc	kEfl9sgsDBnMISB!
+172.16.0.27	cpod-jfc-new	#jcouturier	iTMygHMdrB6HTDO!
+172.16.0.19	cpod-shwrfr	#bdereims	U69Bah8FQQOWvbu!

@@ -1,0 +1,108 @@
+#!/bin/sh
+
+echo noop > /sys/block/sda/queue/scheduler
+echo 0 | tee /proc/sys/net/ipv4/conf/*/send_redirects
+echo 262144 > /proc/sys/net/core/rmem_default
+echo 262144 > /proc/sys/net/core/rmem_max
+echo 262144 > /proc/sys/net/core/wmem_default
+echo 262144 > /proc/sys/net/core/wmem_max
+
+# Begin /etc/systemd/scripts/iptables
+
+# Insert connection-tracking modules
+# (not needed if built into the kernel)
+modprobe nf_conntrack
+modprobe xt_LOG
+
+# Enable broadcast echo Protection
+echo 1 > /proc/sys/net/ipv4/icmp_echo_ignore_broadcasts
+
+# Disable Source Routed Packets
+echo 0 > /proc/sys/net/ipv4/conf/all/accept_source_route
+echo 0 > /proc/sys/net/ipv4/conf/default/accept_source_route
+
+# Enable TCP SYN Cookie Protection
+echo 1 > /proc/sys/net/ipv4/tcp_syncookies
+
+# Disable ICMP Redirect Acceptance
+echo 0 > /proc/sys/net/ipv4/conf/default/accept_redirects
+
+# Do not send Redirect Messages
+echo 0 > /proc/sys/net/ipv4/conf/all/send_redirects
+echo 0 > /proc/sys/net/ipv4/conf/default/send_redirects
+
+# Drop Spoofed Packets coming in on an interface, where responses
+# would result in the reply going out a different interface.
+echo 1 > /proc/sys/net/ipv4/conf/all/rp_filter
+echo 1 > /proc/sys/net/ipv4/conf/default/rp_filter
+
+# No Log packets with impossible addresses.
+echo 0 > /proc/sys/net/ipv4/conf/all/log_martians
+echo 0 > /proc/sys/net/ipv4/conf/default/log_martians
+
+# be verbose on dynamic ip-addresses  (not needed in case of static IP)
+echo 2 > /proc/sys/net/ipv4/ip_dynaddr
+
+# disable Explicit Congestion Notification
+# too many routers are still ignorant
+echo 0 > /proc/sys/net/ipv4/tcp_ecn
+
+# Set a known state
+iptables -P INPUT   DROP 
+iptables -P FORWARD DROP
+iptables -P OUTPUT  DROP 
+
+# These lines are here in case rules are already in place and the
+# script is ever rerun on the fly. We want to remove all rules and
+# pre-existing user defined chains before we implement new rules.
+iptables -F
+iptables -X
+iptables -Z
+
+iptables -t nat -F
+iptables -t nat -X
+iptables -t mangle -F
+iptables -t mangle -X
+
+### SHWRFR Rules ###
+
+iptables -t nat -A POSTROUTING -o eth1 -s 0.0.0.0/0 -j MASQUERADE
+iptables -t nat -A POSTROUTING -s 10.255.254.0/24 -j MASQUERADE
+
+# Allow local-only connections
+iptables -A INPUT  -i lo -j ACCEPT
+iptables -A INPUT  -i eth0 -j ACCEPT
+iptables -A INPUT  -i eth2 -j ACCEPT
+iptables -A INPUT  -i eth3 -j ACCEPT
+iptables -A INPUT  -i tun0 -j ACCEPT
+iptables -A INPUT  -i docker0 -j ACCEPT
+
+# Free output on any interface to any ip for any service
+# (equal to -P ACCEPT)
+iptables -A OUTPUT -j ACCEPT
+iptables -A FORWARD -j ACCEPT
+
+# Permit answers on already established connections
+# and permit new connections related to established ones
+# (e.g. port mode ftp)
+#iptables -I INPUT 1 -i eth2 -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+#iptables -I INPUT 1 -i eth4 -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+iptables -A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+
+#Enable web & VPN connections
+#iptables -A INPUT -p tcp -i eth1 --dport 80 -j ACCEPT
+iptables -A INPUT -p tcp -i eth1 --dport 443 -j ACCEPT
+#iptables -A INPUT -p udp -i eth1 --dport 1194 -j ACCEPT
+
+### ANTI BRUTE-FORCE ####
+iptables -A INPUT -i eth1 -p tcp -m tcp --dport 22 -m state --state NEW -m recent --set --name SSH --rsource
+iptables -A INPUT -i eth1 -p tcp -m tcp --dport 22 -m recent --rcheck --seconds 30 --hitcount 4 --rttl --name SSH --rsource -j REJECT --reject-with tcp-reset
+iptables -A INPUT -i eth1 -p tcp -m tcp --dport 22 -m recent --rcheck --seconds 30 --hitcount 3 --rttl --name SSH --rsource -j LOG --log-prefix "SSH brute force "
+iptables -A INPUT -i eth1 -p tcp -m tcp --dport 22 -m recent --update --seconds 30 --hitcount 3 --rttl --name SSH --rsource -j REJECT --reject-with tcp-reset
+iptables -A INPUT -i eth1 -p tcp -m tcp --dport 22 -j ACCEPT
+
+### VELO CLOUD ###
+#iptables -A INPUT -i eth1 -p udp -m udp --dport 2426 -j ACCEPT
+#iptables -t nat -A PREROUTING -i eth1 -p udp -m udp --dport 2426 -j DNAT --to-destination 172.18.3.43:2426 
+
+# End /etc/systemd/scripts/iptables

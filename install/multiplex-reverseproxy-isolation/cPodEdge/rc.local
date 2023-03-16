@@ -1,0 +1,10 @@
+#!/bin/bash
+#bdereims@vmware.com
+
+iptables -L -n -v --line-numbers > mylog
+echo "###" >> mylog
+
+/etc/systemd/scripts/iptables.cpod-isolation
+
+echo "###" >> mylog
+iptables -L -n -v --line-numbers >> mylog

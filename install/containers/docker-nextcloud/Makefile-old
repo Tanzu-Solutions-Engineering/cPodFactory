@@ -1,0 +1,24 @@
+CONTAINER_NAME=nextcloud
+IMAGE_NAME=bdereims/${CONTAINER_NAME}
+VOLUME=/data/Volumes/nextcloud
+
+build: Dockerfile
+	docker build -t $(IMAGE_NAME) .
+
+run:
+	docker run -d \
+	-p 8081:80 \
+	-v ${VOLUME}:/var/www/html \
+	--name $(CONTAINER_NAME) $(IMAGE_NAME)
+
+stop:
+	docker stop $(CONTAINER_NAME) 
+	docker rm $(CONTAINER_NAME) 
+
+clean: 
+	docker rmi $(IMAGE_NAME) 
+	docker images
+
+clean-volume:
+	rm -fr $(VOLUME)/{*,.??*}
+

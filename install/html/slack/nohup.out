@@ -1,0 +1,13 @@
+=== Starting to deploy a new cPod called 'cPod-DASHING-NEWT'.
+ok172.16.2.12
+The cPod IP address is '172.16.2.17' in transit network.
+The subnet of the cPod is '172.20.7.0/24'.
+Logicial Switch 'cpod-dashing-newt' has been sucessfully created in 'TransportZone'.
+Modifying 'vxw-dvs-24-virtualwire-169-sid-5006-cpod-dashing-newt' with MacLearn and ForgedTransmits.
+Modifying '/etc/dnsmasq.conf' and '/etc/hosts'.
+Adding cPodRouter as BGP peer 172.16.2.17 with ASN 65217
+Building Configuration...
+Configuration saved to /etc/quagga/zebra.conf
+Configuration saved to /etc/quagga/bgpd.conf
+[OK]
+Creating vApp 'cPod-DASHING-NEWT' with 1 ESXi.

@@ -1,0 +1,13 @@
+#!/bin/bash
+#bdereims@vmware.com
+
+# source this env file and
+# create cPod with: cpodctl create X 3 [you-name]
+
+
+export NOCUSTO='NO' # =NO means configure nfsdatastore based on cpodrouter
+export OVA_VCSA=/data/BITS/VMware-vCenter-Server-Appliance-8.0.0.10100-20920323_OVF10.ova
+export TEMPLATE_ESX=template-ESX80RTM
+export NSXALBOVA=/data/BITS/controller-22.1.2-9086.ova
+export OVA_NSXMGR=/data/BITS/nsx-unified-appliance-4.0.1.1.0.20598732.ova
+export OVA_SIVT=${BITS}/service-installer-for-vmware-tanzu-1.3.1.70-20308831_ovf10.ova

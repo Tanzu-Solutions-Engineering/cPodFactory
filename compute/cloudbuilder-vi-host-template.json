@@ -1,0 +1,13 @@
+{
+    "id" : "###HOSTID###",
+    "hostNetworkSpec" : {
+      "vmNics" : [ {
+        "id" : "vmnic0",
+        "vdsName" : "###WLD-VDS###"
+      },
+      {
+          "id" : "vmnic1",
+          "vdsName" : "###WLD-VDS###"
+      } ]
+    }
+  }

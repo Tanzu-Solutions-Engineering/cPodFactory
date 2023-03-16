@@ -1,0 +1,49 @@
+! -*- bgp -*-
+!
+! BGPd sample configuratin file
+!
+! $Id: bgpd.conf.sample,v 1.1 2002/12/13 20:15:29 paul Exp $
+!
+hostname bgpd
+password VMw@re1! 
+enable password VMw@re1!
+!
+!bgp mulitple-instance
+!
+router bgp ###HEADER_ASN######VLAN###
+network 0.0.0.0/0
+bgp router-id ###TRANSIT_NET###.###VLAN###
+neighbor ###TRANSIT_GW### remote-as ###ASN### 
+neighbor 10.###VLAN###.4.2 remote-as 65501
+neighbor 10.###VLAN###.4.2 default-originate
+neighbor 10.###VLAN###.4.2 password VMw@re1! 
+neighbor 10.###VLAN###.4.2 update-source 10.###VLAN###.4.1 
+neighbor 10.###VLAN###.4.3 remote-as 65501
+neighbor 10.###VLAN###.4.3 default-originate
+neighbor 10.###VLAN###.4.3 password VMw@re1! 
+neighbor 10.###VLAN###.4.3 update-source 10.###VLAN###.4.1
+neighbor 10.###VLAN###.5.2 remote-as 65501
+neighbor 10.###VLAN###.5.2 default-originate
+neighbor 10.###VLAN###.5.2 password VMw@re1! 
+neighbor 10.###VLAN###.5.2 update-source 10.###VLAN###.5.1
+neighbor 10.###VLAN###.5.3 remote-as 65501
+neighbor 10.###VLAN###.5.3 default-originate
+neighbor 10.###VLAN###.5.3 password VMw@re1! 
+neighbor 10.###VLAN###.5.3 update-source 10.###VLAN###.5.1
+!neighbor 172.16.66.10 default-originate 
+!redistribute kernel
+!redistribute static
+redistribute connected
+! neighbor 10.0.0.2 route-map set-nexthop out
+! neighbor 172.16.0.2 ebgp-multihop
+! neighbor 10.0.0.2 next-hop-self
+!
+access-list all permit any
+!
+!route-map set-nexthop permit 10
+! match ip address all
+! set ip next-hop 10.0.0.1
+!
+log file bgpd.log
+!
+log stdout

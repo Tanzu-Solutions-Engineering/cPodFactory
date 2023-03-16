@@ -1,0 +1,70 @@
+#!/bin/bash
+#bdereims@vmware.com
+
+# this file is not synced in git
+. ./env.passwd
+
+#. ./vsphere70U2a.sh
+
+SLACK=NO
+LEASE=NO
+FORCE=1
+
+# NSX-V | NSX-T | VLAN
+BACKEND_NETWORK=NSX-T
+# Only for VLAN backend
+BACKEND_VDS="pcc-178-32-194-72_DC3594-vrack"
+BACKEND_VLAN_OFFSET=0
+VLAN_SHIFT=0
+
+# Some Specs
+SPEC=WDC
+
+# Could be ATSIDE of cPodRouter or NESTED, Default is NESTED
+VCSA_PLACEMENT=${VCSA_PLACEMENT:-"ATSIDE"}
+CLOUDBUILDER_PLACEMENT=${CLOUDBUILDER_PLACEMENT:-"ATSIDE"}
+JUMPBOX_PLACEMENT=${JUMPBOX_PLACEMENT:-"ATSIDE"}
+
+ROOT_DOMAIN="az-wdc.cloud-garage.net"
+
+# Transit LS for cPodRouter connectivity
+TRANSIT=172.21
+TRANSIT_SUBNET=${TRANSIT}.1
+HEADER_ASN=657
+ASN=${HEADER_ASN}00
+
+TRANSIT_NET="172.20.0"
+TRANSIT_GW="${TRANSIT_NET}.1"
+DNS=${TRANSIT_GW}
+
+
+CLUSTER="WDC"
+HEADER="cPod"
+
+NETWORK_DIR=network
+COMPUTE_DIR=compute
+EXTRA_DIR=extra
+
+NSX=nsx.az-wdc.cloud-garage.net
+NSX_ADMIN="admin"
+NSX_TRANSPORTZONE="cpod-tz"
+NSX_TRANSPORTZONE_ID="e2ea3824-de91-4a68-b6f4-dce016605208"
+
+ISO_BANK_SERVER=""
+ISO_BANK_DIR=""
+
+export VCENTER=vcsa.az-wdc.cloud-garage.net
+export VCENTER_ADMIN="administrator@az-wdc.cloud-garage.net"
+export VCENTER_DATACENTER="AZ-WDC"
+export VCENTER_CLUSTER="wdc-cluster"
+TEMPLATE_VM="template-cPodRouter"
+TEMPLATE_ESX=${TEMPLATE_ESX:-"template-ESX70u3g"}
+TEMPLATE_FILER="template-cPodFiler"
+#export DATASTORE=${DATASTORE:-"w4-hs3-i0320-3-Datastore"}
+#export DATASTORE=${DATASTORE:-"DatastoreCluster"}
+export DATASTORE=${DATASTORE:-"nfsDatastore"}
+export VCENTER_DATASTORE=${DATASTORE}
+export TEMPLATE_FOLDER="Template"
+export TEMPLATE_RESOURCEPOOL="cPod-Management"
+
+export CPODEDGE_DATASTORE="/data/BITS"

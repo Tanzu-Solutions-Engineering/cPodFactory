@@ -1,0 +1,175 @@
+VERSION         = @VERSION@
+srcdir 		= @srcdir@
+VPATH 		= $(srcdir)
+
+install_prefix	=
+prefix		= @prefix@
+exec_prefix	= @exec_prefix@
+bindir		= @bindir@
+sbindir		= @sbindir@
+mandir		= @mandir@
+libdir		= @libdir@
+man1dir		= $(mandir)/man1
+man5dir		= $(mandir)/man5
+man8dir		= $(mandir)/man8
+docdir		= $(prefix)/doc
+atdocdir	= $(docdir)/at
+etcdir		= @ETCDIR@
+atjobdir	= @ATJBD@
+systemdsystemunitdir = @systemdsystemunitdir@
+
+DAEMON_USERNAME	= @DAEMON_USERNAME@
+DAEMON_GROUPNAME= @DAEMON_GROUPNAME@
+LOADAVG_MX	= @LOADAVG_MX@
+ATJOB_DIR	= @ATJBD@
+ATSPOOL_DIR	= @ATSPD@
+LN_S		= @LN_S@
+YACC		= @YACC@
+LEX		= @LEX@
+LEXLIB		= @LEXLIB@
+
+CC 		= @CC@
+CFLAGS 		= -I$(srcdir) @CFLAGS@
+LDFLAGS		= @LDFLAGS@
+LFILE		= $(ATJOB_DIR)/.SEQ
+DEFS 		= @DEFS@ -DVERSION=\"$(VERSION)\" \
+		-DETCDIR=\"$(etcdir)\" -DLOADAVG_MX=$(LOADAVG_MX) \
+		-DDAEMON_USERNAME=\"$(DAEMON_USERNAME)\" \
+		-DDAEMON_GROUPNAME=\"$(DAEMON_GROUPNAME)\" \
+		-DLFILE=\"$(LFILE)\" -Wall
+LIBS		= @LIBS@
+LIBOBJS		= @LIBOBJS@
+INSTALL		= @INSTALL@
+PAMLIB          = @PAMLIB@
+SELINUXLIB      = @SELINUXLIB@
+
+CLONES		= atq atrm
+ATOBJECTS	= at.o panic.o perm.o posixtm.o y.tab.o lex.yy.o
+RUNOBJECTS	= atd.o daemon.o $(LIBOBJS)
+CSRCS		= at.c atd.c panic.c perm.c posixtm.c daemon.c getloadavg.c \
+			y.tab.c y.tab.h lex.yy.c
+HEADERS 	= at.h panic.h parsetime.h perm.h posixtm.h daemon.h \
+			getloadavg.h privs.h
+
+OTHERS		= parsetime.l parsetime.y parsetime.pl
+
+DOCS =  Problems Copyright README ChangeLog timespec
+
+MISC =  COPYING  Makefile.in configure acconfig.h install-sh \
+	README atrun.in at.1.in atrun.8.in atd.8.in at.allow.5.in \
+	configure.in  config.h.in config.guess config.sub batch.in at.deny \
+	atd.service.in \
+	$(DOCS)
+
+DIST = $(CSRCS) $(HEADERS) $(MISC) $(OTHERS)
+LIST = Filelist Filelist.asc
+
+.PHONY: all install clean dist distclean
+
+all: at atd atd.service atrun
+
+at: $(ATOBJECTS)
+	$(CC) $(LDFLAGS) -o at $(ATOBJECTS) $(LIBS) $(LEXLIB)
+	rm -f $(CLONES)
+	$(LN_S) -f at atq
+	$(LN_S) -f at atrm
+
+atd: $(RUNOBJECTS)
+	$(CC) $(LDFLAGS) -o atd $(RUNOBJECTS) $(LIBS) $(PAMLIB) $(SELINUXLIB)
+
+y.tab.c y.tab.h: parsetime.y
+	$(YACC) -d parsetime.y
+
+lex.yy.c: parsetime.l
+	$(LEX) -i parsetime.l
+
+atd.service: atd.service.in
+	cat $< | sed -e 's![@]sbindir[@]!$(sbindir)!g' | sed -e 's![@]atjobdir[@]!$(atjobdir)!g' > $@
+
+atrun: atrun.in
+	configure
+
+.c.o:
+	$(CC) -c $(CFLAGS) $(DEFS) $*.c
+
+install: all
+	$(INSTALL) -g root -o root -m 755 -d $(IROOT)$(etcdir)
+	$(INSTALL) -g root -o root -m 755 -d $(IROOT)$(bindir)
+	$(INSTALL) -g root -o root -m 755 -d $(IROOT)$(sbindir)
+	$(INSTALL) -g root -o root -m 755 -d $(IROOT)$(docdir)
+	$(INSTALL) -g root -o root -m 755 -d $(IROOT)$(atdocdir)
+	$(INSTALL) -g $(DAEMON_GROUPNAME) -o $(DAEMON_USERNAME) -m 755 -d $(IROOT)$(ATSPOOL_DIR) $(IROOT)$(ATJOB_DIR)
+	chmod 1770 $(IROOT)$(ATSPOOL_DIR) $(IROOT)$(ATJOB_DIR)
+	touch $(IROOT)$(LFILE)
+	chmod 600 $(IROOT)$(LFILE)
+	chown $(DAEMON_USERNAME):$(DAEMON_GROUPNAME) $(IROOT)$(LFILE)
+	test -f $(IROOT)$(etcdir)/at.allow || test -f $(IROOT)$(etcdir)/at.deny || $(INSTALL) -o root -g $(DAEMON_GROUPNAME) -m 640 at.deny $(IROOT)$(etcdir)/
+	$(INSTALL) -g $(DAEMON_GROUPNAME) -o $(DAEMON_USERNAME) -m 6755 at $(IROOT)$(bindir)
+	$(LN_S) -f at $(IROOT)$(bindir)/atq
+	$(LN_S) -f at $(IROOT)$(bindir)/atrm
+	$(INSTALL) -g root -o root -m 755 batch $(IROOT)$(bindir)
+	$(INSTALL) -d -o root -g root -m 755 $(IROOT)$(man1dir)
+	$(INSTALL) -d -o root -g root -m 755 $(IROOT)$(man5dir)
+	$(INSTALL) -d -o root -g root -m 755 $(IROOT)$(man8dir)
+	$(INSTALL) -g root -o root -m 755 atd $(IROOT)$(sbindir)
+	$(INSTALL) -g root -o root -m 755 atrun $(IROOT)$(sbindir)
+	$(INSTALL) -g root -o root -m 644 at.1 $(IROOT)$(man1dir)/
+	cd $(IROOT)$(man1dir) && $(LN_S) -f at.1 atq.1 && $(LN_S) -f at.1 batch.1 && $(LN_S) -f at.1 atrm.1
+	$(INSTALL) -g root -o root -m 644 atd.8 $(IROOT)$(man8dir)/
+	sed "s,\$${exec_prefix},$(exec_prefix),g" <atrun.8>tmpman
+	$(INSTALL) -g root -o root -m 644 tmpman $(IROOT)$(man8dir)/atrun.8
+	rm -f tmpman
+	$(INSTALL) -g root -o root -m 644 at.allow.5 $(IROOT)$(man5dir)/
+	cd $(IROOT)$(man5dir) && $(LN_S) -f at.allow.5 at.deny.5
+	$(INSTALL) -g root -o root -m 644 $(DOCS) $(IROOT)$(atdocdir)
+	rm -f $(IROOT)$(mandir)/cat1/at.1* $(IROOT)$(mandir)/cat1/batch.1* \
+		$(IROOT)$(mandir)/cat1/atq.1*
+	rm -f $(IROOT)$(mandir)/cat1/atd.8*
+	if test x"$(systemdsystemunitdir)" != xno; then \
+		$(INSTALL) -o root -g root -m 755 -d $(IROOT)$(systemdsystemunitdir); \
+		$(INSTALL) -o root -g root -m 644 atd.service $(IROOT)$(systemdsystemunitdir); \
+	fi
+
+dist: checkin $(DIST) $(LIST) Filelist.asc
+	(cd ..; tar cf - `for a in $(DIST) $(LIST); do echo at-$(VERSION)/$$a; done` |\
+		gzip -9 > at-$(VERSION).tar.gz)
+
+pre: checkin $(DIST) $(LIST)
+	(cd ..; tar cf - `for a in $(DIST); do echo at-$(VERSION)/$$a; done` |\
+		gzip -9 > at-$(VERSION).tar.gz)
+	mv ../at-$(VERSION).tar.gz ../at-$(VERSION)-`date +%Y%m%d`.tar.gz
+
+clean:
+	rm -f subs.sed *.o *.s at atd core a.out *~ $(CLONES) *.bak stamp-built
+	rm -f parsetest parsetime.c lex.yy.c y.tab.c y.tab.h
+
+distclean: clean
+	rm -rf at.1 at.allow.5 atd.8 atrun.8 config.cache atrun batch config.h \
+		config.status Makefile config.log build atd.service
+
+checkin: $(DIST)
+	test -d RCS && for a in $(DIST); do ci -l $$a ; done
+
+Filelist: $(DIST)
+	md5sum $(DIST) > Filelist
+
+Filelist.asc: Filelist
+	pgp -sba Filelist
+
+parsetest: lex.yy.c y.tab.c
+	$(CC) -o parsetest $(CFLAGS) $(DEFS) -DTEST_PARSER -DNEED_YYWRAP lex.yy.c y.tab.c
+
+test: parsetest
+	prove parsetime.pl
+
+.depend: $(CSRCS)
+	gcc $(CFLAGS) $(DEFS) -MM $(CSRCS) > .depend
+
+at.o: at.c config.h at.h panic.h parsetime.h perm.h posixtm.h privs.h
+atd.o: atd.c config.h privs.h daemon.h getloadavg.h
+panic.o: panic.c config.h panic.h at.h
+parsetime.o: parsetime.c config.h at.h panic.h
+perm.o: perm.c config.h privs.h at.h
+posixtm.o: posixtm.c posixtm.h
+daemon.o: daemon.c config.h daemon.h privs.h
+getloadavg.o: getloadavg.c config.h getloadavg.h

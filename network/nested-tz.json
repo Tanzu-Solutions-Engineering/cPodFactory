@@ -1,0 +1,7 @@
+{
+  "display_name":"tz-cpod",
+  "host_switch_name":"nsxDefaultHostSwitch",
+  "description":"Transport Zone for cPod",
+  "transport_type":"OVERLAY",
+  "nested_nsx":true
+}

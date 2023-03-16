@@ -1,0 +1,32 @@
+FROM alpine
+MAINTAINER Brice Dereims "bdereims@gmail.com" 
+
+RUN set -xe \
+    && apk add --no-cache ca-certificates \
+                          gzip \
+                          nginx \
+                          openssl \
+                          php5-fpm \
+                          php5-openssl \
+                          php5-pdo_sqlite \
+                          php5-sqlite3 \
+                          php5-xml \
+                          php5-zlib \
+                          tar \
+    && touch /etc/php5/fpm.d/empty.conf
+
+COPY nginx.conf /etc/nginx/nginx.conf
+COPY startup.sh /opt/startup.sh
+
+VOLUME /var/www/html/dokuwiki/conf \
+       /var/www/html/dokuwiki/data/pages \
+       /var/www/html/dokuwiki/data/meta \
+       /var/www/html/dokuwiki/data/media \
+       /var/www/html/dokuwiki/data/media_attic \
+       /var/www/html/dokuwiki/data/media_meta \
+       /var/www/html/dokuwiki/data/attic \
+       /var/www/html/dokuwiki/lib/plugins
+
+EXPOSE 80
+
+CMD ["/bin/sh", "/opt/startup.sh"]

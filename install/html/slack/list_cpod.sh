@@ -1,0 +1,28 @@
+#/bin/sh
+
+HEADER="https://cpodrouter."
+
+if [ "x$1" = "x" ]; then 
+
+LIST="Direct link to cPod:"
+
+for CPOD in $( cat /etc/hosts | sed "s/#//" | awk '$2 ~ /cpod-/ {gsub(/cpod-/,""); print toupper($2)"("$3")"}' ); do
+        FQDN=$( echo ${CPOD} | cut -f1 -d"(" | tr [:upper:] [:lower:] )
+	FOOTER=$( grep "/cpod-${FQDN}." /etc/dnsmasq.conf | head -1 | sed -e "s#^.*cpod-${FQDN}##" -e "s#/.*##" -e "s/ //g" )	
+        FQDN="${HEADER}cpod-${FQDN}${FOOTER}"
+        CPOD=$( echo ${CPOD} | sed "s/()//" | sed "s/(/ (/" )
+        LIST="${LIST}     <${FQDN}|$CPOD>"
+done
+
+else
+
+for CPOD in $( cat /etc/hosts | grep $1 | sed "s/#//" | awk '$2 ~ /cpod-/ {gsub(/cpod-/,""); print toupper($2)}' ); do
+        FQDN=$( echo ${CPOD} | cut -f1 -d"(" | tr [:upper:] [:lower:] )
+        FQDN="https://vcsa.cpod-${FQDN}.shwrfr.mooo.com"
+        #CPOD=$( echo ${CPOD} | sed "s/()//" | sed "s/(/ (/" )
+        LIST="${LIST}     <${FQDN}|$CPOD>"
+done
+
+fi
+
+echo "${LIST}"

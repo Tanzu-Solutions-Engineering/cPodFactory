@@ -1,0 +1,5 @@
+{
+    "mac_discovery_profile_path" : "/infra/mac-discovery-profiles/new-mac-discovery-profile",
+    "ip_discovery_profile_path" : "/infra/ip-discovery-profiles/new-ip-discovery",
+    "resource_type" : "SegmentDiscoveryProfileBindingMap"
+}

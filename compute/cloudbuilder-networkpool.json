@@ -1,0 +1,35 @@
+{
+    "id": "",
+    "name": "###NPPOOLNAME###",
+    "networks": [ {
+        "freeIps": [ "" ],
+        "gateway": "10.###VLAN###.1.1",
+        "id": "",
+        "ipPools": [ {
+            "end": "10.###VLAN###.1.254",
+            "start": "10.###VLAN###.1.2"
+        } ],
+        "mask": "255.255.255.0",
+        "mtu": 1500,
+        "subnet": "10.###VLAN###.1.0",
+        "type": "vmotion",
+        "usedIps": [ "" ],
+        "vlanId": ###VMOTIONVLANID###
+    } , {
+        "freeIps": [ "" ],
+        "gateway": "10.###VLAN###.2.1",
+        "id": "",
+        "ipPools": [ {
+            "end": "10.###VLAN###.2.254",
+            "start": "10.###VLAN###.2.2"
+        } ],
+        "mask": "255.255.255.0",
+        "mtu": 1500,
+        "subnet": "10.###VLAN###.2.0",
+        "type": "vsan",
+        "usedIps": [ "" ],
+        "vlanId": ###VSANVLANID###
+    } 
+	]
+}
+

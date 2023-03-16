@@ -1,0 +1,96 @@
+#!/bin/sh
+
+echo noop > /sys/block/sda/queue/scheduler
+echo 1024 > /sys/block/sda/queue/nr_requests
+echo 16384 > /sys/block/sda/queue/max_sectors_kb
+echo noop > /sys/block/sdb/queue/scheduler
+echo 1024 > /sys/block/sdb/queue/nr_requests
+echo 16384 > /sys/block/sda/queue/max_sectors_kb
+
+echo 0 | tee /proc/sys/net/ipv4/conf/*/send_redirects
+
+#echo 262144 > /proc/sys/net/core/rmem_default
+#echo 262144 > /proc/sys/net/core/rmem_max
+#echo 262144 > /proc/sys/net/core/wmem_default
+#echo 262144 > /proc/sys/net/core/wmem_max
+
+# Begin /etc/systemd/scripts/iptables
+
+# Insert connection-tracking modules
+# (not needed if built into the kernel)
+modprobe nf_conntrack
+modprobe xt_LOG
+
+# Enable broadcast echo Protection
+echo 1 > /proc/sys/net/ipv4/icmp_echo_ignore_broadcasts
+
+# Disable Source Routed Packets
+echo 0 > /proc/sys/net/ipv4/conf/all/accept_source_route
+echo 0 > /proc/sys/net/ipv4/conf/default/accept_source_route
+
+# Enable TCP SYN Cookie Protection
+echo 1 > /proc/sys/net/ipv4/tcp_syncookies
+
+# Disable ICMP Redirect Acceptance
+echo 0 > /proc/sys/net/ipv4/conf/default/accept_redirects
+
+# Do not send Redirect Messages
+echo 0 > /proc/sys/net/ipv4/conf/all/send_redirects
+echo 0 > /proc/sys/net/ipv4/conf/default/send_redirects
+
+# Drop Spoofed Packets coming in on an interface, where responses
+# would result in the reply going out a different interface.
+echo 1 > /proc/sys/net/ipv4/conf/all/rp_filter
+echo 1 > /proc/sys/net/ipv4/conf/default/rp_filter
+
+# Log packets with impossible addresses.
+echo 1 > /proc/sys/net/ipv4/conf/all/log_martians
+echo 1 > /proc/sys/net/ipv4/conf/default/log_martians
+
+# be verbose on dynamic ip-addresses  (not needed in case of static IP)
+echo 2 > /proc/sys/net/ipv4/ip_dynaddr
+
+# disable Explicit Congestion Notification
+# too many routers are still ignorant
+echo 0 > /proc/sys/net/ipv4/tcp_ecn
+
+# Set a known state
+iptables -P INPUT   ACCEPT 
+iptables -P FORWARD ACCEPT 
+iptables -P OUTPUT  ACCEPT 
+
+# These lines are here in case rules are already in place and the
+# script is ever rerun on the fly. We want to remove all rules and
+# pre-existing user defined chains before we implement new rules.
+iptables -F
+iptables -X
+iptables -Z
+
+iptables -t nat -F
+iptables -t nat -X
+iptables -t mangle -F
+iptables -t mangle -X
+
+iptables -t nat -A POSTROUTING -j MASQUERADE
+
+# Drop any access to iSCSI
+iptables -A FORWARD -i eth1 -o eth0 -p tcp --dport 3260 -j DROP
+
+# Open 443 only on internet
+iptables -I INPUT 1 -i eth2 -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+iptables -A INPUT -p tcp -i eth2 --dport 443 -j ACCEPT
+iptables -A INPUT -i eth2 -j DROP 
+
+# RDP redirection to RIFT jumpbox - no need with HAProxy/NGINX reverse proxy
+#iptables -I INPUT 2 -p tcp -i eth2 --dport 3389 -j ACCEPT
+#iptables -I INPUT 2 -p tcp -i eth2 --dport 80 -j ACCEPT
+#iptables -t nat -A PREROUTING -p tcp --dport 3389 -j DNAT --to-destination 172.19.8.205:3389
+#iptables -t nat -A PREROUTING -p tcp --dport 80 -j DNAT --to-destination 172.19.8.205:3389
+
+#restore ipv4 rules
+#iptables-restore < /etc/systemd/scripts/ip4save
+
+#restore ipv6 rules
+#ip6tables-restore < /etc/systemd/scripts/ip6save
+
+# End /etc/systemd/scripts/iptables

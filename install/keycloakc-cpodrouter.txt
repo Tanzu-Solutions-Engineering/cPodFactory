@@ -1,0 +1,1 @@
+docker run -d -p 80:8080 -p 443:8443 -e KEYCLOAK_USER=admin -e KEYCLOAK_PASSWORD=admin quay.io/keycloak/keycloak:13.0.1

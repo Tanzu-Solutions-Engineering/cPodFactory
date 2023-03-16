@@ -1,0 +1,124 @@
+#!/bin/bash
+#bdereims@vmware.com
+
+#######################
+
+# export CPOD=XXX
+# export SUBNET=172.18.XX
+
+#######################
+
+CPOD_LOWER=$( echo ${CPOD} | tr '[:upper:]' '[:lower:]' )
+CPOD_HIGH=$( echo ${CPOD} | tr '[:lower:]' '[:upper:]' )
+export SITE="cPod-${CPOD_HIGH}"
+export DOMAIN=cpod-${CPOD_LOWER}.${ROOT_DOMAIN}
+export DNS=${SUBNET}.1
+export NTP=${DNS}
+export GATEWAY=${DNS}
+export NETMASK=255.255.255.0
+export PASSWORD=VMware1!
+export VC_PASSWORD=${PASSWORD}
+#export PORTGROUP="VM Network"
+export PORTGROUP=${PORTGROUP:="VM Network"}
+#export ADMIN=administrator%40vsphere.local
+export ADMIN=administrator%40${DOMAIN}
+export TARGET=vcsa.${DOMAIN}/cPod-${CPOD}/host/Cluster
+#export TARGET=vcsa.${DOMAIN}/cPod-${CPOD}/host/MANAGEMENT
+#export TARGET=vcsa.${DOMAIN}/cPod-${CPOD}/host/Edge
+#export DATASTORE=Datastore
+export DATASTORE=${DATASTORE:="nfsDatastore"}
+export BITS=/data/BITS
+
+#export HOSTNAME_VCSA=vcsa.${DOMAIN}
+export HOSTNAME_VCSA=vcsa
+export HOSTNAME_PSC=psc.${DOMAIN}
+export NAME_VCSA=VCSA
+export NAME_PSC=PSC
+export IP_VCSA=${SUBNET}.3
+export IP_PSC=${SUBNET}.2
+export OVA_VCSA=${OVA_VCSA:-"${BITS}/VMware-vCenter-Server-Appliance-7.0.2.00100-17920168_OVF10.ova"}
+export TARGET_VCSA=${SUBNET}.21
+export DATASTORE_VCSA=Datastore
+export PORTGROUP_VCSA="VM Network"
+
+export HOSTNAME_NSX=nsx.${DOMAIN}
+export NAME_NSX=NSX-V
+export IP_NSX=${SUBNET}.4
+export OVA_NSX=${BITS}/VMware-NSX-Manager-6.4.4-11197766.ova
+
+#export HOSTNAME_VCSA=vcsa
+#export NAME_VCSA=VCSA
+#export IP_VCSA=${SUBNET}.3
+#export OVA_VCSA=${BITS}/VMware-vCenter-Server-Appliance-6.7.0.40000-14367737_OVF10.ova
+#export OVA_VCSA=${BITS}/vcsa-70.ova
+
+export HOSTNAME_VRLI=vrli.${DOMAIN}
+export NAME_VRLI=VRLI
+export IP_VRLI=${SUBNET}.13
+export OVA_VRLI=${BITS}/VMware-vRealize-Log-Insight-4.7.1-10752772_OVF10.ova
+
+export HOSTNAME_VROPS=vrops.${DOMAIN}
+export NAME_VROPS=VROPS
+export IP_VROPS=${SUBNET}.14
+export OVA_VROPS=${BITS}/vRealize-Operations-Manager-Appliance-7.0.0.10098133_OVF10.ova
+
+export HOSTNAME_PHOTONOS=photonos
+export NAME_PHOTONOS=photonos
+export OVA_PHOTONOS=${BITS}/photon-hw11-3.0-9355405.ova
+
+export HOSTNAME_FORTYTWO=forty-two
+export NAME_FORTYTWO=FORTY-TWO
+export OVA_FORTYTWO=${BITS}/template-FORTY-TWO.ova
+
+export HOSTNAME_GREASEMONKEY=grease-monkey
+export NAME_GREASEMONKEY=GREASE-MONKEY
+export OVA_GREASEMONKEY=${BITS}/template-GREASE-MONKEY.ova
+
+export HOSTNAME_UBUNTU=ubuntu
+export NAME_UBUNTU=Ubuntu
+export OVA_UBUNTU=${BITS}/ubuntu.ova
+
+export HOSTNAME_DARKSTAR=darkstar
+export NAME_DARKSTAR=darkstar
+export OVA_DARKSTAR=${BITS}/darkstar.ova
+
+export HOSTNAME_GRACEHOPER=gracehoper
+export NAME_GRACEHOPER=gracehoper
+export OVA_GRACEHOPER=${BITS}/windows10-vmw.ova
+
+#export HOSTNAME_UBUNTU=darkstar-ubuntu
+#export NAME_UBUNTU=darkstar-Ubuntu
+#export OVA_UBUNTU=${BITS}/ubuntu-16.04-server-cloudimg-amd64.ova
+
+export HOSTNAME_VIC=vic
+export NAME_VIC=VIC
+export IP_VIC=${SUBNET}.11
+export OVA_VIC=${BITS}/vic-v1.5.2-7206-92ebfaf5.ova
+
+export HOSTNAME_OPSMANAGER=opsmanager
+export NAME_OPSMANAGER=OPSMANAGER
+export IP_OPSMANAGER=${SUBNET}.12
+export OVA_OPSMANAGER=${BITS}/Pivotal/pcf-vsphere-2.0-build.269.ova
+
+export HOSTNAME_VIO=vio
+export NAME_VIO=VIO
+export IP_VIO=${SUBNET}.12
+export OVA_VIO=${BITS}/VMware-OpenStack-5.0.0.0-8909572_OVF10.ova
+
+export HOSTNAME_VIO_K8s=vio-k8s
+export NAME_VIO_K8S=VIO-K8S
+export IP_VIO_K8S=${SUBNET}.13
+export OVA_VIO_K8S=${BITS}/VMware-OpenStack-for-Kubernetes-5.0.0.0-8958925_OVF10.ova
+
+export HOSTNAME_HCI=hci
+export NAME_HCI=HCI
+export OVA_HCI=${BITS}/HCIBench_2.0.ova
+
+export HOSTNAME_RIFT=rift
+export NAME_RIFT=RIFT
+export OVA_RIFT=${BITS}/template-RIFT.ova
+
+export HOSTNAME_CLOUDBUILDER=cloudbuilder
+export NAME_CLOUDBUILDER=CLOUDBUILDER
+export OVA_CLOUDBUILDER=${BITS}/VMware-Cloud-Builder-4.2.0.0-17559673_OVF10.ova
+export IP_CLOUDBUILDER=${SUBNET}.3

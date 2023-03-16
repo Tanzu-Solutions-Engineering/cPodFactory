@@ -1,0 +1,14 @@
+#!/bin/bash
+#bdereims@vmware.com
+
+# source this env file and
+# create cPod with: cpodctl create X 3 [you-name]
+
+export TEMPLATE_ESX=template-ESX70U3g
+export OVA_CLOUDBUILDER=/data/BITS/VMware-Cloud-Builder-4.5.0.0-20612863_OVF10.ova
+export JSON_TEMPLATE=cloudbuilder-45.json
+export NOCUSTO='YES'
+export LIC_ESX=xxxx-xxxx-xxxx-xxxx-xxxx
+export LIC_VCSA=xxxx-xxxx-xxxx-xxxx-xxxx
+export LIC_VSAN=xxxx-xxxx-xxxx-xxxx-xxxx
+export LIC_NSXT=xxxx-xxxx-xxxx-xxxx-xxxx

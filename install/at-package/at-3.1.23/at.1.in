@@ -1,0 +1,310 @@
+.TH AT 1 2009-11-14
+.SH NAME
+at, batch, atq, atrm \- queue, examine, or delete jobs for later execution
+.SH SYNOPSIS
+.B at
+.RB [ \-V ]
+.RB [ \-q
+.IR queue ]
+.RB [ \-f
+.IR file ]
+.RB [ \-mMlv ]
+.IR timespec " ...\&"
+.br
+.B at
+.RB [ \-V ]
+.RB [ \-q
+.IR queue ]
+.RB [ \-f
+.IR file ]
+.RB [ \-mMkv ]
+.RB [ \-t
+.IR time ]
+.br
+.B "at \-c"
+.I job
+[...\&]
+.br
+.B atq
+.RB [ \-V ]
+.RB [ \-q
+.IR queue ]
+.br
+.B at
+.RB [ \-rd ]
+.I job
+[...\&]
+.br
+.B atrm
+.RB [ \-V ]
+.I job
+[...\&]
+.br
+.B batch
+.br
+.B "at \-b"
+.SH DESCRIPTION
+.B at
+and
+.B batch
+read commands from standard input or a specified file which are to
+be executed at a later time, using
+.BR /bin/sh .
+.TP 8
+.B at
+executes commands at a specified time.
+.TP 8
+.B atq
+lists the user's pending jobs, unless the user is the superuser; in that
+case, everybody's jobs are listed.  The format of the output lines (one
+for each job) is: Job number, date, hour, queue, and username.
+.TP 8
+.B atrm
+deletes jobs, identified by their job number.
+.TP 8
+.B batch
+executes commands when system load levels permit; in other words, when the load average
+drops below @LOADAVG_MX@, or the value specified in the invocation of
+.BR atd .
+.PP
+.B At
+allows fairly complex time
+specifications, extending the POSIX.2 standard.  It accepts times
+of the form
+.B HH:MM
+to run a job at a specific time of day.
+(If that time is already past, the next day is assumed.)
+You may also specify
+.B midnight,
+.B noon,
+or
+.B teatime
+(4pm)
+and you can have a time-of-day suffixed with
+.B AM
+or
+.B PM
+for running in the morning or the evening.
+You can also say what day the job will be run,
+by giving a date in the form
+.B month-name
+.B day
+with an optional
+.B year,
+or giving a date of the form
+.IR MMDD [ CC ] YY ,
+.IR MM / DD /[ CC ] YY ,
+.IR DD . MM .[ CC ] YY
+or
+.RI [ CC ] YY - MM - DD .
+The specification of a date
+.I must
+follow the specification of the time of day.
+You can also give times like
+.B now
+.B +
+.I count
+.I time-units,
+where the time-units can be
+.B minutes,
+.B hours,
+.B days,
+or
+.B weeks
+and you can tell
+.B at
+to run the job today by suffixing the time with
+.B today
+and to run the job tomorrow by suffixing the time with
+.B tomorrow.
+.PP
+For example, to run a job at 4pm three days from now, you would do
+.B at 4pm + 3 days,
+to run a job at 10:00am on July 31, you would do
+.B at 10am Jul 31
+and to run a job at 1am tomorrow, you would do
+.B at 1am tomorrow.
+.PP
+If you specify a job to absolutely run at a specific time and date in
+the past, the job will run as soon as possible.  For example, if it is
+8pm and you do a
+.B at 6pm today,
+it will run more likely at 8:05pm.
+.PP
+The definition of the time specification can be found in
+.IR @prefix@/share/doc/at/timespec .
+.PP
+For both
+.BR at " and " batch ,
+commands are read from standard input or the file specified
+with the
+.B \-f
+option and executed.
+The working directory, the environment (except for the variables
+.BR BASH_VERSINFO ,
+.BR DISPLAY ,
+.BR EUID ,
+.BR GROUPS ,
+.BR SHELLOPTS ,
+.BR TERM ,
+.BR UID ,
+and
+.BR _ )
+and the umask are retained from the time of invocation.
+
+As
+.B at
+is currently implemented as a setuid program, other environment variables (e.g.,
+.BR LD_LIBRARY_PATH " or " LD_PRELOAD )
+are also not exported.  This may change in the future.  As a workaround,
+set these variables explicitly in your job.
+
+An
+.BR "at " \-
+or
+.BR "batch "\-
+command invoked from a
+.BR su (1)
+shell will retain the current userid.
+The user will be mailed standard error and standard output from his
+commands, if any.
+Mail will be sent using the command
+.BR @MAIL_CMD@ .
+If
+.B at
+is executed from a
+.BR su (1)
+shell, the owner of the login shell will receive the mail.
+.PP
+The superuser may use these commands in any case.
+For other users, permission to use at is determined by the files
+.I @ETCDIR@/at.allow
+and
+.IR @ETCDIR@/at.deny .
+See
+.BR at.allow (5)
+for details.
+.SH OPTIONS
+.TP 8
+.B \-V
+prints the version number to standard error and exit successfully.
+.TP 8
+.BI \-q " queue"
+uses the specified queue.
+A queue designation consists of a single letter; valid queue designations
+range from
+.B a
+to
+.B z
+and
+.B A
+to
+.BR Z .
+The
+.B a
+queue is the default for
+.B at
+and the
+.B b
+queue for
+.BR batch .
+Queues with higher letters run with increased niceness.  The special
+queue "=" is reserved for jobs which are currently running.
+.P
+If a job is submitted to a queue designated with an uppercase letter, the
+job is treated as if it were submitted to batch at the time of the job.
+Once the time is reached, the batch processing rules with respect to load
+average apply.
+If
+.B atq
+is given a specific queue, it will only show jobs pending in that queue.
+.TP 8
+.B \-m
+Send mail to the user when the job has completed even if there was no
+output.
+.TP 8
+.B \-M
+Never send mail to the user.
+.TP 8
+.BI \-f " file"
+Reads the job from
+.I file
+rather than standard input.
+.TP 8
+.BI \-t " time"
+run the job at
+.IR time ,
+given in the format [[CC]YY]MMDDhhmm[.ss]
+.TP 8
+.B \-l
+Is an alias for
+.B atq.
+.TP
+.B \-r
+Is an alias for
+.B atrm.
+.TP
+.B \-d
+Is an alias for
+.B atrm.
+.TP
+.B \-b
+is an alias for
+.BR batch .
+.TP
+.B \-v
+Shows the time the job will be executed before reading the job.
+.P
+Times displayed will be in the format "Thu Feb 20 14:50:00 1997".
+.TP
+.B
+\-c
+cats the jobs listed on the command line to standard output.
+.SH FILES
+.I @ATJBD@
+.br
+.I @ATSPD@
+.br
+.I /proc/loadavg
+.br
+.I /var/run/utmp
+.br
+.I @ETCDIR@/at.allow
+.br
+.I @ETCDIR@/at.deny
+.SH SEE ALSO
+.BR at.allow (5),
+.BR at.deny (5),
+.BR atd (8),
+.BR cron (1),
+.BR nice (1),
+.BR sh (1),
+.BR umask (2).
+.SH BUGS
+The correct operation of
+.B batch
+for Linux depends on the presence of a
+.IR proc -
+type directory mounted on
+.IR /proc .
+.PP
+If the file
+.I /var/run/utmp
+is not available or corrupted, or if the user is not logged on at the
+time
+.B at
+is invoked, the mail is sent to the userid found
+in the environment variable
+.BR LOGNAME .
+If that is undefined or empty, the current userid is assumed.
+.PP
+.B At
+and
+.B batch
+as presently implemented are not suitable when users are competing for
+resources.
+If this is the case for your site, you might want to consider another
+batch system, such as
+.BR nqs .
+.SH AUTHOR
+At was mostly written by Thomas Koenig.

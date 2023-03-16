@@ -1,0 +1,14 @@
+[Unit]
+Description=Quagga Zebra daemon
+Before=bgpd.service
+ 
+[Service]
+Type=forking
+ExecStart=/usr/sbin/zebra -d -f /etc/quagga/zebra.conf -i /etc/quagga/zebra.pid
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+
+#[Timer]
+#OnBootSec=20sec

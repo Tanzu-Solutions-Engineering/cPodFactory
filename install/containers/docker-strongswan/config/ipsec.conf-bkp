@@ -1,0 +1,59 @@
+config setup
+  uniqueids=no
+
+conn %default
+  keyexchange=ikev2
+  ikelifetime=60m
+  keylife=20m
+  rekeymargin=3m
+  keyingtries=1
+  rekey=no
+  ike=chacha20poly1305-prfsha256-newhope128,chacha20poly1305-prfsha256-ecp256,aes128gcm16-prfsha256-ecp256,aes256-sha256-modp2048,aes256-sha256-modp1024!
+  esp=chacha20poly1305-newhope128,chacha20poly1305-ecp256,aes128gcm16-ecp256,aes256-sha256-modp2048,aes256-sha256,aes256-sha1!
+  dpdaction=clear
+  dpddelay=120s
+  auto=add
+
+conn roadwarrior-full
+  left=%any
+# This is "Remote ID" that we'll use on the client to select connection. See notes below
+  leftid=@az-demo.shwrfr.com
+  leftauth=pubkey
+  leftcert=/etc/ipsec.d/certs/serverCert.pem
+  leftsendcert=always
+  leftsubnet=0.0.0.0/0
+  #leftupdown=/etc/ipsec.d/firewall.updown
+  right=%any
+  rightauth=pubkey
+  rightsourceip=10.0.24.0/24
+  rightdns=172.16.100.20
+
+# the only difference here we narrow down left subnet
+conn roadwarrior-split
+  also=roadwarrior-full
+  leftid=@split-tunnel.vpn.example.com
+  leftsubnet=10.0.17.0/24
+
+# These two if we want MSCHAPv2 EAP authentication
+conn roadwarrior-eap-full
+  also=roadwarrior-full
+  rightauth=eap-dynamic
+  eap_identity=%any
+
+conn roadwarrior-eap-split
+  also=roadwarrior-split
+  rightauth=eap-dynamic
+  eap_identity=%any
+
+# These two for public key authentication
+conn roadwarrior-pubkey-eap-full
+  also=roadwarrior-full
+  rightauth2=eap-dynamic
+  eap_identity=%any
+
+conn roadwarrior-pubkey-eap-split
+  also=roadwarrior-split
+  rightauth2=eap-dynamic
+  eap_identity=%any
+
+

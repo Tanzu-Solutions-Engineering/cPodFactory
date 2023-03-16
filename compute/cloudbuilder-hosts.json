@@ -1,0 +1,9 @@
+{
+    "fqdn": "###ESXFQDN###",
+    "networkPoolId": "###POOLID###",
+    "networkPoolName": "###NPPOOL###",
+    "password": "###PASSWORD###",
+    "storageType": "VSAN",
+    "username": "root",
+    "vvolStorageProtocolType": null
+}

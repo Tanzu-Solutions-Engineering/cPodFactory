@@ -1,0 +1,17 @@
+#!/bin/bash
+set -e
+
+PACKNAME=at
+SOURCENAME=at
+VER=$( grep AC_INIT configure.ac | cut -d ',' -f 2 | tr -d ' )' )
+RELTAR=${SOURCENAME}_$VER.orig.tar.gz
+
+echo $PACKNAME $SOURCENAME $VER
+echo $RELTAR
+
+[ ! -e ../$SOURCENAME-$VER ] || ( echo "Dir $SOURCENAME-$VER exist, aborting" ; exit 1 )
+[ ! -e ../$RELTAR ] || ( echo "Release file $RELTAR exist, aborting" ; exit 2 )
+mkdir ../$SOURCENAME-$VER
+fakeroot tar --exclude=debian --exclude=.git -cf - . | tar -C ../$SOURCENAME-$VER -x
+GZIP=-9 fakeroot tar -C .. -czf ../$RELTAR $SOURCENAME-$VER
+rm -r ../$SOURCENAME-$VER

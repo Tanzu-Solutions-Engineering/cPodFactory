@@ -1,0 +1,201 @@
+at 3.0:
+	at now has a lex/yacc grammer, which is an extension of POSIX.2 to
+	something more sensible.  There's an atd, which can still simulate
+	atrun with the -s option.
+
+at 3.1:
+	Tried to fix some races in the atd code by renaming
+	running jobs to "=" (thanks to aj@arthur.pfalz.de for
+	pointing out the bug).
+
+at 3.1.1:
+	The last fix didn't work.  New locking scheme: as soon as
+	a job starts, the file a00beef is hardlinked to =00beef.
+	a00beef is unlinked as soon as actual shell execution
+	starts.  "=" - files are deleted as soon as their job
+	ends, or an hour after they should have run.
+
+at 3.1.2:
+	cleanups:  indent the source with OTBS
+	remove output file if it already exists, with a warning.
+	log attempts to run job twice
+	added -b option to atd
+	removed -b option from at (now batch calls "at -qb now")
+	revamp run_loop so -b works correctly
+
+at 3.1.3:
+	Fixed "at 07:30" functionality for implicit tomorrow
+	Include yywrap if none can be found
+
+at 3.1.4:
+	Set default batch maximum to 0.8
+	Changed install group to 'root'
+
+at 3.1.5:
+	Merged Bjorn Helgaas' (helgaas@tomahawk.rsn.hp.com) patches:
+		* Use setresuid(2) if setreuid(2) is not available
+		  (HP-UX 10)
+		* Use "chown user:group" instead of "chown user.group" for
+		  HP-UX compatibility
+		* RELINQUISH_PRIVS slightly earlier in at.c,
+		  since it doesn't depend on
+		* Change "volatile static" to "static volatile"
+		* Test for HAVE_ATTRIBUTE_NORETURN instead of __GNUC__
+		  in daemon.h
+	Don't export SHELLOPTS (read-only variable in bash)
+
+at 3.1.6:
+	Made 'noon', 'teatime' and 'midnight' work.
+	Reran autoheader so HP-UX compilation works.
+
+at 3.1.7:
+	Made parser case-independent by specifying -i to flex
+
+at 3.1.8:
+	Fixed spelling mistake in manpage
+	Created at_allow(5) and at_deny(5) manpages
+	Fixed bug where 'next monday' could be a synonym for today
+	Fixed spelling bug in parser (misspelled February)
+	Removed obsolete '-v' flag from atq
+
+at 3.1.11:
+
+  Ansgar Burchardt (15):
+      correct comment in atd.c
+      rc: do not set -e
+      panic.c: switch permissions before unlink
+      update configure script
+      update config.guess and config.sub
+      Makefile.in: do not remove debian/tmp
+      at.c: add -t option
+      document new -t option
+      remove unused function parsetimespec
+      at.c: exit successfully when -V is given
+      fix some typos
+      update contact address
+      update copyright information
+      set version to 3.1.11
+      remove $Id$ tags
+
+  Cyril Brulebois (7):
+      Make Copyright a regular file.
+      Copy debian/rc to rc, it's not Debian-specific.
+      Copy debian/pam to pam.conf, it's not Debian-specific.
+      Remove the debian/ directory.
+      Fix LFILE/ATJOB_DIR usage in nextjob().
+      Fix missing panic.h include.
+      Remove unused "static const char *svnid"
+
+at 3.1.12:
+
+  Ansgar Burchardt (18):
+      do not increment year twice
+      do not increment day of month twice
+      update documentation on removed environment variables
+      add -f option to stay in foreground
+      error when day of month is 0
+      make less assumptations on open file descriptors
+      use common-session-noninteractive
+      make parsetest buildable
+      pass -i option to sendmail
+      use pid file in init script
+      add status action to init script
+      make stdout, stderr available to sendmail process
+      default queues are no longer configurable
+      document -b option
+      pass current time as a parameter to parsetime()
+      document 4-digit years and ISO date format
+      add test suite
+      update copyright information
+
+at 3.1.13:
+
+  Ansgar Burchardt (18):
+        parsetime.pl: add test case
+        correct error message when initgroups fails
+        change owner of output file
+        do not open output file twice
+        use strdup()
+        at.1.in: Add references to at.allow(5), at.deny(5)
+        Sort references in SEE ALSO section.
+        man page for atrun is in section 8
+        at.1.in: Document -M option.
+        at.1.in: Remove a dot from mid-sentence.
+        Rename at_allow.5.in to at.allow.5.in
+        Remove useless chdir()
+        Create hardlink as priviledged user
+        Update my email address.
+        atd.c: variable "rc" is always used
+        No longer mention atrun in documentation.
+        do not abort when job is removed just before we run it
+        do not strip binaries on install
+
+  Mike Miller (1):
+        Add support for -r option required by POSIX.
+
+  Reuben Thomas (2):
+        De-duplicate and improve documentation of /etc/at.{deny,allow}.
+        Clarify an error message.
+
+at 3.1.14:
+
+  Ansgar Burchardt (5):
+        Add systemd service file.
+        Initialize jobno before using it.
+        No longer try to compile and run a trivial C program.
+        Add -M option to usage message.
+        Use LDFLAGS when linking programs.
+
+at 3.1.15 (2014-08-10):
+
+  Ansgar Burchardt (3):
+        pam.conf: require pam_loginuid.so
+        atd.service.in: Add Documentation field.
+        atd.service.in: Set IgnoreSIGPIPE=false
+
+at 3.1.16 (2014-09-30):
+
+  Ansgar Burchardt (1):
+        at: only retain variables whose name consists of alphanumerics and underscores
+
+at 3.1.17 (2015-08-31):
+
+  Jose M Calhariz:
+	at.1.in: Document behaviour when using past time, thanks Kelly Price (Closes: #639900).
+	Makefile.in: On distclean remove at.allow.5, auto generated file.
+
+at 3.1.18 (2015-12-06)
+
+  Jose M Calhariz:
+	Add support for SELinux, multiples files
+
+at 3.1.19 (2016-03-20)
+  Jose M Calhariz:
+	Fix configure handling of flag --without-selinux.
+
+(...)
+
+at 3.1.21 (2018-07-23):
+  Jose M Calhariz:
+    832368-Using_of_the_meaningless_fcntl
+	Fix call of fcntl by replacing (long) 1 with FD_CLOEXEC
+
+    892819-at__improvements_to_atd.service
+	Improve atd.service, see bug report 892819
+
+    885891-at__stale_batchjobs_after_reboot
+	Remove stale at jobs after a boot.
+
+    897669-897670-Some_fixes_in_the_manuals
+	Fix some warnings in manpages at.1 and atd.8
+
+    883730-Remove_invalid_email_from_man_page
+	Remove invalid email from man pages.
+
+at 3.1.22 (2018-07-24):
+  Jose M Calhariz:
+	Draft of a release script
+
+at 3.1.23 (2018-07-24):
+  Jose M Calhariz
+	Finalised script to release software.

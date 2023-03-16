@@ -1,0 +1,22 @@
+port 1195
+proto tcp
+dev tun0
+ca /etc/openvpn/easy-rsa/keys/ca.crt
+cert /etc/openvpn/easy-rsa/keys/cpodedge.crt
+dh /etc/openvpn/easy-rsa/keys/dh2048.pem 
+server 10.255.254.0 255.255.255.0
+ifconfig-pool-persist ipp.txt
+push "route 10.0.0.0 255.0.0.0"
+push "route 172.16.100.20 255.255.255.255"
+push "route 172.16.0.0 255.240.0.0"
+push "route 192.168.0.0 255.255.0.0"
+push "route 10.1.0.150 255.255.255.255"
+push "dhcp-option DNS 10.1.0.150"
+push "dhcp-option DOMAIN az-demo.shwrfr.com"
+client-to-client
+duplicate-cn
+keepalive 10 120
+max-clients 250
+persist-key
+persist-tun
+verb 0 

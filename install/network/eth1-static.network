@@ -1,0 +1,9 @@
+[Match]
+Name=eth1
+
+[Network]
+Address=172.16.100.50/22
+Gateway=172.16.100.254
+
+[DHCP]
+UseDNS=false

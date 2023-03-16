@@ -1,0 +1,23 @@
+port 1195
+proto tcp
+dev tun0
+ca /etc/openvpn/easy-rsa/keys/ca.crt
+cert /etc/openvpn/easy-rsa/keys/cpodedge.crt
+key  /etc/openvpn/easy-rsa/keys/cpodedge.key
+dh /etc/openvpn/easy-rsa/keys/dh2048.pem 
+server 10.255.254.0 255.255.255.0
+ifconfig-pool-persist ipp.txt
+push "route 10.0.0.0 255.0.0.0"
+push "route 172.16.0.0 255.240.0.0"
+push "route 192.168.0.0 255.255.0.0"
+push "route 10.1.0.150 255.255.255.255"
+push "dhcp-option DNS 10.197.96.201"
+push "dhcp-option DOMAIN az-wdc.cloud-garage.net"
+client-to-client
+duplicate-cn
+keepalive 10 120
+max-clients 250
+persist-key
+persist-tun
+tun-mtu 1472
+verb 0 

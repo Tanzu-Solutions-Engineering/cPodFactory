@@ -1,0 +1,81 @@
+.TH ATD 8 2009-11-14
+.SH NAME
+atd \- run jobs queued for later execution
+.SH SYNOPSIS
+.B atd
+.RB [ \-l
+.IR load_avg ]
+.RB [ \-b
+.IR batch_interval ]
+.RB [ \-d ]
+.RB [ \-f ]
+.RB [ \-s ]
+.SH DESCRIPTION
+.B atd
+runs jobs queued by
+.BR at (1) .
+.PP
+.SH OPTIONS
+.TP 8
+.B \-l
+Specifies a limiting load factor, over which batch jobs should
+not be run, instead of the compile-time choice of @LOADAVG_MX@.
+For an SMP system with
+.I n
+CPUs, you will probably want to set this higher than
+.IR n\-1.
+.TP 8
+.B \-b
+Specify the minimum interval in seconds between the start of two
+batch jobs (60 default).
+.TP 8
+.B \-d
+Debug; print error messages to standard error instead of using
+.BR syslog (3) .
+This option also implies
+.BR \-f .
+.TP
+.B \-f
+Run
+.BR atd
+in the foreground.
+.TP 8
+.B \-s
+Process the at/batch queue only once.
+This is primarily of use for compatibility with old versions of
+.BR at ;
+.B "atd \-s"
+is equivalent to the old
+.B atrun
+command.
+.SH WARNING
+.B atd
+won't work if its spool directory is mounted via NFS even if
+.I no_root_squash
+is set.
+.SH FILES
+.I @ATJBD@
+The directory for storing jobs; this should be mode 700, owner
+@DAEMON_USERNAME@.
+.PP
+.I @ATSPD@
+The directory for storing output; this should be mode 700, owner
+@DAEMON_USERNAME@.
+.PP
+.IR /etc/at.allow ,
+.I /etc/at.deny
+determine who can use the
+.B at
+system.
+.SH "SEE ALSO"
+.BR at (1),
+.BR at.deny (5),
+.BR at.allow (5),
+.BR cron (8),
+.BR crontab (1),
+.BR syslog (3).
+.SH BUGS
+The functionality of
+.B atd
+should be merged into
+.BR cron (8) .

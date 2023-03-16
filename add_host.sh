@@ -106,8 +106,8 @@ ${SCRIPT}
 
 echo "executing ${SCRIPT}"
 
-scp -o StrictHostKeyChecking=no ${SCRIPT} root@"${TRANSIT_IP}":./${SHELL_SCRIPT} 2>&1 > /dev/null
-ssh -o StrictHostKeyChecking=no root@"${TRANSIT_IP}" "./${SHELL_SCRIPT}" 2>&1 > /dev/null
+scp -o StrictHostKeyChecking=no ${SCRIPT} root@"${TRANSIT_IP}":./${SHELL_SCRIPT}  > /dev/null 2>&1
+ssh -o StrictHostKeyChecking=no root@"${TRANSIT_IP}" "./${SHELL_SCRIPT}"
 
 #rm ${SCRIPT}
 

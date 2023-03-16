@@ -122,7 +122,7 @@ for ((i=1; i<=NUM_ESX; i++)); do
 
 	#Go into this loop for ESXi based image, adding NFS datastore and VMotion interface and ISO bank
 	if [ "${NOCUSTO}" != "YES" ]; then
-		echo "$ESXHOST --- setting vmo ---tion on vmk0"
+		echo "$ESXHOST --- setting vmotion on vmk0 ---"
 		sshpass -p "${GEN_PASSWORD}" ssh -o StrictHostKeyChecking=no root@"${IP}" "vim-cmd hostsvc/vmotion/vnic_set vmk0"
 		echo "Adding nfsDatastore from cpodrouter"
 		sshpass -p "${GEN_PASSWORD}" ssh -o StrictHostKeyChecking=no root@"${IP}" "esxcli storage nfs add --host=${CPODROUTER} --share=/data/Datastore --volume-name=nfsDatastore" 

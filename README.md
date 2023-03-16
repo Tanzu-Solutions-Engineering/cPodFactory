@@ -27,18 +27,18 @@ In order to have multiple actors working on this helpful resource, please follow
 * Don't commit changes directly to `origin`! 
 * [Fork](https://docs.github.com/en/get-started/quickstart/fork-a-repo) the repository to your Github account and go ahead from there:
 
-  * `clone` the fork locally: `git clone git@github.com:rguske/tanzu-ese-poc-guides.git`
-    * Change into the cloned dir `cd tanzu-ese-poc-guides`
+  * `clone` the fork locally: `git clone https://github.com/Tanzu-Solutions-Engineering/cPodFactory.git`
+    * Change into the cloned dir `cd cPodFactory`
   * Rename your fork from e.g. `origin` to `fork`: `git remote rename origin fork`
-  * Add the `origin`al repository as well, to e.g. `fetch` and `pull` changes from `origin` (changes caused by e.g. contributions from others): `git remote add origin https://github.com/Tanzu-Solutions-Engineering/tanzu-ese-poc-guides.git`
+  * Add the `origin`al repository as well, to e.g. `fetch` and `pull` changes from `origin` (changes caused by e.g. contributions from others): `git remote add origin https://github.com/Tanzu-Solutions-Engineering/cPodFactory.git`
   * Execute `git remote -vvv` to see both added repos
 
 You should see a similar output like this:
 
 ```bash
 git remote -vvv
-fork    git@github.com:rguske/tanzu-ese-poc-guides.git (fetch)
-fork    git@github.com:rguske/tanzu-ese-poc-guides.git (push)
+fork	https://github.com/vEDW/cPodFactory.git (fetch)
+fork	https://github.com/vEDW/cPodFactory.git (push)
 origin  https://github.com/Tanzu-Solutions-Engineering/tanzu-ese-poc-guides.git (fetch)
 origin  https://github.com/Tanzu-Solutions-Engineering/tanzu-ese-poc-guides.git (push)
 ```

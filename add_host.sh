@@ -121,7 +121,7 @@ for ((i=1; i<=NUM_ESX; i++)); do
   TIMEOUT=0
   while [ 0 -ne "$SSHOK" ]
   do  
-    SSHOK=$( sshpass -p "${ROOT_PASSWD}" ssh -o "StrictHostKeyChecking=no" -o "BatchMode=yes" -o "ConnectTimeout=5" root@"${DHCPIP}" exit >/dev/null 2>&1; ) 
+    SSHOK=$( sshpass -p "${ROOT_PASSWD}" ssh -o "StrictHostKeyChecking=no" -o "ConnectTimeout=5" root@"${DHCPIP}" exit >/dev/null 2>&1; ) 
     echo "DHCPIP is now: $SSHOK"
     sleep 10
     TIMEOUT=$((TIMEOUT + 1))

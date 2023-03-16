@@ -122,7 +122,7 @@ for ((i=1; i<=NUM_ESX; i++)); do
   #wait for ESXCLI to become available 
   while [ "$SSHOK" != 0 ]
   do  
-    SSHOK=$( sshpass -p "${ROOT_PASSWD}" ssh -o "StrictHostKeyChecking=no" -o "ConnectTimeout=5" root@"${DHCPIP}" exit >/dev/null 2>&1; ) 
+    SSHOK=$( sshpass -p "${ROOT_PASSWD}" ssh -o "StrictHostKeyChecking=no" -o "ConnectTimeout=5" root@"${DHCPIP}" exit >/dev/null 2>&1; echo $? ) 
     echo "SSH is not ready on $DHCPIP ===$SSHOK==="
     sleep 10
     TIMEOUT=$((TIMEOUT + 1))
@@ -138,13 +138,15 @@ for ((i=1; i<=NUM_ESX; i++)); do
   echo "=========================================="
   echo "== Configuring $ESXHOST on IP: $DHCPIP  =="
   echo "=========================================="
-	echo "$ESXHOST --- Setting hostname to $ESXHOST  ---"
+	echo "$ESXHOST --- Setting hostname to $ESXHOST and domain to: $DOMAIN   ---"
 	sshpass -p "${ROOT_PASSWD}" ssh -o StrictHostKeyChecking=no root@"${DHCPIP}" "esxcli system hostname set --host=${ESXHOST} --domain=${DOMAIN}" 
+  echo "$ESXHOST --- Setting MemorySalting and Coredump  ---"
 	sshpass -p "${ROOT_PASSWD}" ssh -o StrictHostKeyChecking=no root@"${DHCPIP}" "esxcli system settings advanced set -o /Mem/ShareForceSalting -i 0"
 	sshpass -p "${ROOT_PASSWD}" ssh -o StrictHostKeyChecking=no root@"${DHCPIP}" "esxcli system settings advanced set -o /UserVars/SuppressCoredumpWarning -i 1"
+  echo "$ESXHOST --- Setting ntp to: $TRANSIT_IP  ---"
 	sshpass -p "${ROOT_PASSWD}" ssh -o StrictHostKeyChecking=no root@"${DHCPIP}" "echo \"server ${TRANSIT_IP} iburst\" >> /etc/ntp.conf ; chkconfig ntpd on ; /etc/init.d/ntpd stop ; /etc/init.d/ntpd start"
 	sshpass -p "${ROOT_PASSWD}" ssh -o StrictHostKeyChecking=no root@"${DHCPIP}" "esxcli system ntp set --reset ; esxcli system ntp set -s ${TRANSIT_IP} --enabled true"
-	echo "$ESXHOST --- setting dns to $DOMAIN ---"
+	echo "$ESXHOST --- setting dns to: $TRANSIT_IP and domain to: $DOMAIN ---"
 	sshpass -p "${ROOT_PASSWD}" ssh -o StrictHostKeyChecking=no root@"${DHCPIP}" "esxcli network ip dns server add -s ${TRANSIT_IP}"
 	sshpass -p "${ROOT_PASSWD}" ssh -o StrictHostKeyChecking=no root@"${DHCPIP}" "esxcli network ip dns search add -d ${DOMAIN}"
 	echo "$ESXHOST --- setting ssd with ssdcript in ./install/ssd_esx_tag.sh ---"

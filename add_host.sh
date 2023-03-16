@@ -105,7 +105,6 @@ for ((i=1; i<=NUM_ESX; i++)); do
   
   #wait for DHCPIP to become available 
 
-
   while [ -z "$DHCPIP" ]
   do
     # code to be executed while $DHCPIP is empty
@@ -140,39 +139,39 @@ for ((i=1; i<=NUM_ESX; i++)); do
   echo "== Configuring $ESXHOST on IP: $DHCPIP  =="
   echo "=========================================="
 	echo "$ESXHOST --- Setting hostname to $ESXHOST and domain to: $DOMAIN   ---"
-	sshpass -p "${ROOT_PASSWD}" ssh -o StrictHostKeyChecking=no root@"${DHCPIP}" "esxcli system hostname set --host=${ESXHOST} --domain=${DOMAIN}" 
+	sshpass -p "${ROOT_PASSWD}" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@"${DHCPIP}" "esxcli system hostname set --host=${ESXHOST} --domain=${DOMAIN}" 
   echo "$ESXHOST --- Setting MemorySalting and Coredump  ---"
-	sshpass -p "${ROOT_PASSWD}" ssh -o StrictHostKeyChecking=no root@"${DHCPIP}" "esxcli system settings advanced set -o /Mem/ShareForceSalting -i 0"
-	sshpass -p "${ROOT_PASSWD}" ssh -o StrictHostKeyChecking=no root@"${DHCPIP}" "esxcli system settings advanced set -o /UserVars/SuppressCoredumpWarning -i 1"
+	sshpass -p "${ROOT_PASSWD}" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@"${DHCPIP}" "esxcli system settings advanced set -o /Mem/ShareForceSalting -i 0"
+	sshpass -p "${ROOT_PASSWD}" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@"${DHCPIP}" "esxcli system settings advanced set -o /UserVars/SuppressCoredumpWarning -i 1"
   echo "$ESXHOST --- Setting ntp to: $TRANSIT_IP  ---"
-	sshpass -p "${ROOT_PASSWD}" ssh -o StrictHostKeyChecking=no root@"${DHCPIP}" "echo \"server ${TRANSIT_IP} iburst\" >> /etc/ntp.conf ; chkconfig ntpd on ; /etc/init.d/ntpd stop ; /etc/init.d/ntpd start"
-	sshpass -p "${ROOT_PASSWD}" ssh -o StrictHostKeyChecking=no root@"${DHCPIP}" "esxcli system ntp set --reset ; esxcli system ntp set -s ${TRANSIT_IP} --enabled true"
+	sshpass -p "${ROOT_PASSWD}" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@"${DHCPIP}" "echo \"server ${TRANSIT_IP} iburst\" >> /etc/ntp.conf ; chkconfig ntpd on ; /etc/init.d/ntpd stop ; /etc/init.d/ntpd start"
+	sshpass -p "${ROOT_PASSWD}" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@"${DHCPIP}" "esxcli system ntp set --reset ; esxcli system ntp set -s ${TRANSIT_IP} --enabled true"
 	echo "$ESXHOST --- setting dns to: $TRANSIT_IP and domain to: $DOMAIN ---"
-	sshpass -p "${ROOT_PASSWD}" ssh -o StrictHostKeyChecking=no root@"${DHCPIP}" "esxcli network ip dns server add -s ${TRANSIT_IP}"
-	sshpass -p "${ROOT_PASSWD}" ssh -o StrictHostKeyChecking=no root@"${DHCPIP}" "esxcli network ip dns search add -d ${DOMAIN}"
+	sshpass -p "${ROOT_PASSWD}" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@"${DHCPIP}" "esxcli network ip dns server add -s ${TRANSIT_IP}"
+	sshpass -p "${ROOT_PASSWD}" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@"${DHCPIP}" "esxcli network ip dns search add -d ${DOMAIN}"
 	echo "$ESXHOST --- setting ssd with ssdcript in ./install/ssd_esx_tag.sh ---"
-	sshpass -p "${ROOT_PASSWD}" scp -o StrictHostKeyChecking=no ./install/ssd_esx_tag.sh root@"${DHCPIP}":/tmp/ssd_esx_tag.sh
-	sshpass -p "${ROOT_PASSWD}" ssh -o StrictHostKeyChecking=no root@"${DHCPIP}" "/tmp/ssd_esx_tag.sh"
+	sshpass -p "${ROOT_PASSWD}" scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ./install/ssd_esx_tag.sh root@"${DHCPIP}":/tmp/ssd_esx_tag.sh
+	sshpass -p "${ROOT_PASSWD}" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@"${DHCPIP}" "/tmp/ssd_esx_tag.sh"
 	echo "$ESXHOST --- setting password ---"
-	sshpass -p "${ROOT_PASSWD}" ssh -o StrictHostKeyChecking=no root@"${DHCPIP}" "printf \"${GEN_PASSWORD}\n${GEN_PASSWORD}\n\" | passwd root "
+	sshpass -p "${ROOT_PASSWD}" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@"${DHCPIP}" "printf \"${GEN_PASSWORD}\n${GEN_PASSWORD}\n\" | passwd root "
 	echo "$ESXHOST --- setting host IP to: $IP ---"
-	sshpass -p "${GEN_PASSWORD}" ssh -o StrictHostKeyChecking=no root@"${DHCPIP}" "esxcli network ip interface ipv4 set -i vmk0 -I ${IP} -N 255.255.255.0 -t static ; esxcli network ip interface set -e false -i vmk0 ; esxcli network ip interface set -e true -i vmk0"
+	sshpass -p "${GEN_PASSWORD}" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@"${DHCPIP}" "esxcli network ip interface ipv4 set -i vmk0 -I ${IP} -N 255.255.255.0 -t static ; esxcli network ip interface set -e false -i vmk0 ; esxcli network ip interface set -e true -i vmk0"
 
 	#Go into this loop for ESXi based image, adding NFS datastore and VMotion interface and ISO bank
 	if [ "${NOCUSTO}" != "YES" ]; then
 		echo "$ESXHOST --- setting vmotion on vmk0 ---"
-		sshpass -p "${GEN_PASSWORD}" ssh -o StrictHostKeyChecking=no root@"${IP}" "vim-cmd hostsvc/vmotion/vnic_set vmk0"
+		sshpass -p "${GEN_PASSWORD}" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@"${IP}" "vim-cmd hostsvc/vmotion/vnic_set vmk0"
 		echo "Adding nfsDatastore from cpodrouter"
-		sshpass -p "${GEN_PASSWORD}" ssh -o StrictHostKeyChecking=no root@"${IP}" "esxcli storage nfs add --host=${CPODROUTER} --share=/data/Datastore --volume-name=nfsDatastore" 
-		sshpass -p "${GEN_PASSWORD}" ssh -o StrictHostKeyChecking=no root@"${IP}" "esxcli storage nfs list "
+		sshpass -p "${GEN_PASSWORD}" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@"${IP}" "esxcli storage nfs add --host=${CPODROUTER} --share=/data/Datastore --volume-name=nfsDatastore" 
+		sshpass -p "${GEN_PASSWORD}" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@"${IP}" "esxcli storage nfs list "
 
 		if [ "${ISO_BANK_SERVER}" != "" ]; then
 			echo "Adding BITS from ${ISO_BANK_SERVER}"
-			sshpass -p "${GEN_PASSWORD}" ssh -o StrictHostKeyChecking=no root@"${IP}" "esxcli storage nfs add --host=${ISO_BANK_SERVER} --share=${ISO_BANK_DIR} --volume-name=BITS -r" 
+			sshpass -p "${GEN_PASSWORD}" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@"${IP}" "esxcli storage nfs add --host=${ISO_BANK_SERVER} --share=${ISO_BANK_DIR} --volume-name=BITS -r" 
 		fi
 	fi
 	echo "restarting services"
-	sshpass -p "${GEN_PASSWORD}" ssh -o StrictHostKeyChecking=no root@"${IP}" "/sbin/generate-certificates ; /etc/init.d/hostd restart && /etc/init.d/vpxa restart"
+	sshpass -p "${GEN_PASSWORD}" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@"${IP}" "/sbin/generate-certificates ; /etc/init.d/hostd restart && /etc/init.d/vpxa restart"
 
   #update DNS
   echo "adding IP $IP for host $ESXHOST on $CPODROUTER"

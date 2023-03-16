@@ -98,7 +98,7 @@ for ((i=1; i<=NUM_ESX; i++)); do
   IP="${SUBNET}.${OCTET}"
   HOST=$( printf "%02d" "${STARTNUMESX}" )
   ESXHOST="esx${HOST}"
-  VMNAME="cPOD-${NAME_UPPER}-${ESXHOST}"
+  VMNAME="cPod-${NAME_UPPER}-${ESXHOST}"
 
   #wait for DHCPIP to become available 
   TIMEOUT=0

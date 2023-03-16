@@ -60,17 +60,17 @@ fi
 
 #build the inputs
 
-CPODNAME_LOWER=$( echo "${HEADER}-${1}" | tr '[:upper:]' '[:lower:]' )
+CPODROUTER=$( echo "${HEADER}-${1}" | tr '[:upper:]' '[:lower:]' )
 NAME_UPPER=$( echo "${1}" | tr '[:lower:]' '[:upper:]' )
-LASTNUMESX=$(get_last_ip  "esx"  "${CPODNAME_LOWER}")
+LASTNUMESX=$(get_last_ip  "esx"  "${CPODROUTER}")
 STARTNUMESX=$(( LASTNUMESX-20+1 ))
 NUM_ESX="${2}"
 OWNER="${3}"
 SUBNET=$( ./"${COMPUTE_DIR}"/cpod_ip.sh "${1}" )
-PORTGROUP_NAME="${CPODNAME_LOWER}"
-TRANSIT_IP=$( grep "${CPODNAME_LOWER}" "/etc/hosts" | awk '{print $1}' )
+PORTGROUP_NAME="${CPODROUTER}"
+TRANSIT_IP=$( grep "${CPODROUTER}" "/etc/hosts" | awk '{print $1}' )
 
-#check for duplicate IP's 
+#check for duplicate IP's
 for ((i=1; i<=NUM_ESX; i++)); do
   OCTET=$(( LASTNUMESX+i ))
   IP="${SUBNET}.${OCTET}"
@@ -87,41 +87,58 @@ done
 echo "Adding $NUM_ESX ESXi hosts to $NAME_UPPER owned by $OWNER on portgroup: $PORTGROUP_NAME in domain: $ROOT_DOMAIN starting at: $STARTNUMESX."
 "${COMPUTE_DIR}"/create_resourcepool.sh "${NAME_UPPER}" "${PORTGROUP_NAME}" "${TRANSIT_IP}" "${NUM_ESX}" "${ROOT_DOMAIN}" "${OWNER}" "${STARTNUMESX}"
 
-# configure the ESXi hosts
 
-SHELL_SCRIPT=add_esx.sh
-
-SCRIPT_DIR=/tmp/scripts
-SCRIPT=/tmp/scripts/$$
-
-GEN_PASSWD=$( grep "${CPODNAME_LOWER}" "/etc/hosts" | awk '{print $4}' )
-
-mkdir -p ${SCRIPT_DIR} 
-cp "${COMPUTE_DIR}"/${SHELL_SCRIPT} ${SCRIPT}
-sed -i -e "s/###ROOT_PASSWD###/${ROOT_PASSWD}/" \
--e "s/###GEN_PASSWD###/${GEN_PASSWD}/" \
--e "s/###ISO_BANK_SERVER###/${ISO_BANK_SERVER}/" \
--e "s!###ISO_BANK_DIR###!${ISO_BANK_DIR}!" \
--e "s/###NUM_ESX###/${2}/" \
--e "s/###NOCUSTO###/${NOCUSTO}/" \
-${SCRIPT}
-
-echo "executing ${SCRIPT}"
-
-scp -o StrictHostKeyChecking=no ${SCRIPT} root@"${TRANSIT_IP}":./${SHELL_SCRIPT}  > /dev/null 2>&1
-ssh -o StrictHostKeyChecking=no root@"${TRANSIT_IP}" "./${SHELL_SCRIPT}"
-
-#rm ${SCRIPT}
-
-
-#Update DNS
+#Configure ESX hosts
 for ((i=1; i<=NUM_ESX; i++)); do
+  #configure the hosts
   OCTET=$(( LASTNUMESX+i ))
   IP="${SUBNET}.${OCTET}"
   HOST=$( printf "%02d" "${STARTNUMESX}" )
   ESXHOST="esx${HOST}"
-  echo "adding IP $IP for host $ESXHOST on $CPODNAME_LOWER"
-  add_to_cpodrouter_hosts "${IP}" "${ESXHOST}" "${CPODNAME_LOWER}"
+  GEN_PASSWORD=$( grep "${CPODROUTER}" "/etc/hosts" | awk '{print $4}' )
+  DOMAIN=$("${CPODROUTER}"."${ROOT_DOMAIN}")
+  DHCPIP=$( ssh -o LogLevel=error "${CPOD}" cat /var/lib/misc/dnsmasq.leases | awk '{print $3}' | head -n 1 )
+  #update the host
+  echo "=========================================="
+  echo "== Configuring $ESXHOST on IP: $DHCPIP  =="
+  echo "=========================================="
+	echo "$ESXHOST --- Setting hostname ---"
+	sshpass -p "${PASSWORD}" ssh -o StrictHostKeyChecking=no root@"${DHCPIP}" "esxcli system hostname set --host=${NAME} --domain=${DOMAIN}" 
+	sshpass -p "${PASSWORD}" ssh -o StrictHostKeyChecking=no root@"${DHCPIP}" "esxcli system settings advanced set -o /Mem/ShareForceSalting -i 0"
+	sshpass -p "${PASSWORD}" ssh -o StrictHostKeyChecking=no root@"${DHCPIP}" "esxcli system settings advanced set -o /UserVars/SuppressCoredumpWarning -i 1"
+	sshpass -p "${PASSWORD}" ssh -o StrictHostKeyChecking=no root@"${DHCPIP}" "echo \"server ${CPODROUTER} iburst\" >> /etc/ntp.conf ; chkconfig ntpd on ; /etc/init.d/ntpd stop ; /etc/init.d/ntpd start"
+	sshpass -p "${PASSWORD}" ssh -o StrictHostKeyChecking=no root@"${DHCPIP}" "esxcli system ntp set --reset ; esxcli system ntp set -s ${CPODROUTER} --enabled true"
+	echo "$ESXHOST --- setting dns to $DOMAIN ---"
+	sshpass -p "${PASSWORD}" ssh -o StrictHostKeyChecking=no root@"${DHCPIP}" "esxcli network ip dns server add -s ${CPODROUTER}"
+	sshpass -p "${PASSWORD}" ssh -o StrictHostKeyChecking=no root@"${DHCPIP}" "esxcli network ip dns search add -d ${DOMAIN}"
+	echo "$ESXHOST --- setting ssd with ssdcript in ./install/ssd_esx_tag.sh ---"
+	sshpass -p "${PASSWORD}" scp -o StrictHostKeyChecking=no ./install/ssd_esx_tag.sh root@"${DHCPIP}":/tmp/ssd_esx_tag.sh
+	sshpass -p "${PASSWORD}" ssh -o StrictHostKeyChecking=no root@"${DHCPIP}" "/tmp/ssd_esx_tag.sh"
+	echo "$ESXHOST --- setting password ---"
+	sshpass -p "${PASSWORD}" ssh -o StrictHostKeyChecking=no root@"${DHCPIP}" "printf \"${GEN_PASSWORD}\n${GEN_PASSWORD}\n\" | passwd root "
+	echo "$ESXHOST --- setting host IP to: $IP ---"
+	sshpass -p "${GEN_PASSWORD}" ssh -o StrictHostKeyChecking=no root@"${DHCPIP}" "esxcli network ip interface ipv4 set -i vmk0 -I ${IP} -N 255.255.255.0 -t static ; esxcli network ip interface set -e false -i vmk0 ; esxcli network ip interface set -e true -i vmk0"
+
+	#Go into this loop for ESXi based image, adding NFS datastore and VMotion interface and ISO bank
+	if [ "${NOCUSTO}" != "YES" ]; then
+		echo "$ESXHOST --- setting vmo ---tion on vmk0"
+		sshpass -p "${GEN_PASSWORD}" ssh -o StrictHostKeyChecking=no root@"${IP}" "vim-cmd hostsvc/vmotion/vnic_set vmk0"
+		echo "Adding nfsDatastore from cpodrouter"
+		sshpass -p "${GEN_PASSWORD}" ssh -o StrictHostKeyChecking=no root@"${IP}" "esxcli storage nfs add --host=${CPODROUTER} --share=/data/Datastore --volume-name=nfsDatastore" 
+		sshpass -p "${GEN_PASSWORD}" ssh -o StrictHostKeyChecking=no root@"${IP}" "esxcli storage nfs list "
+
+		if [ "${ISO_BANK_SERVER}" != "" ]; then
+			echo "Adding BITS from ${ISO_BANK_SERVER}"
+			sshpass -p "${GEN_PASSWORD}" ssh -o StrictHostKeyChecking=no root@"${IP}" "esxcli storage nfs add --host=${ISO_BANK_SERVER} --share=${ISO_BANK_DIR} --volume-name=BITS -r" 
+		fi
+	fi
+	echo "restarting services"
+	sshpass -p "${GEN_PASSWORD}" ssh -o StrictHostKeyChecking=no root@"${IP}" "/sbin/generate-certificates ; /etc/init.d/hostd restart && /etc/init.d/vpxa restart"
+
+  #update DNS
+  echo "adding IP $IP for host $ESXHOST on $CPODROUTER"
+  add_to_cpodrouter_hosts "${IP}" "${ESXHOST}" "${CPODROUTER}"
+  #set the next esxi for next loop
   STARTNUMESX=$(( STARTNUMESX+1 ))
 done
 

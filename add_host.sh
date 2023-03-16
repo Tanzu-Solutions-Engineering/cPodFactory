@@ -102,24 +102,23 @@ for ((i=1; i<=NUM_ESX; i++)); do
 
   #wait for DHCPIP to become available 
   TIMEOUT=0
-
-    while [ -z "$DHCPIP" ]
-    do
-      # code to be executed while $DHCPIP is empty
-      echo "Waiting for $ESXHOST to get a DHCP IP..."
-      DHCPIP=$( govc vm.ip "$VMNAME" )
-      echo "DHCPIP is now $DHCPIP"
-      sleep 10
-      TIMEOUT=$((TIMEOUT + 1))
-      if [ $TIMEOUT -ge 6 ]; then
-        echo "bailing out..."
-        exit 1  
-      fi      
-    done
+  while [ -z "$DHCPIP" ]
+  do
+    # code to be executed while $DHCPIP is empty
+    echo "Waiting for $ESXHOST to get a DHCP IP..."
+    DHCPIP=$( govc vm.ip "$VMNAME" )
+    echo "DHCPIP is now $DHCPIP"
+    sleep 10
+    TIMEOUT=$((TIMEOUT + 1))
+    if [ $TIMEOUT -ge 6 ]; then
+      echo "bailing out..."
+      exit 1  
+    fi      
+  done
   
   #wait for ESXCLI to become available 
   TIMEOUT=0
-  while ! ssh -q -o "BatchMode=yes" -o "ConnectTimeout=5" -p "$DHCPIP" 22 exit >/dev/null 2>&1;
+  while ! ssh -q -o "BatchMode=yes" -o "ConnectTimeout=5" -p 22 "$DHCPIP" exit >/dev/null 2>&1;
   do
     echo "Waiting for $ESXHOST to respond to SSH on $DHCPIP..."
     sleep 10

@@ -1,7 +1,7 @@
 #!/bin/bash
 #goldyck@vmware.com
 
-#This script adds a given number of ESXi hosts to an existing cPOD.
+#This script adds a given number of ESXi hosts to an existing cPOD and configure them with the next available IP starting from 20.
 
 # $1 : Name of cpod to modify
 # $2 : Number of ESXi hosts to add
@@ -154,7 +154,7 @@ for ((i=1; i<=NUM_ESX; i++)); do
 	sshpass -p "${ROOT_PASSWD}" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=error root@"${DHCPIP}" "/tmp/ssd_esx_tag.sh"
 	echo "$ESXHOST --- setting password ---"
 	sshpass -p "${ROOT_PASSWD}" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=error root@"${DHCPIP}" "printf \"${GEN_PASSWORD}\n${GEN_PASSWORD}\n\" | passwd root "
-	echo "$ESXHOST --- setting host IP to: $IP ---"
+	echo "$ESXHOST --- setting host IP to final IP: $IP ---"
 	sshpass -p "${GEN_PASSWORD}" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=error root@"${DHCPIP}" "esxcli network ip interface ipv4 set -i vmk0 -I ${IP} -N 255.255.255.0 -t static ; esxcli network ip interface set -e false -i vmk0 ; esxcli network ip interface set -e true -i vmk0"
 
 	#Go into this loop for ESXi based image, adding NFS datastore and VMotion interface and ISO bank
@@ -163,7 +163,7 @@ for ((i=1; i<=NUM_ESX; i++)); do
 		sshpass -p "${GEN_PASSWORD}" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=error root@"${IP}" "vim-cmd hostsvc/vmotion/vnic_set vmk0"
 		echo "Adding nfsDatastore from cpodrouter"
 		sshpass -p "${GEN_PASSWORD}" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=error root@"${IP}" "esxcli storage nfs add --host=${CPODROUTER} --share=/data/Datastore --volume-name=nfsDatastore" 
-		sshpass -p "${GEN_PASSWORD}" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=error root@"${IP}" "esxcli storage nfs list "
+		sshpass -p "${GEN_PASSWORD}" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=error root@"${IP}" "esxcli storage nfs list"
 
   #this is not working ISO_BANK_SERVER does not exist!
   #		if [ "${ISO_BANK_SERVER}" != "" ]; then

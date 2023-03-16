@@ -96,26 +96,27 @@ for ((i=1; i<=NUM_ESX; i++)); do
   HOST=$( printf "%02d" "${STARTNUMESX}" )
   ESXHOST="esx${HOST}"
   GEN_PASSWORD=$( grep "${CPODROUTER}" "/etc/hosts" | awk '{print $4}' )
-  DOMAIN=$("${CPODROUTER}"."${ROOT_DOMAIN}")
-  DHCPIP=$( ssh -o LogLevel=error "${CPOD}" cat /var/lib/misc/dnsmasq.leases | awk '{print $3}' | head -n 1 )
+  DOMAIN="${CPODROUTER}.${ROOT_DOMAIN}"
+  DHCPIP=$( ssh -o LogLevel=error "${CPODROUTER}" cat /var/lib/misc/dnsmasq.leases | awk '{print $3}' | head -n 1 )
+  
   #update the host
   echo "=========================================="
   echo "== Configuring $ESXHOST on IP: $DHCPIP  =="
   echo "=========================================="
 	echo "$ESXHOST --- Setting hostname ---"
-	sshpass -p "${PASSWORD}" ssh -o StrictHostKeyChecking=no root@"${DHCPIP}" "esxcli system hostname set --host=${NAME} --domain=${DOMAIN}" 
-	sshpass -p "${PASSWORD}" ssh -o StrictHostKeyChecking=no root@"${DHCPIP}" "esxcli system settings advanced set -o /Mem/ShareForceSalting -i 0"
-	sshpass -p "${PASSWORD}" ssh -o StrictHostKeyChecking=no root@"${DHCPIP}" "esxcli system settings advanced set -o /UserVars/SuppressCoredumpWarning -i 1"
-	sshpass -p "${PASSWORD}" ssh -o StrictHostKeyChecking=no root@"${DHCPIP}" "echo \"server ${CPODROUTER} iburst\" >> /etc/ntp.conf ; chkconfig ntpd on ; /etc/init.d/ntpd stop ; /etc/init.d/ntpd start"
-	sshpass -p "${PASSWORD}" ssh -o StrictHostKeyChecking=no root@"${DHCPIP}" "esxcli system ntp set --reset ; esxcli system ntp set -s ${CPODROUTER} --enabled true"
+	sshpass -p "${ROOT_PASSWD}" ssh -o StrictHostKeyChecking=no root@"${DHCPIP}" "esxcli system hostname set --host=${NAME} --domain=${DOMAIN}" 
+	sshpass -p "${ROOT_PASSWD}" ssh -o StrictHostKeyChecking=no root@"${DHCPIP}" "esxcli system settings advanced set -o /Mem/ShareForceSalting -i 0"
+	sshpass -p "${ROOT_PASSWD}" ssh -o StrictHostKeyChecking=no root@"${DHCPIP}" "esxcli system settings advanced set -o /UserVars/SuppressCoredumpWarning -i 1"
+	sshpass -p "${ROOT_PASSWD}" ssh -o StrictHostKeyChecking=no root@"${DHCPIP}" "echo \"server ${CPODROUTER} iburst\" >> /etc/ntp.conf ; chkconfig ntpd on ; /etc/init.d/ntpd stop ; /etc/init.d/ntpd start"
+	sshpass -p "${ROOT_PASSWD}" ssh -o StrictHostKeyChecking=no root@"${DHCPIP}" "esxcli system ntp set --reset ; esxcli system ntp set -s ${CPODROUTER} --enabled true"
 	echo "$ESXHOST --- setting dns to $DOMAIN ---"
-	sshpass -p "${PASSWORD}" ssh -o StrictHostKeyChecking=no root@"${DHCPIP}" "esxcli network ip dns server add -s ${CPODROUTER}"
-	sshpass -p "${PASSWORD}" ssh -o StrictHostKeyChecking=no root@"${DHCPIP}" "esxcli network ip dns search add -d ${DOMAIN}"
+	sshpass -p "${ROOT_PASSWD}" ssh -o StrictHostKeyChecking=no root@"${DHCPIP}" "esxcli network ip dns server add -s ${CPODROUTER}"
+	sshpass -p "${ROOT_PASSWD}" ssh -o StrictHostKeyChecking=no root@"${DHCPIP}" "esxcli network ip dns search add -d ${DOMAIN}"
 	echo "$ESXHOST --- setting ssd with ssdcript in ./install/ssd_esx_tag.sh ---"
-	sshpass -p "${PASSWORD}" scp -o StrictHostKeyChecking=no ./install/ssd_esx_tag.sh root@"${DHCPIP}":/tmp/ssd_esx_tag.sh
-	sshpass -p "${PASSWORD}" ssh -o StrictHostKeyChecking=no root@"${DHCPIP}" "/tmp/ssd_esx_tag.sh"
+	sshpass -p "${ROOT_PASSWD}" scp -o StrictHostKeyChecking=no ./install/ssd_esx_tag.sh root@"${DHCPIP}":/tmp/ssd_esx_tag.sh
+	sshpass -p "${ROOT_PASSWD}" ssh -o StrictHostKeyChecking=no root@"${DHCPIP}" "/tmp/ssd_esx_tag.sh"
 	echo "$ESXHOST --- setting password ---"
-	sshpass -p "${PASSWORD}" ssh -o StrictHostKeyChecking=no root@"${DHCPIP}" "printf \"${GEN_PASSWORD}\n${GEN_PASSWORD}\n\" | passwd root "
+	sshpass -p "${ROOT_PASSWD}" ssh -o StrictHostKeyChecking=no root@"${DHCPIP}" "printf \"${GEN_PASSWORD}\n${GEN_PASSWORD}\n\" | passwd root "
 	echo "$ESXHOST --- setting host IP to: $IP ---"
 	sshpass -p "${GEN_PASSWORD}" ssh -o StrictHostKeyChecking=no root@"${DHCPIP}" "esxcli network ip interface ipv4 set -i vmk0 -I ${IP} -N 255.255.255.0 -t static ; esxcli network ip interface set -e false -i vmk0 ; esxcli network ip interface set -e true -i vmk0"
 

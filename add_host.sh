@@ -58,7 +58,7 @@ fi
 
 #TODO check_space
 
-#build the inputs
+#build the variables
 
 CPODROUTER=$( echo "${HEADER}-${1}" | tr '[:upper:]' '[:lower:]' )
 NAME_UPPER=$( echo "${1}" | tr '[:lower:]' '[:upper:]' )
@@ -69,6 +69,8 @@ OWNER="${3}"
 SUBNET=$( ./"${COMPUTE_DIR}"/cpod_ip.sh "${1}" )
 PORTGROUP_NAME="${CPODROUTER}"
 TRANSIT_IP=$( grep "${CPODROUTER}" "/etc/hosts" | awk '{print $1}' )
+GEN_PASSWORD=$( grep "${CPODROUTER}" "/etc/hosts" | awk '{print $4}' )
+DOMAIN="${CPODROUTER}.${ROOT_DOMAIN}"
 
 #check for duplicate IP's
 for ((i=1; i<=NUM_ESX; i++)); do
@@ -89,15 +91,31 @@ echo "Adding $NUM_ESX ESXi hosts to $NAME_UPPER owned by $OWNER on portgroup: $P
 
 
 #Configure ESX hosts
+
 for ((i=1; i<=NUM_ESX; i++)); do
   #configure the hosts
   OCTET=$(( LASTNUMESX+i ))
   IP="${SUBNET}.${OCTET}"
   HOST=$( printf "%02d" "${STARTNUMESX}" )
   ESXHOST="esx${HOST}"
-  GEN_PASSWORD=$( grep "${CPODROUTER}" "/etc/hosts" | awk '{print $4}' )
-  DOMAIN="${CPODROUTER}.${ROOT_DOMAIN}"
-  DHCPIP=$( ssh -o LogLevel=error "${CPODROUTER}" cat /var/lib/misc/dnsmasq.leases | awk '{print $3}' | head -n 1 )
+  VMNAME="cPOD-${NAME_UPPER}-${ESXHOST}"
+
+  #wait for DHCPIP to become available - Endless Loop potenial
+  while [ -z "$DHCPIP" ]
+    do
+        # code to be executed while $DHCPIP is empty
+        echo "Waiting for $ESXHOST to get a DHCP IP..."
+        DHCPIP=$( govc vm.ip "$VMNAME" )
+    done
+  
+  #wait for ESXCLI to become available - Endless Loop potenial
+  while ! ssh -q -o "BatchMode=yes" -o "ConnectTimeout=5" -p $DHCPIP 22 exit >/dev/null 2>&1; do
+      echo "Waiting for $ESXHOST to respond to SSH on $DHCPIP..."
+      sleep 5
+  done
+
+  echo "$HOST is now responding to SSH."
+
   
   #update the host
   echo "=========================================="

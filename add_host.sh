@@ -99,9 +99,11 @@ for ((i=1; i<=NUM_ESX; i++)); do
   HOST=$( printf "%02d" "${STARTNUMESX}" )
   ESXHOST="esx${HOST}"
   VMNAME="cPod-${NAME_UPPER}-${ESXHOST}"
-
-  #wait for DHCPIP to become available 
+  DHCPIP=""
+  SSHOK=1
   TIMEOUT=0
+  #wait for DHCPIP to become available 
+
 
   while [ -z "$DHCPIP" ]
   do
@@ -111,28 +113,26 @@ for ((i=1; i<=NUM_ESX; i++)); do
     echo "DHCPIP is now: $DHCPIP"
     sleep 10
     TIMEOUT=$((TIMEOUT + 1))
-    if [ $TIMEOUT -ge 6 ]; then
+    if [ $TIMEOUT -ge 10 ]; then
       echo "bailing out..."
       exit 1  
     fi      
   done
   
   #wait for ESXCLI to become available 
-  TIMEOUT=0
-  SSHOK=1
   while [ "$SSHOK" != 0 ]
   do  
     SSHOK=$( sshpass -p "${ROOT_PASSWD}" ssh -o "StrictHostKeyChecking=no" -o "ConnectTimeout=5" root@"${DHCPIP}" exit >/dev/null 2>&1; ) 
-    echo "DHCPIP is now: $SSHOK"
+    echo "SSH is not ready on $DHCPIP ===$SSHOK==="
     sleep 10
     TIMEOUT=$((TIMEOUT + 1))
-    if [ $TIMEOUT -ge 6 ]; then
+    if [ $TIMEOUT -ge 10 ]; then
       echo "bailing out..."
       exit 1  
     fi 
   done
 
-  echo "$ESXHOST is now responding to SSH."
+  echo "$ESXHOST is now responding to SSH... Ready to proceed"
 
   #update the host
   echo "=========================================="
@@ -176,8 +176,6 @@ for ((i=1; i<=NUM_ESX; i++)); do
   add_to_cpodrouter_hosts "${IP}" "${ESXHOST}" "${CPODROUTER}"
   #set the next esxi for next loop
   STARTNUMESX=$(( STARTNUMESX+1 ))
-  DHCPIP=""
-  SSHOK=""
 done
 
 #end the timer and wrapup

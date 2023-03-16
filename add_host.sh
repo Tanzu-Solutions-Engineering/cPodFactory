@@ -90,7 +90,7 @@ echo "Adding $NUM_ESX ESXi hosts to $NAME_UPPER owned by $OWNER on portgroup: $P
 "${COMPUTE_DIR}"/create_resourcepool.sh "${NAME_UPPER}" "${PORTGROUP_NAME}" "${TRANSIT_IP}" "${NUM_ESX}" "${ROOT_DOMAIN}" "${OWNER}" "${STARTNUMESX}"
 
 
-#Configure ESX hosts
+#Configure ESX hosts. As we execute this from the cPodRouter, we do not want the SSH keys added to known hosts.
 
 for ((i=1; i<=NUM_ESX; i++)); do
   #configure the hosts

@@ -114,3 +114,5 @@ echo "restart service :"
 echo "systemctl restart domainmanager"
 echo "exit"
 echo "exit"
+
+#curl -k -u admin:"YDAboI6FLcp!" -X GET https://cloudbuilder.cpod-bygel.az-lhr.cloud-garage.net/v1/sddcs/validations | jq '.elements[] | select(.id == "845c240f-dbe4-45ca-b022-1a4f24570ceb") | .resultStatus'

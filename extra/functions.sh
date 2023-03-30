@@ -71,6 +71,13 @@ add_to_cpodrouter_hosts() {
 	ssh -o LogLevel=error ${3} "systemctl restart dnsmasq.service"
 }
 
+commit_to_cpodrouter_hosts() {
+	# ${1} : cpod_name_lower to add to
+
+	echo "commiting and restarting dnsmasq on ${1} "
+	ssh -o LogLevel=error ${1} "systemctl restart dnsmasq.service"
+}
+
 enable_dhcp_cpod_vlanx() {
 	# ${1} : internal cpod vlan (1-8) to enable dhcp on
 	# ${2} : cpod_name_lower

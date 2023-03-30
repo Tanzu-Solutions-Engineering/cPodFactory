@@ -75,6 +75,12 @@ add_to_cpodrouter_hosts "${SUBNET}.9" "en01" "${CPODROUTER}"
 add_to_cpodrouter_hosts "${SUBNET}.10" "en02" "${CPODROUTER}"
 add_to_cpodrouter_hosts "${SUBNET}.11" "sddc" "${CPODROUTER}"
 
+echo "commiting changes on  ${CPODROUTER}."
+commit_to_cpodrouter_hosts "${CPODROUTER}"
+
+echo "sleeping for 10 seconds to make sure dnsmasq has been restarted"
+sleep 10
+
 echo ""
 echo "Hit enter or ctrl-c to launch prereqs validation:"
 read answer

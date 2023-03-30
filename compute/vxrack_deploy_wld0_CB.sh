@@ -102,7 +102,6 @@ echo 'DOMAINMGR=$(find /etc -name application-pro* | grep domainmanager)'
 echo 'echo "nsxt.manager.formfactor=small" >> $DOMAINMGR'
 echo 'echo "nsxt.management.resources.validation.skip=true" >> $DOMAINMGR'
 echo 'echo "vc.deployment.option=management-tiny" >> $DOMAINMGR'
-
 echo "verify the 2 lines have been added as expected"
 echo 'cat $DOMAINMGR'
 echo "restart service :"

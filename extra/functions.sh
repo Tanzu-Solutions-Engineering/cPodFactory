@@ -68,7 +68,6 @@ add_to_cpodrouter_hosts() {
 
 	echo "add ${1} -> ${2} in ${3}"
 	ssh -o LogLevel=error ${3} "sed "/${1}/d" -i /etc/hosts ; printf \"${1}\\t${2}\\n\" >> /etc/hosts"
-	ssh -o LogLevel=error ${3} "systemctl restart dnsmasq.service"
 }
 
 commit_to_cpodrouter_hosts() {

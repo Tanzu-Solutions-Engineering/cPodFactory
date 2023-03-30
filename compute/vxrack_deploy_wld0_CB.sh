@@ -8,6 +8,13 @@
 . ./env
 source ./extra/functions.sh
 
+#input validation check
+if [ $# -ne 1 ]; then
+  echo "usage: $0 <name_of_cpod>  <#esx to add> <name_of_owner>"
+  echo "usage example: $0 LAB01 4 vedw" 
+  exit 1  
+fi
+
 #build the variables
 CPODROUTER=$( echo "${HEADER}-${1}" | tr '[:upper:]' '[:lower:]' )
 CPOD_NAME=$( echo "${1}" | tr '[:lower:]' '[:upper:]' )
@@ -57,8 +64,6 @@ ${SCRIPT}
 
 echo "JSON is genereated: ${SCRIPT}"
 
-add_to_cpodrouter_hosts "${IP}" "${ESXHOST}" "${CPODROUTER}"
-
 echo "Adding entries into hosts of ${CPODROUTER}."
 add_to_cpodrouter_hosts "${SUBNET}.3" "cloudbuilder" "${CPODROUTER}"
 add_to_cpodrouter_hosts "${SUBNET}.4" "vcsa" "${CPODROUTER}"
@@ -69,3 +74,38 @@ add_to_cpodrouter_hosts "${SUBNET}.8" "nsx01c" "${CPODROUTER}"
 add_to_cpodrouter_hosts "${SUBNET}.9" "en01" "${CPODROUTER}"
 add_to_cpodrouter_hosts "${SUBNET}.10" "en02" "${CPODROUTER}"
 add_to_cpodrouter_hosts "${SUBNET}.11" "sddc" "${CPODROUTER}"
+
+echo ""
+echo "Hit enter or ctrl-c to launch prereqs validation:"
+read answer
+curl -i -k -u admin:${PASSWORD} -H 'Content-Type: application/json' -H 'Accept: application/json' -d @${SCRIPT} -X POST https://cloudbuilder.${NAME_LOWER}.${ROOT_DOMAIN}/v1/sddcs/validations
+echo ""
+echo ""
+echo "Check prereqs in CloudBuilder:"
+echo "check url : https://cloudbuilder.${NAME_LOWER}.${ROOT_DOMAIN}"
+echo "using pwd : ${PASSWORD}"
+echo 
+echo "when validation confirmed,"
+echo "Hit enter or ctrl-c to launch deployment:"
+read answer
+curl -i -k -u admin:${PASSWORD} -H 'Content-Type: application/json' -H 'Accept: application/json' -d @${SCRIPT} -X POST https://cloudbuilder.${NAME_LOWER}.${ROOT_DOMAIN}/v1/sddcs
+echo ""
+echo "Check deployment in CloudBuilder:"
+echo "check url : https://cloudbuilder.${NAME_LOWER}.${ROOT_DOMAIN}"
+echo "using pwd : ${PASSWORD}"
+echo
+echo "when deployment finished, please manually edit sddc properties as follows:"
+echo "ssh vcf@sddc.${NAME_LOWER}.${ROOT_DOMAIN}"
+echo "su -"
+echo "pwd = ${PASSWORD}"
+echo 'DOMAINMGR=$(find /etc -name application-pro* | grep domainmanager)'
+echo 'echo "nsxt.manager.formfactor=small" >> $DOMAINMGR'
+echo 'echo "nsxt.management.resources.validation.skip=true" >> $DOMAINMGR'
+echo 'echo "vc.deployment.option=management-tiny" >> $DOMAINMGR'
+
+echo "verify the 2 lines have been added as expected"
+echo 'cat $DOMAINMGR'
+echo "restart service :"
+echo "systemctl restart domainmanager"
+echo "exit"
+echo "exit"

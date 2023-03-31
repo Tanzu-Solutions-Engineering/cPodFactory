@@ -65,7 +65,7 @@ do
 done
 
 #validate the EMS.json
-VALIDATIONID=$(curl -s -k -u ${AUTH} -H 'Content-Type: application/json' -H 'Accept: application/json' -d @${SCRIPT} -X POST ${URL}/v1/sddcs/validations | jq -r '.id')
+VALIDATIONID=$(curl -s -k -u ${AUTH} -H 'Content-Type: application/json' -H 'Accept: application/json' -d @${SCRIPT} -X POST ${URL}/v1/sddcs/validations | jq '.id')
 echo "The validation with id: ${VALIDATIONID} has started"
 
 #check the validation

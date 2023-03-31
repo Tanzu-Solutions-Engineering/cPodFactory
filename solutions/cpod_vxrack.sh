@@ -1,8 +1,9 @@
 #!/bin/bash
-#edewitte@vmware.com
+#goldyck@vmware.com
 
-# $1 : Name of cpod to modify
+# $1 : Name of cpod
 # $2 : Name of owner
+# $3 : Number of esxi hosts
 
 if [ -z "$LOGGING" ]
 then
@@ -64,14 +65,10 @@ echo "=== creating cpod / vsan / NLB  ==="
 echo "====================================="
 echo
 
-cpodctl create $1 $2 $3
-cpodctl cloudbuilder $1 $3
-./compute/generate_cloudbuilder.sh $1 $3
-
-echo "press enter to create first wld"
-read a 
-cpodctl create $1-wld01 $2 $3
-./compute/generate_sddc_vi.sh $1 $1-wld01
+#cpodctl create $1 $2 $3
+#cpodctl cloudbuilder $1 $3
+./compute/vxrack_generate_ems.sh $1
+./compute/vxrack_deploy_wld0_CB.sh $1
 
 #get data
 CPOD_NAME=$( echo ${1} | tr '[:lower:]' '[:upper:]' )

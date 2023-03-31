@@ -10,9 +10,9 @@ source ./extra/functions.sh
 
 #input validation check
 if [ $# -ne 1 ]; then
-  echo "usage: $0 <name_of_cpod>  <#esx to add> <name_of_owner>"
+  echo "usage: $0 <name_of_cpod>"
   echo "usage example: $0 LAB01 4 vedw" 
-  exit 1  
+  exit
 fi
 
 #build the variables
@@ -22,7 +22,6 @@ NAME_LOWER=$( echo "${HEADER}"-"${CPOD_NAME}" | tr '[:upper:]' '[:lower:]' )
 VLAN=$( grep -m 1 "${NAME_LOWER}\s" /etc/hosts | awk '{print $1}' | cut -d "." -f 4 )
 VLAN_MGMT="${VLAN}"
 SUBNET=$( ./"${COMPUTE_DIR}"/cpod_ip.sh "${1}" )
-#VLAN_SHIFT=$(( VLAN + VLAN_SHIFT ))
 PASSWORD=$( ${EXTRA_DIR}/passwd_for_cpod.sh ${CPOD_NAME} ) 
 SCRIPT_DIR=/tmp/scripts
 SCRIPT=/tmp/scripts/cloudbuilder-${NAME_LOWER}.json
@@ -41,45 +40,6 @@ else
 	VSANVLANID=${VLAN}02
 	TRANSPORTVLANID=${VLAN}03
 fi
-
-#Create the EMS
-mkdir -p ${SCRIPT_DIR} 
-cp ${COMPUTE_DIR}/${EMS_TEMPLATE} ${SCRIPT} 
-
-# Generate JSON for cloudbuilder
-sed -i -e "s/###SUBNET###/${SUBNET}/g" \
--e "s/###PASSWORD###/${PASSWORD}/" \
--e "s/###VLAN###/${VLAN}/g" \
--e "s/###VMOTIONVLANID###/${VMOTIONVLANID}/g" \
--e "s/###VSANVLANID###/${VSANVLANID}/g" \
--e "s/###TRANSPORTVLANID###/${TRANSPORTVLANID}/g" \
--e "s/###VLAN_MGMT###/${VLAN_MGMT}/g" \
--e "s/###CPOD###/${NAME_LOWER}/g" \
--e "s/###DOMAIN###/${ROOT_DOMAIN}/g" \
--e "s/###LIC_ESX###/${LIC_ESX}/g" \
--e "s/###LIC_VCSA###/${LIC_VCSA}/g" \
--e "s/###LIC_VSAN###/${LIC_VSAN}/g" \
--e "s/###LIC_NSXT###/${LIC_NSXT}/g" \
-${SCRIPT}
-
-echo "JSON is genereated: ${SCRIPT}"
-
-echo "Adding entries into hosts of ${CPODROUTER}."
-add_to_cpodrouter_hosts "${SUBNET}.3" "cloudbuilder" "${CPODROUTER}"
-add_to_cpodrouter_hosts "${SUBNET}.4" "vcsa" "${CPODROUTER}"
-add_to_cpodrouter_hosts "${SUBNET}.5" "nsx01" "${CPODROUTER}"
-add_to_cpodrouter_hosts "${SUBNET}.6" "nsx01a" "${CPODROUTER}"
-add_to_cpodrouter_hosts "${SUBNET}.7" "nsx01b" "${CPODROUTER}"
-add_to_cpodrouter_hosts "${SUBNET}.8" "nsx01c" "${CPODROUTER}"
-add_to_cpodrouter_hosts "${SUBNET}.9" "en01" "${CPODROUTER}"
-add_to_cpodrouter_hosts "${SUBNET}.10" "en02" "${CPODROUTER}"
-add_to_cpodrouter_hosts "${SUBNET}.11" "sddc" "${CPODROUTER}"
-
-echo "commiting changes on  ${CPODROUTER}."
-commit_to_cpodrouter_hosts "${CPODROUTER}"
-
-echo "sleeping for 10 seconds to make sure dnsmasq has been restarted"
-sleep 10
 
 echo ""
 echo "Hit enter or ctrl-c to launch prereqs validation:"

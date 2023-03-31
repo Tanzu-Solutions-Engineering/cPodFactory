@@ -76,7 +76,7 @@ restart_cpodrouter_dnsmasq() {
 add_to_cpodrouter_hosts() {
         # ${1} : ip address to add
         # ${2} : host record to add
-        # ${3} : cpod_name_lower to add to
+        # ${3} : cpod_name_lower
 
         echo "add ${1} -> ${2} in ${3}"
         ssh -o LogLevel=error ${3} "sed "/${1}/d" -i /etc/hosts ; printf \"${1}\\t${2}\\n\" >> /etc/hosts"
@@ -86,31 +86,31 @@ add_to_cpodrouter_hosts() {
 add_entry_cpodrouter_hosts() {
 	# ${1} : ip address to add
 	# ${2} : host record to add
-	# ${3} : cpod_name_lower to add to
+	# ${3} : cpod_name_lower
 
 	echo "add ${1} -> ${2} in ${3}"
 	ssh -o LogLevel=error ${3} "sed "/${1}/d" -i /etc/hosts ; printf \"${1}\\t${2}\\n\" >> /etc/hosts"
 }
 
 enable_dhcp_cpod_vlanx() {
-        # ${1} : internal cpod vlan (1-8) to enable dhcp on
-        # ${2} : cpod_name_lower
-        # example : enable_dhcp_cpod_vlanx 2 cpod-demo
-        # need to call restart_cpodrouter_dnsmasq() to make changes effective
-        [ "$1" == "" -o "$2" == ""  ] && echo "usage: enable_dhcp_cpod_vlanx  <(vlan) 1-8 > <cpod_name_lower>"  && echo "usage example: enable_dhcp_cpod_vlanx 8  cpod-demo" && exit 1
-        CPODVLAN=$( grep -m 1 "${2}\s" /etc/hosts | awk '{print $1}' | cut -d "." -f 4 )
-        declare -a VLANS
-        for VLAN in $( ssh ${2} "ip add |grep inet | grep eth2." | awk '{print $5}' ) ; do
-                VLANS+=( ${VLAN} )
-        done
-        #${VLANS[$((${1}-1))]}
-        DHCPLINE="dhcp-range=${VLANS[$((${1}-1))]}:eth2,10.$CPODVLAN.${1}.2,10.$CPODVLAN.${1}.200,255.255.255.0,12h"
-        add_entry_to_cpodrouter_dnsmasq ${DHCPLINE} ${2}
-        DHCPLINE="dhcp-option=${VLANS[$((${1}-1))]}:eth2,option:router,10.$CPODVLAN.${1}.1"
-        add_entry_to_cpodrouter_dnsmasq ${DHCPLINE} ${2}
-        #restart_cpodrouter_dnsmasq ${2}
-        #dhcp-range=eth2.1047:eth2,10.104.7.2,10.104.7.254,255.255.255.0,12h
-        #dhcp-option=eth2.1047:eth2,option:router,10.104.7.1
+	# ${1} : internal cpod vlan (1-8) to enable dhcp on
+	# ${2} : cpod_name_lower
+	# example : enable_dhcp_cpod_vlanx 2 cpod-demo
+	# need to call restart_cpodrouter_dnsmasq() to make changes effective
+	[ "$1" == "" -o "$2" == ""  ] && echo "usage: enable_dhcp_cpod_vlanx  <(vlan) 1-8 > <cpod_name_lower>"  && echo "usage example: enable_dhcp_cpod_vlanx 8  cpod-demo" && exit 1
+	CPODVLAN=$( grep -m 1 "${2}\s" /etc/hosts | awk '{print $1}' | cut -d "." -f 4 )
+	declare -a VLANS
+	for VLAN in $( ssh ${2} "ip add |grep inet | grep eth2." | awk '{print $5}' ) ; do
+			VLANS+=( ${VLAN} )
+	done
+	#${VLANS[$((${1}-1))]}
+	#exmaple: dhcp-range=eth2.1047:eth2,10.104.7.2,10.104.7.254,255.255.255.0,12h
+	DHCPLINE="dhcp-range=${VLANS[$((${1}-1))]}:eth2,10.$CPODVLAN.${1}.2,10.$CPODVLAN.${1}.200,255.255.255.0,12h"
+	add_entry_to_cpodrouter_dnsmasq ${DHCPLINE} ${2}
+	# example: dhcp-option=eth2.1047:eth2,option:router,10.104.7.1
+	DHCPLINE="dhcp-option=${VLANS[$((${1}-1))]}:eth2,option:router,10.$CPODVLAN.${1}.1"
+	add_entry_to_cpodrouter_dnsmasq ${DHCPLINE} ${2}
+	#restart_cpodrouter_dnsmasq ${2}    
 }
 
 

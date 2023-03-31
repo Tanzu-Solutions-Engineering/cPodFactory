@@ -72,10 +72,13 @@ add_entry_cpodrouter_hosts "${SUBNET}.9" "en01" "${CPODROUTER}"
 add_entry_cpodrouter_hosts "${SUBNET}.10" "en02" "${CPODROUTER}"
 add_entry_cpodrouter_hosts "${SUBNET}.11" "sddc" "${CPODROUTER}"
 
-echo "commiting changes on  ${CPODROUTER}."
+echo "Enabeling dhcp on vlan ${TRANSPORTVLANID}."
+enable_dhcp_cpod_vlanx 3 "${CPODROUTER}"
+
+echo "Commiting changes on  ${CPODROUTER}."
 restart_to_cpodrouter_hosts "${CPODROUTER}"
 
-echo "sleeping for 10 seconds to make sure dnsmasq has been restarted"
+echo "Sleeping for 10 seconds to make sure dnsmasq has been restarted"
 sleep 10
 
 echo "JSON is genereated: ${SCRIPT} and placed in directory: ${SCRIPT_DIR}."

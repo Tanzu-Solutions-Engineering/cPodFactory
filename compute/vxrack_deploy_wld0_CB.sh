@@ -65,17 +65,17 @@ do
 done
 
 #validate the EMS.json
-VALIDATIONID=$(curl -s -k -u ${AUTH} -H 'Content-Type: application/json' -H 'Accept: application/json' -d @${SCRIPT} -X POST ${URL}/v1/sddcs/validations | jq '.id')
+VALIDATIONID=$(curl -s -k -u ${AUTH} -H 'Content-Type: application/json' -H 'Accept: application/json' -d @${SCRIPT} -X POST ${URL}/v1/sddcs/validations | jq -r '.id')
 echo "The validation with id: ${VALIDATIONID} has started"
 
 #check the validation
-VALIDATIONSTATUS=$(curl -s -k -u ${AUTH} -X GET ${URL}/v1/sddcs/validations | jq ".elements[] | select(.id == ${VALIDATIONID}) | .resultStatus")
+VALIDATIONSTATUS=$(curl -s -k -u ${AUTH} -X GET ${URL}/v1/sddcs/validations | jq -r ".elements[] | select(.id == ${VALIDATIONID}) | .resultStatus")
 echo "The validation with id: ${VALIDATIONID} has the status ${VALIDATIONSTATUS}"
 
 #wait for the validation to finish
 while [ ${VALIDATIONSTATUS} != "SUCCEEDED" ]
 	do
-	VALIDATIONSTATUS=$(curl -s -k -u ${AUTH} -X GET ${URL}/v1/sddcs/validations | jq ".elements[] | select(.id == ${VALIDATIONID}) | .resultStatus")
+	VALIDATIONSTATUS=$(curl -s -k -u ${AUTH} -X GET ${URL}/v1/sddcs/validations | jq -r ".elements[] | select(.id == ${VALIDATIONID}) | .resultStatus")
 	echo "The validation with id: ${VALIDATIONID} has the status ${VALIDATIONSTATUS}"
 	sleep 10
 	TIMEOUT=$((TIMEOUT + 1))
@@ -92,12 +92,12 @@ done
 #proceeding with deployment
 echo "Proceeding with Bringup using ${SCRIPT}."
 
-#BRINGUPID=$(curl -s -k -u ${AUTH} -H 'Content-Type: application/json' -H 'Accept: application/json' -d @${SCRIPT} -X POST ${URL}/v1/sddcs | jq '.id')
+#BRINGUPID=$(curl -s -k -u ${AUTH} -H 'Content-Type: application/json' -H 'Accept: application/json' -d @${SCRIPT} -X POST ${URL}/v1/sddcs | jq -r '.id')
 #echo "The deployment with id: ${BRINGUPID} has started"
 
 # while [ ${BRINGUPSTATUS} != "COMPLETED_WITH_SUCCESS" ]
 # 	do  
-# 	BRINGUPSTATUS=$(curl -s -k -u ${AUTH} -X GET ${URL}/v1/sddcs | jq ".elements[] | select(.id == ${VALIDATIONID}) | .status")
+# 	BRINGUPSTATUS=$(curl -s -k -u ${AUTH} -X GET ${URL}/v1/sddcs | jq -r ".elements[] | select(.id == ${VALIDATIONID}) | .status")
 # 	echo "The validation with id: ${BRINGUPID} has the status ${BRINGUPSTATUS}"
 # 	sleep 10
 # 	TIMEOUT=$((TIMEOUT + 1))

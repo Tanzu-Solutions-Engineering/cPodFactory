@@ -25,6 +25,7 @@ SUBNET=$( ./"${COMPUTE_DIR}"/cpod_ip.sh "${1}" )
 PASSWORD=$( ${EXTRA_DIR}/passwd_for_cpod.sh ${CPOD_NAME} ) 
 SCRIPT_DIR=/tmp/scripts
 SCRIPT=/tmp/scripts/cloudbuilder-${NAME_LOWER}.json
+TIMEOUT=0
 
 # with NSX, VLAN Management is untagged
 if [ ${BACKEND_NETWORK} != "VLAN" ]; then
@@ -52,3 +53,21 @@ echo "The validation with id: ${VALIDATIONID} has started"
 #check the validation
 VALIDATIONSTATUS=$(curl -k -u ${AUTH} -X GET ${URL}/v1/sddcs/validations | jq ".elements[] | select(.id == ${VALIDATIONID}) | .resultStatus")
 echo "The validation with id: ${VALIDATIONID} has the status ${VALIDATIONSTATUS}"
+
+  #wait for the validation to finish
+  while [ "$VALIDATIONSTATUS" != "SUCCESS" ]
+  do  
+	VALIDATIONSTATUS=$(curl -k -u ${AUTH} -X GET ${URL}/v1/sddcs/validations | jq ".elements[] | select(.id == ${VALIDATIONID}) | .resultStatus")
+	echo "The validation with id: ${VALIDATIONID} has the status ${VALIDATIONSTATUS}"
+    sleep 10
+    TIMEOUT=$((TIMEOUT + 1))
+    if [ $TIMEOUT -ge 10 ]; then
+    	echo "bailing out..."
+    	exit 1  
+    fi 
+	if [ "$VALIDATIONSTATUS" != "ERROR" ]; then
+		echo "bailing out..."
+		exit 1
+	fi  
+  done
+echo "Great Success!!!"

@@ -91,12 +91,20 @@ restart_to_cpodrouter_hosts() {
 enable_dhcp_cpod_vlanx() {
 	# ${1} : internal cpod vlan (1-8) to enable dhcp on
 	# ${2} : cpod_name_lower
-	# example : enable_dhcp_cpod_vlanx 2 cpod-demo.az-stc.cloud-garage.net
-
-	
+	# example : enable_dhcp_cpod_vlanx 2 cpod-demo
+	# need to call restart_cpodrouter_dnsmasq() to make changes effective
+	CPODVLAN=$( grep -m 1 "${2}\s" /etc/hosts | awk '{print $1}' | cut -d "." -f 4 )
+	declare -a VLANS
+	for VLAN in $( ssh ${2} "ip add |grep inet | grep eth2." | awk '{print $5}' ) ; do
+		VLANS+=( ${VLAN} )
+	done
+	${VLANS[$((${1}-1))]}
+	DHCPLINE="dhcp-range=${VLANS[$((${1}-1))]}:eth2,10.$CPODVLAN.${1}.2,10.$CPODVLAN.${1}.200,255.255.255.0,12h"
+	add_entry_to_cpodrouter_dnsmasq ${DHCPLINE} ${2}
+	DHCPLINE="dhcp-option=${VLANS[$((${1}-1))]}:eth2,option:router,10.$CPODVLAN.${1}.1"
+	add_entry_to_cpodrouter_dnsmasq ${DHCPLINE} ${2}
 	#dhcp-range=eth2.1047:eth2,10.104.7.2,10.104.7.254,255.255.255.0,12h
 	#dhcp-option=eth2.1047:eth2,option:router,10.104.7.1
-	echo "TBD"
 }
 
 get_last_ip() {

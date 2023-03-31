@@ -61,11 +61,11 @@ echo "The validation with id: ${VALIDATIONID} has the status ${VALIDATIONSTATUS}
 	echo "The validation with id: ${VALIDATIONID} has the status ${VALIDATIONSTATUS}"
     sleep 10
     TIMEOUT=$((TIMEOUT + 1))
-    if [ $TIMEOUT -ge 10 ]; then
+    if [ $TIMEOUT -ge 24 ]; then
     	echo "bailing out..."
     	exit 1  
     fi 
-	if [ "$VALIDATIONSTATUS" != "ERROR" ]; then
+	if [ "$VALIDATIONSTATUS" == "FAILED" ]; then
 		echo "bailing out..."
 		exit 1
 	fi  

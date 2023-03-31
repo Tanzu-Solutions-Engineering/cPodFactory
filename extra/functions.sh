@@ -53,7 +53,8 @@ test_params_file() {
 }
 
 add_to_cpodrouter_dnsmasq() {
-        # ${1} : line to add to dnsmasq
+        #deprecated - do not use this as restarting dnsmasq services in quick succesion can cause it to crash
+		# ${1} : line to add to dnsmasq
         # ${2} : cpod_name_lower
         echo "add ${1} to ${2}"
         ssh -o LogLevel=error ${2} "sed "/${1}/d" -i /etc/dnsmasq.conf ; printf \"${1}\n\" >> /etc/dnsmasq.conf"

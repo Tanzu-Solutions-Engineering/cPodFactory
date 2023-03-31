@@ -186,8 +186,6 @@ for ((i=1; i<=NUM_ESX; i++)); do
   STARTNUMESX=$(( STARTNUMESX+1 ))
 done
 
-
-
 #end the timer and wrapup
 END=$( date +%s )
 TIME=$(( "${END}" - "${START}" ))

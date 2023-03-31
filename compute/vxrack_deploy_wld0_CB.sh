@@ -47,17 +47,17 @@ URL="https://cloudbuilder.${NAME_LOWER}.${ROOT_DOMAIN}"
 AUTH="admin:${PASSWORD}"
 
 #validate the EMS.json
-VALIDATIONID=$(curl -k -u ${AUTH} -H 'Content-Type: application/json' -H 'Accept: application/json' -d @${SCRIPT} -X POST ${URL}/v1/sddcs/validations | jq '.id')
+VALIDATIONID=$(curl -s -k -u ${AUTH} -H 'Content-Type: application/json' -H 'Accept: application/json' -d @${SCRIPT} -X POST ${URL}/v1/sddcs/validations | jq '.id')
 echo "The validation with id: ${VALIDATIONID} has started"
 
 #check the validation
-VALIDATIONSTATUS=$(curl -k -u ${AUTH} -X GET ${URL}/v1/sddcs/validations | jq ".elements[] | select(.id == ${VALIDATIONID}) | .resultStatus")
+VALIDATIONSTATUS=$(curl -s -k -u ${AUTH} -X GET ${URL}/v1/sddcs/validations | jq ".elements[] | select(.id == ${VALIDATIONID}) | .resultStatus")
 echo "The validation with id: ${VALIDATIONID} has the status ${VALIDATIONSTATUS}"
 
   #wait for the validation to finish
   while [ "$VALIDATIONSTATUS" != "SUCCESS" ]
   do  
-	VALIDATIONSTATUS=$(curl -k -u ${AUTH} -X GET ${URL}/v1/sddcs/validations | jq ".elements[] | select(.id == ${VALIDATIONID}) | .resultStatus")
+	VALIDATIONSTATUS=$(curl -s -k -u ${AUTH} -X GET ${URL}/v1/sddcs/validations | jq ".elements[] | select(.id == ${VALIDATIONID}) | .resultStatus")
 	echo "The validation with id: ${VALIDATIONID} has the status ${VALIDATIONSTATUS}"
     sleep 10
     TIMEOUT=$((TIMEOUT + 1))

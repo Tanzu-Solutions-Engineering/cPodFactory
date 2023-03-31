@@ -115,8 +115,16 @@ fi
 
 echo "The deployment with id: ${BRINGUPID} has started"
 
+#check the bringup status via cURL 
+BRINGUPSTATUS=$(curl -s -k -u ${AUTH} -X GET ${URL}/v1/sddcs | jq -r ".elements[] | select(.id == ${BRINGUPID}) | .status")
+
+if [ -z "$BRINGUPSTATUS" ]; then
+  echo "Error: The bringup status is empty..."
+  exit 1
+fi
+
 while [ ${BRINGUPSTATUS} != "COMPLETED_WITH_SUCCESS" ]
-	do
+do
 	#check the bringup status via cURL 
 	BRINGUPSTATUS=$(curl -s -k -u ${AUTH} -X GET ${URL}/v1/sddcs | jq -r ".elements[] | select(.id == ${BRINGUPID}) | .status")
 	echo "The validation with id: ${BRINGUPID} has the status ${BRINGUPSTATUS}...."
@@ -124,7 +132,7 @@ while [ ${BRINGUPSTATUS} != "COMPLETED_WITH_SUCCESS" ]
 	TIMEOUT=$((TIMEOUT + 1))
 	if [ $TIMEOUT -ge 720 ]; then
 		echo "this is taking way to long bailing out..."
-		exit 1 
+		exit 1
 	fi 
 	if [ "$BRINGUPSTATUS" == "COMPLETED_WITH_FAILURE" ]; then
 		echo "The deployment failed..."

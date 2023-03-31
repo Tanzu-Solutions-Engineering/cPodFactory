@@ -73,7 +73,7 @@ VALIDATIONSTATUS=$(curl -s -k -u ${AUTH} -X GET ${URL}/v1/sddcs/validations | jq
 echo "The validation with id: ${VALIDATIONID} has the status ${VALIDATIONSTATUS}"
 
 #wait for the validation to finish
-while [ "$VALIDATIONSTATUS" != "SUCCEEDED" ]
+while [ ${VALIDATIONSTATUS} != "SUCCEEDED" ]
 	do
 	VALIDATIONSTATUS=$(curl -s -k -u ${AUTH} -X GET ${URL}/v1/sddcs/validations | jq ".elements[] | select(.id == ${VALIDATIONID}) | .resultStatus")
 	echo "The validation with id: ${VALIDATIONID} has the status ${VALIDATIONSTATUS}"
@@ -95,13 +95,13 @@ echo "Proceeding with Bringup using ${SCRIPT}."
 #BRINGUPID=$(curl -s -k -u ${AUTH} -H 'Content-Type: application/json' -H 'Accept: application/json' -d @${SCRIPT} -X POST ${URL}/v1/sddcs | jq '.id')
 #echo "The deployment with id: ${BRINGUPID} has started"
 
-# while [ "$BRINGUPSTATUS" != "COMPLETED_WITH_SUCCESS" ]
+# while [ ${BRINGUPSTATUS} != "COMPLETED_WITH_SUCCESS" ]
 # 	do  
 # 	BRINGUPSTATUS=$(curl -s -k -u ${AUTH} -X GET ${URL}/v1/sddcs | jq ".elements[] | select(.id == ${VALIDATIONID}) | .status")
 # 	echo "The validation with id: ${BRINGUPID} has the status ${BRINGUPSTATUS}"
 # 	sleep 10
 # 	TIMEOUT=$((TIMEOUT + 1))
-# 	if [ $TIMEOUT -ge 24 ]; then
+# 	if [ $TIMEOUT -ge 720 ]; then
 # 		echo "bailing out..."
 # 		exit 1  
 # 	fi 

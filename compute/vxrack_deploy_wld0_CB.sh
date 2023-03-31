@@ -64,10 +64,14 @@ do
 	fi 
 done
 
+#sleep a bit to avoid API issues
+echo "sleeping a bit to make sure the API is ready."
+sleep 10
+
 echo "API on cloudbuilder ${URL} is ready... thunderbirds are go!"
 
-#validate the EMS.json. We sleep a bit as the cloudbuilder API is a bit lazy.
-sleep 10
+#validate the EMS.json.
+
 VALIDATIONID=$(curl -s -k -u ${AUTH} -H 'Content-Type: application/json' -H 'Accept: application/json' -d @${SCRIPT} -X POST ${URL}/v1/sddcs/validations | jq '.id')
 
 if [ -z "$VALIDATIONID" ]; then
@@ -131,8 +135,8 @@ do
 	echo "The bringup with id: ${BRINGUPID} has the status ${BRINGUPSTATUS}...."
 	sleep 10
 	TIMEOUT=$((TIMEOUT + 1))
-	if [ $TIMEOUT -ge 720 ]; then
-		echo "this is taking over 2 hours, bailing out..."
+	if [ $TIMEOUT -ge 1440 ]; then
+		echo "this is taking over 4 hours, bailing out..."
 		exit 1
 	fi
 	if [ "$BRINGUPSTATUS" == "COMPLETED_WITH_FAILURE" ]; then

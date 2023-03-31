@@ -76,7 +76,7 @@ echo "Enabeling dhcp on vlan ${TRANSPORTVLANID}."
 enable_dhcp_cpod_vlanx 3 "${CPODROUTER}"
 
 echo "Commiting changes on  ${CPODROUTER}."
-restart_to_cpodrouter_hosts "${CPODROUTER}"
+restart_cpodrouter_dnsmasq "${CPODROUTER}"
 
 echo "Sleeping for 10 seconds to make sure dnsmasq has been restarted"
 sleep 10

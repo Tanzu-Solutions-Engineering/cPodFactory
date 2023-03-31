@@ -74,12 +74,11 @@ echo "API on cloudbuilder ${URL} is ready... thunderbirds are go!"
 
 VALIDATIONID=$(curl -s -k -u ${AUTH} -H 'Content-Type: application/json' -H 'Accept: application/json' -d @${SCRIPT} -X POST ${URL}/v1/sddcs/validations)
 
-echo "The validation returns: ${VALIDATIONID}"
+#echo "The validation returns: ${VALIDATIONID}"
 
 VALIDATIONID=$(echo $VALIDATIONID | jq .id)
 
-echo "The validation after jq returns: ${VALIDATIONID}"
-
+#echo "The validation after jq returns: ${VALIDATIONID}"
 
 if [ -z "$VALIDATIONID" ]; then
   echo "Error: The validation ID is empty..."
@@ -96,7 +95,7 @@ if [ -z "$VALIDATIONSTATUS" ]; then
   exit 1
 fi
 
-echo "The validation with id: ${VALIDATIONID} has the status ${VALIDATIONSTATUS}"
+echo "The validation with id: ${VALIDATIONID} has the status ${VALIDATIONSTATUS}..."
 
 #wait for the validation to finish
 while [ ${VALIDATIONSTATUS} != "SUCCEEDED" ]

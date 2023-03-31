@@ -75,7 +75,7 @@ echo "The validation with id: ${VALIDATIONID} has the status ${VALIDATIONSTATUS}
 #wait for the validation to finish
 while [ ${VALIDATIONSTATUS} != "SUCCEEDED" ]
 	do
-	VALIDATIONSTATUS=$(curl -s -k -u ${AUTH} -X GET ${URL}/v1/sddcs/validations | jq -r ".elements[] | select(.id == ${VALIDATIONID}) | .resultStatus")
+	VALIDATIONSTATUS=$(curl -s -k -u ${AUTH} -X GET ${URL}/v1/sddcs/validations | jq "-r .elements[] | select(.id == ${VALIDATIONID}) | .resultStatus")
 	echo "The validation with id: ${VALIDATIONID} has the status ${VALIDATIONSTATUS}"
 	sleep 10
 	TIMEOUT=$((TIMEOUT + 1))
@@ -111,3 +111,4 @@ echo "Proceeding with Bringup using ${SCRIPT}."
 # 	fi
 # done
 
+curl -s -k -u 'admin:28HwmYPHElm!' -X GET https://cloudbuilder.cpod-kallax.az-lhr.cloud-garage.net/v1/sddcs/validations | jq -r '.elements[] | select(.id == 158be6a8-087c-4c7d-bb5c-2edcd87f9d97) | .resultStatus'

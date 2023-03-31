@@ -62,6 +62,17 @@ add_to_cpodrouter_dnsmasq() {
 }
 
 add_to_cpodrouter_hosts() {
+	# deprecated - do not use as it can cause dnsmasq service to fail when used in quick succession, use add_entry_cpodrouter_hosts and commit_to_cpodrouter_hosts
+	# ${1} : ip address to add
+	# ${2} : host record to add
+	# ${3} : cpod_name_lower to add to
+
+	echo "add ${1} -> ${2} in ${3}"
+	ssh -o LogLevel=error ${3} "sed "/${1}/d" -i /etc/hosts ; printf \"${1}\\t${2}\\n\" >> /etc/hosts"
+	ssh -o LogLevel=error ${3} "systemctl restart dnsmasq.service"
+}
+
+add_entry_cpodrouter_hosts() {
 	# ${1} : ip address to add
 	# ${2} : host record to add
 	# ${3} : cpod_name_lower to add to

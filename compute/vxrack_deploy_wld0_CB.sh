@@ -72,7 +72,14 @@ echo "API on cloudbuilder ${URL} is ready... thunderbirds are go!"
 
 #validate the EMS.json.
 
-VALIDATIONID=$(curl -s -k -u ${AUTH} -H 'Content-Type: application/json' -H 'Accept: application/json' -d @${SCRIPT} -X POST ${URL}/v1/sddcs/validations | jq '.id')
+VALIDATIONID=$(curl -s -k -u ${AUTH} -H 'Content-Type: application/json' -H 'Accept: application/json' -d @${SCRIPT} -X POST ${URL}/v1/sddcs/validations)
+
+echo "The validation returns: ${VALIDATIONID}"
+
+VALIDATIONID=$(echo $VALIDATIONID | jq ".id")
+
+echo "The validation after jq returns: ${VALIDATIONID}"
+
 
 if [ -z "$VALIDATIONID" ]; then
   echo "Error: The validation ID is empty..."

@@ -106,7 +106,7 @@ done
 #proceeding with deployment
 echo "Proceeding with Bringup using ${SCRIPT}."
 
-#BRINGUPID=$(curl -s -k -u ${AUTH} -H 'Content-Type: application/json' -H 'Accept: application/json' -d @${SCRIPT} -X POST ${URL}/v1/sddcs | jq '.id')
+BRINGUPID=$(curl -s -k -u ${AUTH} -H 'Content-Type: application/json' -H 'Accept: application/json' -d @${SCRIPT} -X POST ${URL}/v1/sddcs | jq '.id')
 
 if [ -z "$BRINGUPID" ]; then
   echo "Error: The bringup id  is empty..."

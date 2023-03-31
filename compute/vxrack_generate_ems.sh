@@ -73,7 +73,7 @@ add_entry_cpodrouter_hosts "${SUBNET}.10" "en02" "${CPODROUTER}"
 add_entry_cpodrouter_hosts "${SUBNET}.11" "sddc" "${CPODROUTER}"
 
 echo "commiting changes on  ${CPODROUTER}."
-commit_to_cpodrouter_hosts "${CPODROUTER}"
+restart_to_cpodrouter_hosts "${CPODROUTER}"
 
 echo "sleeping for 10 seconds to make sure dnsmasq has been restarted"
 sleep 10

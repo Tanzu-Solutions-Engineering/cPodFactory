@@ -81,10 +81,10 @@ add_entry_cpodrouter_hosts() {
 	ssh -o LogLevel=error ${3} "sed "/${1}/d" -i /etc/hosts ; printf \"${1}\\t${2}\\n\" >> /etc/hosts"
 }
 
-commit_to_cpodrouter_hosts() {
+restart_to_cpodrouter_hosts() {
 	# ${1} : cpod_name_lower to add to
 
-	echo "commiting and restarting dnsmasq on ${1} "
+	echo "restarting dnsmasq on ${1} "
 	ssh -o LogLevel=error ${1} "systemctl restart dnsmasq.service"
 }
 

@@ -41,38 +41,18 @@ else
 	TRANSPORTVLANID=${VLAN}03
 fi
 
-echo ""
-echo "Hit enter or ctrl-c to launch prereqs validation:"
-read answer
-curl -i -k -u admin:${PASSWORD} -H 'Content-Type: application/json' -H 'Accept: application/json' -d @${SCRIPT} -X POST https://cloudbuilder.${NAME_LOWER}.${ROOT_DOMAIN}/v1/sddcs/validations
-echo ""
-echo ""
-echo "Check prereqs in CloudBuilder:"
-echo "check url : https://cloudbuilder.${NAME_LOWER}.${ROOT_DOMAIN}"
-echo "using pwd : ${PASSWORD}"
-echo 
-echo "when validation confirmed,"
-echo "Hit enter or ctrl-c to launch deployment:"
-read answer
-curl -i -k -u admin:${PASSWORD} -H 'Content-Type: application/json' -H 'Accept: application/json' -d @${SCRIPT} -X POST https://cloudbuilder.${NAME_LOWER}.${ROOT_DOMAIN}/v1/sddcs
-echo ""
-echo "Check deployment in CloudBuilder:"
-echo "check url : https://cloudbuilder.${NAME_LOWER}.${ROOT_DOMAIN}"
-echo "using pwd : ${PASSWORD}"
-echo
-echo "when deployment finished, please manually edit sddc properties as follows:"
-echo "ssh vcf@sddc.${NAME_LOWER}.${ROOT_DOMAIN}"
-echo "su -"
-echo "pwd = ${PASSWORD}"
-echo 'DOMAINMGR=$(find /etc -name application-pro* | grep domainmanager)'
-echo 'echo "nsxt.manager.formfactor=small" >> $DOMAINMGR'
-echo 'echo "nsxt.management.resources.validation.skip=true" >> $DOMAINMGR'
-echo 'echo "vc.deployment.option=management-tiny" >> $DOMAINMGR'
-echo "verify the 2 lines have been added as expected"
-echo 'cat $DOMAINMGR'
-echo "restart service :"
-echo "systemctl restart domainmanager"
-echo "exit"
-echo "exit"
+#make the curl more readable
+URL="https://cloudbuilder.${NAME_LOWER}.${ROOT_DOMAIN}"
+AUTH="admin:${PASSWORD}"
 
+#validate the EMS.json
+VALIDATIONID=$(curl -k -u ${AUTH} -H 'Content-Type: application/json' -H 'Accept: application/json' -d @${SCRIPT} -X POST ${URL}/v1/sddcs/validations | jq '.elements[].id')
+echo "The validation with id: ${VALIDATIONID} has started"
+
+#check the validation
+VALIDATIONSTATUS=$(curl -k -u ${AUTH} -X GET ${URL}/v1/sddcs/validations | jq '.elements[] | select(.id == "${VALIDATIONID}") | .resultStatus')
+echo "The validation with id: ${VALIDATIONID} has the status ${VALIDATIONSTATUS}"
+
+
+#curl -k -u admin:"YDAboI6FLcp!" -X GET https://cloudbuilder.cpod-bygel.az-lhr.cloud-garage.net/v1/sddcs/validations | jq '.elements[].id'
 #curl -k -u admin:"YDAboI6FLcp!" -X GET https://cloudbuilder.cpod-bygel.az-lhr.cloud-garage.net/v1/sddcs/validations | jq '.elements[] | select(.id == "845c240f-dbe4-45ca-b022-1a4f24570ceb") | .resultStatus'

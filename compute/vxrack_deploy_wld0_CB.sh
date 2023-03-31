@@ -46,7 +46,7 @@ URL="https://cloudbuilder.${NAME_LOWER}.${ROOT_DOMAIN}"
 AUTH="admin:${PASSWORD}"
 
 #validate the EMS.json
-VALIDATIONID=$(curl -k -u ${AUTH} -H 'Content-Type: application/json' -H 'Accept: application/json' -d @${SCRIPT} -X POST ${URL}/v1/sddcs/validations | jq '.elements[].id')
+VALIDATIONID=$(curl -k -u ${AUTH} -H 'Content-Type: application/json' -H 'Accept: application/json' -d @${SCRIPT} -X POST ${URL}/v1/sddcs/validations | jq '.id')
 echo "The validation with id: ${VALIDATIONID} has started"
 
 #check the validation

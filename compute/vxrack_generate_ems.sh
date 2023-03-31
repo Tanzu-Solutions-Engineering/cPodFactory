@@ -61,8 +61,6 @@ sed -i -e "s/###SUBNET###/${SUBNET}/g" \
 -e "s/###LIC_NSXT###/${LIC_NSXT}/g" \
 ${SCRIPT}
 
-echo "JSON is genereated: ${SCRIPT} and placed in directory: ${SCRIPT_DIR}."
-
 echo "Adding entries into hosts of ${CPODROUTER}."
 add_entry_cpodrouter_hosts "${SUBNET}.3" "cloudbuilder" "${CPODROUTER}"
 add_entry_cpodrouter_hosts "${SUBNET}.4" "vcsa" "${CPODROUTER}"
@@ -79,3 +77,5 @@ commit_to_cpodrouter_hosts "${CPODROUTER}"
 
 echo "sleeping for 10 seconds to make sure dnsmasq has been restarted"
 sleep 10
+
+echo "JSON is genereated: ${SCRIPT} and placed in directory: ${SCRIPT_DIR}."

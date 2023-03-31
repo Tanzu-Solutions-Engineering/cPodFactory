@@ -66,16 +66,28 @@ done
 
 #validate the EMS.json
 VALIDATIONID=$(curl -s -k -u ${AUTH} -H 'Content-Type: application/json' -H 'Accept: application/json' -d @${SCRIPT} -X POST ${URL}/v1/sddcs/validations | jq '.id')
+
+if [ -z "$VALIDATIONID" ]; then
+  echo "Error: The validation ID is empty..."
+  exit 1
+fi
+
 echo "The validation with id: ${VALIDATIONID} has started"
 
 #check the validation
 VALIDATIONSTATUS=$(curl -s -k -u ${AUTH} -X GET ${URL}/v1/sddcs/validations | jq -r ".elements[] | select(.id == ${VALIDATIONID}) | .resultStatus")
+
+if [ -z "$VALIDATIONSTATUS" ]; then
+  echo "Error: The validation status is empty..."
+  exit 1
+fi
+
 echo "The validation with id: ${VALIDATIONID} has the status ${VALIDATIONSTATUS}"
 
 #wait for the validation to finish
 while [ ${VALIDATIONSTATUS} != "SUCCEEDED" ]
 	do
-	VALIDATIONSTATUS=$(curl -s -k -u ${AUTH} -X GET ${URL}/v1/sddcs/validations | jq "-r .elements[] | select(.id == ${VALIDATIONID}) | .resultStatus")
+	VALIDATIONSTATUS=$(curl -s -k -u ${AUTH} -X GET ${URL}/v1/sddcs/validations | jq -r ".elements[] | select(.id == ${VALIDATIONID}) | .resultStatus")
 	echo "The validation with id: ${VALIDATIONID} has the status ${VALIDATIONSTATUS}"
 	sleep 10
 	TIMEOUT=$((TIMEOUT + 1))
@@ -111,4 +123,6 @@ echo "Proceeding with Bringup using ${SCRIPT}."
 # 	fi
 # done
 
-curl -s -k -u 'admin:28HwmYPHElm!' -X GET https://cloudbuilder.cpod-kallax.az-lhr.cloud-garage.net/v1/sddcs/validations | jq -r '.elements[] | select(.id == 158be6a8-087c-4c7d-bb5c-2edcd87f9d97) | .resultStatus'
+
+#curl -k -u 'admin:28HwmYPHElm!' -H 'Content-Type: application/json' -H 'Accept: application/json' -d @/tmp/scripts/cloudbuilder-cpod-kallax.json -X POST https://cloudbuilder.cpod-kallax.az-lhr.cloud-garage.net/v1/sddcs/validations | jq .id
+#curl -s -k -u 'admin:28HwmYPHElm!' -X GET https://cloudbuilder.cpod-kallax.az-lhr.cloud-garage.net/v1/sddcs/validations | jq '.elements[] | select(.id == "923446eb-d65a-4ea2-905d-c620902dd0de" ) | .resultStatus'

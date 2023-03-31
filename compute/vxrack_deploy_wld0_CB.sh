@@ -66,7 +66,8 @@ done
 
 echo "API on cloudbuilder ${URL} is ready... thunderbirds are go!"
 
-#validate the EMS.json
+#validate the EMS.json./
+sleep 10
 VALIDATIONID=$(curl -s -k -u ${AUTH} -H 'Content-Type: application/json' -H 'Accept: application/json' -d @${SCRIPT} -X POST ${URL}/v1/sddcs/validations | jq '.id')
 
 if [ -z "$VALIDATIONID" ]; then

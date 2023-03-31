@@ -76,7 +76,7 @@ VALIDATIONID=$(curl -s -k -u ${AUTH} -H 'Content-Type: application/json' -H 'Acc
 
 echo "The validation returns: ${VALIDATIONID}"
 
-VALIDATIONID=$(echo $VALIDATIONID | jq ".id")
+VALIDATIONID=$(echo $VALIDATIONID | jq .id)
 
 echo "The validation after jq returns: ${VALIDATIONID}"
 

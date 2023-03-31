@@ -52,4 +52,3 @@ echo "The validation with id: ${VALIDATIONID} has started"
 #check the validation
 VALIDATIONSTATUS=$(curl -k -u ${AUTH} -X GET ${URL}/v1/sddcs/validations | jq ".elements[] | select(.id == ${VALIDATIONID}) | .resultStatus")
 echo "The validation with id: ${VALIDATIONID} has the status ${VALIDATIONSTATUS}"
-) | .resultStatus'

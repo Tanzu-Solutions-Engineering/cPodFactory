@@ -125,7 +125,7 @@ fi
 
 while [ ${BRINGUPSTATUS} != "COMPLETED_WITH_SUCCESS" ]
 do
-	#check the bringup status via cURL 
+	#check the bringup status via cURL
 	BRINGUPSTATUS=$(curl -s -k -u ${AUTH} -X GET ${URL}/v1/sddcs | jq -r ".elements[] | select(.id == ${BRINGUPID}) | .status")
 	echo "The validation with id: ${BRINGUPID} has the status ${BRINGUPSTATUS}...."
 	sleep 10
@@ -133,7 +133,7 @@ do
 	if [ $TIMEOUT -ge 720 ]; then
 		echo "this is taking way to long bailing out..."
 		exit 1
-	fi 
+	fi
 	if [ "$BRINGUPSTATUS" == "COMPLETED_WITH_FAILURE" ]; then
 		echo "The deployment failed..."
 		exit 1

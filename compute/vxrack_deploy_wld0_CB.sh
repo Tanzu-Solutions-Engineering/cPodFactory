@@ -123,11 +123,11 @@ while [ ${BRINGUPSTATUS} != "COMPLETED_WITH_SUCCESS" ]
 	sleep 10
 	TIMEOUT=$((TIMEOUT + 1))
 	if [ $TIMEOUT -ge 720 ]; then
-		echo "bailing out..."
-		exit 1  
+		echo "this is taking way to long bailing out..."
+		exit 1 
 	fi 
 	if [ "$BRINGUPSTATUS" == "COMPLETED_WITH_FAILURE" ]; then
-		echo "bailing out..."
+		echo "The deployment failed..."
 		exit 1
 	fi
 done

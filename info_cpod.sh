@@ -4,7 +4,6 @@
 . ./env
 . ./govc_env
 
-
 [ "$1" == "" ] && echo "usage: $0 <name_of_cpod>"  && echo "usage example: $0 LAB01" && exit 1
 
 if [ -f "${1}" ]; then

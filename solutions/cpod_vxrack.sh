@@ -31,6 +31,12 @@ if [ "$1" == "ikea" ]; then
     echo "the name of your cpod will be: $NAME"
 fi
 
+#check if the cpod name exists by checking the host file
+if grep -qF cpod-"$NAME" /etc/hosts; then
+  echo "Error: $NAME already exists in /etc/hosts"
+  exit 1
+fi
+
 # sourcing params and functions
 
 source ./env 
@@ -46,7 +52,7 @@ echo "====================================="
 echo
 
 #find the file that contains the version file specified in $2
-VERSION=$(find . -type f -name "*$1*" | head -n 1)
+VERSION=$(find . -maxdepth 1 -type f -name "*$2*" | head -n 1)
 echo "you selected version: ${VERSION}"
 source ./${VERSION}
 

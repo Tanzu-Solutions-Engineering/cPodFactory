@@ -129,7 +129,7 @@ add_ssh_key_to_cpod() {
         # ${1} : cpod_name_lower
         # this function will use ssh-keyscan to add the cpod to the known hosts file
 
-        KEY=$(ssh-keyscan -t rsa -H ${1})
+        KEY=$(ssh-keyscan -t rsa ${1})
         #check if key is valid, otherwise exit
         if [ "${KEY}" == "" ]; then
                 echo "ERROR: key for ${1} is empty or host is unreachable"

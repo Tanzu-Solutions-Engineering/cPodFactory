@@ -137,6 +137,6 @@ add_ssh_key_to_cpod() {
         fi
         #magic to escape / in key
         KEY_ESC=$(echo "$KEY" | sed 's/\//\\\//g')
-        sed "/${KEY}/d" -i ~/.ssh/known_hosts
+        sed "/${KEY_ESC}/d" -i ~/.ssh/known_hosts
         echo "${KEY}" >> ~/.ssh/known_hosts
 }

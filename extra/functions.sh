@@ -38,7 +38,7 @@ test_params_file() {
                 fi
         done
 
-        TEMPLATENAME=$(cat ${1}  | grep "ESX" | cut -d"=" -f2)
+        TEMPLATENAME=$(cat ${1}  | grep "TEMPLATE_ESX" | cut -d"=" -f2)
         TEMPLATE=$(govc ls /${VCENTER_DATACENTER}/vm/${TEMPLATE_FOLDER}/${TEMPLATENAME})
         if [ "${TEMPLATE}" == "" ]; then
                 echo "  Template ${TEMPLATENAME} not found"

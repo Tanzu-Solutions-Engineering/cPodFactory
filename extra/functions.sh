@@ -129,12 +129,12 @@ add_ssh_key_to_cpod() {
         # ${1} : cpod_name_lower
         # this function will use ssh-keyscan to add the cpod to the known hosts file
 
-        KEY=$(ssh-keyscan -H ${1})
+        KEY=$(ssh-keyscan -t rsa -H ${1})
         #check if key is valid, otherwise exit
         if [ "${KEY}" == "" ]; then
                 echo "ERROR: key for ${1} is empty or host is unreachable"
                 exit 1
         fi
-        sed "/${KEY}/d" -i /etc/dnsmasq.conf
-        echo "${KEY}" >> /etc/dnsmasq.conf
+        sed "/${KEY}/d" -i ~/.ssh/known_hosts
+        echo "${KEY}" >> ~/.ssh/known_hosts
 }

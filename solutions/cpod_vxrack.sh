@@ -3,7 +3,8 @@
 
 # $NAME : Name of cpod
 # $2 : Name of owner
-# $3 : Number of esxi hosts
+
+# if the cpod name equals ikea, then we  get the name of the cpod from the ikea script
 
 if [ -z "$LOGGING" ]
 then
@@ -15,7 +16,7 @@ fi
 
 START=$( date +%s ) 
 
-[ "$1" == "" -o "$2" == ""  -o "$3" == ""  ] && echo "usage: $0 <name_of_cpod> <version file> <name_of_owner>"  && echo "usage example: $0 ikea vcf45.sh vedw" && exit 1
+[ "$1" == "" -o "$2" == ""  -o "$3" == ""  ] && echo "usage: $0 <name_of_cpod> <version file> <name_of_owner>"  && echo "usage example: $0 ikea vcf45.sh vedw"  && exit 1
 
 if [ "$TERM" = "screen" ] && [ -n "$TMUX" ]; then
   echo "You are running in a tmux session. That is very wise of you !  :)"

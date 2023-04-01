@@ -135,6 +135,8 @@ add_ssh_key_to_cpod() {
                 echo "ERROR: key for ${1} is empty or host is unreachable"
                 exit 1
         fi
+        #magic to escape / in key
+        KEY_ESC=$(echo "$KEY" | sed 's/\//\\\//g')
         sed "/${KEY}/d" -i ~/.ssh/known_hosts
         echo "${KEY}" >> ~/.ssh/known_hosts
 }

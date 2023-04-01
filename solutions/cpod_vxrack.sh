@@ -27,7 +27,7 @@ fi
 
 #check if the cpod name equals ikea
 if [ "$1" == "ikea" ]; then
-    NAME=$("./extra/ikea.sh")
+    NAME=$("./extra/ikeaname.sh")
     echo "the name of your cpod will be: $NAME"
 fi
 
@@ -47,6 +47,8 @@ echo
 
 #find the file that contains the version file specified in $2
 VERSION=$(find . -type f -name "*$1*" | head -n 1)
+echo "you selected version: ${VERSION}"
+source ./${VERSION}
 
 echo
 echo "======================"

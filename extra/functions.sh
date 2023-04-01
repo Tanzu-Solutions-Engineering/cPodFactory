@@ -37,7 +37,7 @@ test_params_file() {
                         PROBLEM="YES"
                 fi
         done
-
+        #goldyck@vmware.com: modified the grep is it would also check other things contains esx
         TEMPLATENAME=$(cat ${1}  | grep "TEMPLATE_ESX" | cut -d"=" -f2)
         TEMPLATE=$(govc ls /${VCENTER_DATACENTER}/vm/${TEMPLATE_FOLDER}/${TEMPLATENAME})
         if [ "${TEMPLATE}" == "" ]; then

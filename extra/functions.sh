@@ -127,10 +127,10 @@ get_last_ip() {
 
 add_ssh_key_to_cpod() {
         # ${1} : cpod_name_lower
-        # this function will use ssh-keyscan to add the cpod to the known hosts file
+        # this function will use ssh-keyscan to add the cpod public to the known hosts file, use this function to prevent scripts breaking down the line.
 
         KEY=$(ssh-keyscan -t rsa "${1}")
-        #check if key is valid, otherwise exit
+        #check if key is not empty, otherwise exit
         if [ "${KEY}" == "" ]; then
                 echo "ERROR: key for ${1} is empty or host is unreachable"
                 exit 1
@@ -138,5 +138,6 @@ add_ssh_key_to_cpod() {
         #magic to escape / in key
         KEY_ESC=$(echo "$KEY" | sed 's/\//\\\//g')
         sed "/${KEY_ESC}/d" -i ~/.ssh/known_hosts
+        #add key to known hosts
         echo "${KEY}" >> ~/.ssh/known_hosts
 }

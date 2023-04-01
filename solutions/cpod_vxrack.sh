@@ -1,7 +1,7 @@
 #!/bin/bash
 #goldyck@vmware.com
 
-# $1 : Name of cpod
+# $NAME : Name of cpod
 # $2 : Name of owner
 # $3 : Number of esxi hosts
 
@@ -15,7 +15,7 @@ fi
 
 START=$( date +%s ) 
 
-[ "$1" == "" -o "$2" == ""  -o "$3" == ""  ] && echo "usage: $0 <name_of_cpod>  <#esx> <name_of_owner>"  && echo "usage example: $0 LAB01 4 vedw" && exit 1
+[ "$1" == "" -o "$2" == ""  -o "$3" == ""  ] && echo "usage: $0 <name_of_cpod> <version file> <name_of_owner>"  && echo "usage example: $0 ikea vcf45.sh vedw" && exit 1
 
 if [ "$TERM" = "screen" ] && [ -n "$TMUX" ]; then
   echo "You are running in a tmux session. That is very wise of you !  :)"
@@ -23,6 +23,12 @@ else
   echo "You are not running in a tmux session. Maybe you want to run this in a tmux session?"
   echo "stopping script because you're not in a TMUX session."
   exit
+fi
+
+#check if the cpod name equals ikea
+if [ "$1" == "ikea" ]; then
+    NAME=$("./extra/ikea.sh")
+    echo "the name of your cpod will be: $NAME"
 fi
 
 # sourcing params and functions
@@ -39,17 +45,8 @@ echo "=== Select CPOD version to deploy ==="
 echo "====================================="
 echo
 
-options=$(ls vcf*.sh)
-options=${options}" Quit"
-
-select VERSION in ${options}; do 
-    if [ "${VERSION}" = "Quit" ]; then 
-      exit
-    fi
-    echo "you selected version : ${VERSION}"
-    source ./${VERSION}
-    break
-done
+#find the file that contains the version file specified in $2
+VERSION=$(find . -type f -name "*$1*" | head -n 1)
 
 echo
 echo "======================"
@@ -65,13 +62,13 @@ echo "=== creating cpod / vsan / NLB  ==="
 echo "====================================="
 echo
 
-cpodctl create $1 $2 $3
-cpodctl cloudbuilder $1 $3
-./compute/vxrack_generate_ems.sh $1
-./compute/vxrack_deploy_wld0_CB.sh $1
+cpodctl create $NAME 4 $3
+cpodctl cloudbuilder $NAME $3
+./compute/vxrack_generate_ems.sh $NAME
+./compute/vxrack_deploy_wld0_CB.sh $NAME
 
 #get data
-CPOD_NAME=$( echo ${1} | tr '[:lower:]' '[:upper:]' )
+CPOD_NAME=$( echo ${NAME} | tr '[:lower:]' '[:upper:]' )
 NAME_LOWER=$( echo ${HEADER}-${CPOD_NAME} | tr '[:upper:]' '[:lower:]' )
 PASSWORD=$( ${EXTRA_DIR}/passwd_for_cpod.sh ${CPOD_NAME} ) 
 
@@ -84,8 +81,8 @@ echo "===  creation is finished ==="
 echo "=== In ${TIME} Seconds ==="
 echo "============================="
 
-echo "=== connect to cpod vcsa ==="
-echo "=== url: https://vcsa.${NAME_LOWER}.${ROOT_DOMAIN}/ui"
+echo "=== connect to cpod sddc ==="
+echo "=== url: https://sddc.${NAME_LOWER}.${ROOT_DOMAIN}/ui"
 echo "== user : administrator@${NAME_LOWER}.${ROOT_DOMAIN}"
 echo "=== pwd : ${PASSWORD}"
 echo "============================="

@@ -54,7 +54,7 @@ test_params_file() {
 
 add_to_cpodrouter_dnsmasq() {
         #deprecated - do not use this as restarting dnsmasq services in quick succesion can cause it to crash
-		# ${1} : line to add to dnsmasq
+	# ${1} : line to add to dnsmasq
         # ${2} : cpod_name_lower
         echo "add ${1} to ${2}"
         ssh -o LogLevel=error ${2} "sed "/${1}/d" -i /etc/dnsmasq.conf ; printf \"${1}\n\" >> /etc/dnsmasq.conf"
@@ -123,4 +123,18 @@ get_last_ip() {
         CPOD=${2}
         LASTIP=$(ssh -o LogLevel=error ${CPOD} "cat /etc/hosts | grep ${SUBNET}" | awk '{print $1}' | sort -t . -k 2,2n -k 3,3n -k 4,4n | tail -n 1 | cut -d "." -f 4)
         echo $LASTIP
+}
+
+add_ssh_key_to_cpod() {
+        # ${1} : cpod_name_lower
+        # this function will use ssh-keyscan to add the cpod to the known hosts file
+
+        KEY=$(ssh-keyscan -H ${1})
+        #check if key is valid, otherwise exit
+        if [ "${KEY}" == "" ]; then
+                echo "ERROR: key for ${1} is empty or host is unreachable"
+                exit 1
+        fi
+        sed "/${KEY}/d" -i /etc/dnsmasq.conf
+        echo "${KEY}" >> /etc/dnsmasq.conf
 }

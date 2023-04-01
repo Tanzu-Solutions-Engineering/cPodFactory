@@ -61,6 +61,9 @@ sed -i -e "s/###SUBNET###/${SUBNET}/g" \
 -e "s/###LIC_NSXT###/${LIC_NSXT}/g" \
 ${SCRIPT}
 
+echo "adding cpod key to know hosts ${CPODROUTER}."
+add_ssh_key_to_cpod "${CPODROUTER}"
+
 echo "Adding entries into hosts of ${CPODROUTER}."
 add_entry_cpodrouter_hosts "${SUBNET}.3" "cloudbuilder" "${CPODROUTER}"
 add_entry_cpodrouter_hosts "${SUBNET}.4" "vcsa" "${CPODROUTER}"

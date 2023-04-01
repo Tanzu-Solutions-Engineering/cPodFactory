@@ -46,7 +46,7 @@ fi
 URL="https://cloudbuilder.${NAME_LOWER}.${ROOT_DOMAIN}"
 AUTH="admin:${PASSWORD}"
 
-#check if the script exists
+#check if the script already exists
 if [ ! -f "${SCRIPT}" ]; then
   echo "Error: EMS json ${SCRIPT} does not exist"
   exit 1
@@ -76,12 +76,10 @@ VALIDATIONID=$(curl -s -k -u ${AUTH} -H 'Content-Type: application/json' -H 'Acc
 #echo "The validation returns: ${VALIDATIONID}"
 VALIDATIONID=$(echo $VALIDATIONID | jq .id)
 #echo "The validation after jq returns: ${VALIDATIONID}"
-
 if [ -z "$VALIDATIONID" ]; then
   echo "Error: The validation ID is empty..."
   exit 1
 fi
-
 echo "The validation with id: ${VALIDATIONID} has started"
 
 #check the validation

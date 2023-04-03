@@ -73,8 +73,8 @@ echo
 
 cpodctl create $NAME 4 $3
 cpodctl cloudbuilder $NAME $3
-./compute/vxrack_generate_ems.sh $NAME
-./compute/vxrack_deploy_wld0_CB.sh $NAME
+./compute/sddc_generate_ems.sh $NAME
+./compute/sddc_deploy_wld0_CB.sh $NAME
 
 #get data
 CPOD_NAME=$( echo ${NAME} | tr '[:lower:]' '[:upper:]' )

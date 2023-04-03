@@ -163,7 +163,7 @@ for ((i=1; i<=NUM_ESX; i++)); do
 		echo "$ESXHOST --- setting vmotion on vmk0 ---"
 		sshpass -p "${GEN_PASSWORD}" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=error root@"${IP}" "vim-cmd hostsvc/vmotion/vnic_set vmk0"
 		echo "Adding nfsDatastore from cpodrouter"
-		sshpass -p "${GEN_PASSWORD}" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=error root@"${IP}" "esxcli storage nfs add --host=${CPODROUTER} --share=/data/Datastore --volume-name=nfsDatastore" 
+		sshpass -p "${GEN_PASSWORD}" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=error root@"${IP}" "esxcli storage nfs add --host=${TRANSIT_IP} --share=/data/Datastore --volume-name=nfsDatastore" 
 		sshpass -p "${GEN_PASSWORD}" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=error root@"${IP}" "esxcli storage nfs list"
 
   #this is not working ISO_BANK_SERVER does not exist!
@@ -185,8 +185,6 @@ for ((i=1; i<=NUM_ESX; i++)); do
   #set the next esxi for next loop
   STARTNUMESX=$(( STARTNUMESX+1 ))
 done
-
-
 
 #end the timer and wrapup
 END=$( date +%s )

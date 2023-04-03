@@ -32,4 +32,4 @@ cloudbuilder.json
 CPODFACTORY-ENVIRONMENTS-BACKUP/*
 vcf*.sh
 vsphere*.sh
-.vscode/mv 
+.vscode

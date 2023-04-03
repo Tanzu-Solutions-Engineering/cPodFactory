@@ -62,7 +62,7 @@ sed -i -e "s/###SUBNET###/${SUBNET}/g" \
 ${SCRIPT}
 
 echo "adding cpod key to know hosts ${CPODROUTER}."
-add_ssh_key_to_cpod "${CPODROUTER}"
+add_cpod_ssh_key_to_edge_know_hosts "${CPODROUTER}"
 
 echo "Adding entries into hosts of ${CPODROUTER}."
 add_entry_cpodrouter_hosts "${SUBNET}.3" "cloudbuilder" "${CPODROUTER}"

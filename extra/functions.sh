@@ -125,7 +125,7 @@ get_last_ip() {
         echo $LASTIP
 }
 
-add_ssh_key_to_cpod() {
+add_cpod_ssh_key_to_edge_know_hosts() {
         # ${1} : cpod_name_lower
         # this function will use ssh-keyscan to add the cpod public to the known hosts file, use this function to prevent scripts breaking down the line.
 

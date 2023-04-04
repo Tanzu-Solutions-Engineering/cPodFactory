@@ -12,3 +12,5 @@ export LIC_ESX=xxxx-xxxx-xxxx-xxxx-xxxx
 export LIC_VCSA=xxxx-xxxx-xxxx-xxxx-xxxx
 export LIC_VSAN=xxxx-xxxx-xxxx-xxxx-xxxx
 export LIC_NSXT=xxxx-xxxx-xxxx-xxxx-xxxx
+# this file needs to exist and be placed in ./compute
+export EMS_TEMPLATE=cloudbuilder-45.json

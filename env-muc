@@ -60,4 +60,5 @@ TEMPLATE_FILER="template-cPodFiler"
 export DATASTORE=${DATASTORE:-"muc-ds-vsan01"}
 export VCENTER_DATASTORE=${DATASTORE}
 export TEMPLATE_FOLDER="Templates"
+export TEMPLATE_RESOURCEPOOL="cPod-Management"
 export CPODEDGE_DATASTORE="/data/BITS"

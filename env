@@ -38,6 +38,9 @@ case $WHERE in
 	"172.16.100.155/24")
 		ALL_CLUSTER=(lhr)
 		;;
+        "172.16.111.20/24")
+                ALL_CLUSTER=(muc)
+                ;;
 esac
 
 case $WHERE_MAD in

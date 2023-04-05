@@ -15,65 +15,55 @@ exit 1
    
 
 get_objects() {
-
-
 if [ "$DIRTY" -nt "$OUTPUT" ] ; then
-        echo "Check: $DIRTY was modified and $OUTPUT needs refresh"
+        echo "$DIRTY was modified. $OUTPUT needs refresh"
         #get health status from vsan node
         HEALTHY=$( sshpass -p ${PASSWORD} ssh -o StrictHostKeyChecking=no root@${ESX_FQDN} \
 	"esxcli vsan cluster get" 2>/dev/null | grep "Local Node Health State" | cut -d ' ' -f8 )
 	
         if [ "${HEALTHY}" == "HEALTHY" ]; then
                 echo "ESX: $ESX_FQDN is ${HEALTHY}, fetching object data via SSH"
-                
+                start=`date +%s`
 		#fetch list with vsan objects size an mapping output in cache tmp folder
-                sshpass -p ${PASSWORD} ssh -o StrictHostKeyChecking=no root@${ESX_FQDN} \
-		"esxcli vsan debug object list --all |  grep -e 'Object UUID' -e 'Size' -e 'Used:' -e 'Group UUID:' -e 'Type:' -e 'Path:' | sed -e s/' UUID'// -e s/' GB'// -e s/'(Exists)'// -e s/' ('/'('/ | xargs -n 12" 2>/dev/null > ${OUTPUT} &
+
+		sshpass -p ${PASSWORD} ssh -o StrictHostKeyChecking=no root@${ESX_FQDN} \
+		"esxcli vsan debug object list --max-number 20000 |  grep -e 'Group UUID:' -e 'Object UUID:' -e 'Size' -e 'Used:' -e 'Type:' -e 'Path:' | sed -e s/'Object UUID'/Object/ -e s/'Group UUID'/Group/ -e s/' GB'// -e s/'(Exists)'// -e s/' ('/'('/ -e  s/'[a-zA-Z0-9/:-]*\/'// | xargs -n 12" 2>/dev/null > ${OUTPUT} &
 		echo "$OUTPUT created"
-		
+
+		#alternative govc can be used to fetch the vsan objects. need to compare which is faster.
+		#GOVC_HOST=${ESX_FQDN}
+		#govc host.esxcli vsan debug object list -max-number 20000 |  grep -e 'ObjectUUID' -e 'Size' -e 'Used:' -e 'GroupUUID:' -e 'Type:' -e 'Path:' | sed -e s/'ObjectUUID:'/Object:/ -e s/'GroupUUID:'/Group:/ -e s/' GB'// -e s/'(Exists)'// -e s/' ('/'('/ -e  s/'[a-zA-Z0-9/:-]*\/'//  | xargs -n 12 | awk '{print $3,$4,$7,$8,$11,$12,$9,$10,$5,$6,$1,$2}' > ${OUTPUT} & 
 		while kill -0 $! 2>/dev/null; do
     			printf '.' > /dev/tty
     			sleep 1
 		done
-		echo
+		end=`date +%s`
+		echo Execution time was `expr $end - $start` seconds.
 
-                #post processing output here (it is much faster to do here) cleans the output for later manipulation
-                #this line removes the unnecessary path from the objects, gets only the vmdk names and namespaces
-		echo "Improoving output.."
-                sed -i 's/[a-zA-Z0-9/:-]*\///' $OUTPUT
+#		echo "Improoving output.."
+#                sed -i 's/[a-zA-Z0-9/:-]*\///' $OUTPUT
 
-                #Test only: copy script file to esxi
-                #sshpass -p ${PASSWORD} scp -o StrictHostKeyChecking=no /tmp/script.sh root@${ESX_FQDN}:/tmp/script.sh
-                #create permissions and output file with script
-                #sshpass -p ${PASSWORD} ssh -o StrictHostKeyChecking=no root@${ESX_FQDN} "chmod 770 /tmp/script.sh"
-                #sshpass -p ${PASSWORD} ssh -o StrictHostKeyChecking=no root@${ESX_FQDN} "/tmp/script.sh" > ./${CPOD_NAME}.obj
-
-                #gets Objects for the selected cPOD Namespace in a list of objects
-                #cat ${CPOD-NAME}.obj | grep ${HEADER}-${CPOD_NAME}
 
         else
                 echo "ESX: $ESX_FQDN is ${HEALTHY}. $(wc $OUTPUT) lines received via SSH. Hit enter or ctrl-c to abort:"
                 read answer
                 echo "Fetch was Aborted! but will use previous $OUTPUT data"
         fi
-
-
+        touch echo $DIRTY
 else
-        echo "old $OUTPUT was used, because $DIRTY is unchanged. Try $0 <refresh> to get latest object data"
-        #post processing output here (it is much faster to do here) cleans the output for later manipulation
-        #test: Manipulation to extract the Type of object (vdisk namespace or vmswap
-        #cat /tmp/vsan.out-all | grep -o "Type: [a-z]* " | cut -d " " -f 2
-
+        echo "$OUTPUT may be outdated. Try $0 <refresh> to get latest object data"
 fi
-
-
+ 
 }
 
 
 CPOD_NAME=$( echo ${1} | tr '[:lower:]' '[:upper:]' )
 NAME_LOWER=$( echo ${CPOD_NAME} | tr '[:upper:]' '[:lower:]' )
 #PASSWORD=$( ${EXTRA_DIR}/passwd_for_cpod.sh ${CPOD_NAME} )
+
 OUTPUT=$( echo "/tmp/vsan.out" | tr '[:upper:]' '[:lower:]')
+[[ ! -f $OUTPUT ]] && echo "/tmp/vsan.out does not exists try $0 <fetch>" && exit 1
+
 namespace=$( echo ${CPOD_NAME})
 PASSWORD=$VCENTER_PASSWD
 ESX=$( cat /etc/hosts | cut -f2 | grep esx | head -1 )
@@ -81,18 +71,19 @@ ESX_FQDN="${ESX}.${ROOT_DOMAIN}"
 
 #create dirty flag file for checking if cached files are outdated. it should be started when cpodctl creates pods or removes them
 DIRTY=$( echo "/tmp/refresh-needed")
+
  
 case "$1" in
 all)
 	namespace=$( echo "all")
 	get_objects
-	echo "Calculating size of objects for '$NAME_LOWER' cPod"
+ 	echo "Calculating all cPods:"
 	
 	#calculate vms and namespace for all
-	used=0; a=0; while read -a vms ; do used=$( echo "$used + ${vms[5]}" | bc ); a=$( echo "$a + ${vms[3]}" | bc); done < <(cat $OUTPUT ); echo "'$namespace' uses $( echo "scale=2; $used / 1024" | bc -l ) TB allocates $( echo "scale=2; $a / 1024" | bc -l ) TB"
+	used=0; a=0; while read -a vms ; do used=$( echo "$used + ${vms[5]}" | bc ); a=$( echo "$a + ${vms[3]}" | bc); done < <(cat $OUTPUT ); echo -e "'$namespace' \t\t uses $( echo "scale=2; $used / 1024" | bc -l ) TB allocates $( echo "scale=2; $a / 1024" | bc -l ) TB"
 	
 	#calculate snapshots for all
-	used=0; a=0; while read -a vms ; do used=$( echo "$used + ${vms[5]}" | bc ); a=$( echo "$a + ${vms[3]}" | bc); done < <(cat $OUTPUT | grep "0000"); echo "snapshot uses $used GB allocates $a GB"
+	used=0; a=0; while read -a vms ; do used=$( echo "$used + ${vms[5]}" | bc ); a=$( echo "$a + ${vms[3]}" | bc); done < <(cat $OUTPUT | grep "0000"); echo -e "snapshot \t uses $used GB allocates $a GB"
 	exit 1
 	;;
 
@@ -103,10 +94,26 @@ fetch)
 	;;
 
 list)
-	OUTPUT=$( echo "/tmp/vsan.out" | tr '[:upper:]' '[:lower:]' )
-	echo "cat $OUTPUT | grep $2"
-	grep -o $HEADER-[a-zA-Z0-9]*-[a-zA-Z0-9]* $OUTPUT | sort -u
-	[ "$2" != "" ] && cat $OUTPUT | grep $HEADER- | cut -d ' ' -f5,6,10
+	get_objects 
+	VSANCPODS=$( grep -o $HEADER-[a-zA-Z0-9]*-[a-zA-Z0-9]* $OUTPUT | sed -e s/$HEADER-// |  sort -u )
+              
+	if [ "$2" == "" ]; then
+	#no second parameter after <list>
+  	echo "List all vSAN cPODs:"
+	for CPOD in ${VSANCPODS} ; do
+              	used=0; a=0; while read -a vms ; do used=$( echo "$used + ${vms[5]}" | bc ); a=$( echo "$a + ${vms[3]}" | bc); done < <(cat $OUTPUT | grep $CPOD); echo -e " '$CPOD' \t uses $used GB allocates $a GB"
+	done
+	
+	else
+	#second parameter 	
+	echo List VMs in $2
+		NESTED=$( grep -o $2-[a-zA-Z0-9/]* $OUTPUT | sed -e s/$2-// | sort -u )
+		for CPOD in ${NESTED} ; do 
+			used=0; a=0; while read -a vms ; do used=$( echo "$used + ${vms[5]}" | bc ); a=$( echo "$a + ${vms[3]}" | bc); done < <(cat $OUTPUT | grep $2-$CPOD); echo -e " '$CPOD' \t uses $used GB allocates $a GB"
+
+		done
+	fi
+
 	exit 1
 	;;
 
@@ -133,15 +140,16 @@ help)
 *)
 	#this version fetches vsan objects from the first level nested VM level
 	get_objects
-	echo "Calculating size of objects for '$NAME_LOWER' cPod"
+ 	echo "Calculating cPod size:"
 
 	#calculate vms and snapshots for namespace
-	used=0; a=0; while read -a vms ; do used=$( echo "$used + ${vms[5]}" | bc ); a=$( echo "$a + ${vms[3]}" | bc); done < <(cat $OUTPUT | grep $namespace); echo "'$namespace' uses $used GB allocates $a GB"
+	used=0; a=0; while read -a vms ; do used=$( echo "$used + ${vms[5]}" | bc ); a=$( echo "$a + ${vms[3]}" | bc); done < <(cat $OUTPUT | grep $namespace); echo -e "'$namespace' \t uses $used GB allocates $a GB"
 
 	#snapshots
-	used=0; a=0; while read -a vms ; do used=$( echo "$used + ${vms[5]}" | bc ); a=$( echo "$a + ${vms[3]}" | bc); done < <(cat $OUTPUT | grep $namespace | grep "0000"); echo "snapshot uses $used GB allocates $a GB"
+	used=0; a=0; while read -a vms ; do used=$( echo "$used + ${vms[5]}" | bc ); a=$( echo "$a + ${vms[3]}" | bc); done < <(cat $OUTPUT | grep $namespace | grep "0000"); echo -e "snapshot \t uses $used GB allocates $a GB"
 	;;
-
 
 esac
 
+
+ 

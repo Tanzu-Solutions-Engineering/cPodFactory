@@ -30,3 +30,11 @@ MEM=$( govc metric.sample "host/${VCENTER_CLUSTER}" mem.usage.average | sed -e "
 MEM=$( expr ${MEM} )
 echo "Memory : ${MEM}% avg"
 echo =====================
+
+EDGESTORAGE=$(df -h | grep "/$" | rev | awk '{print $2}' | rev | sed 's/%//')
+[[ $EDGESTORAGE -gt 90 ]] && EDGESTATUS="!! alert !!" || EDGESTATUS="ok"
+echo "cPodEdge '/' : ${EDGESTORAGE}% - ${EDGESTATUS}"
+EDGESTORAGE=$(df -h $CPODEDGE_DATASTORE | grep "/" | rev | awk '{print $2}' | rev | sed 's/%//')
+[[ $EDGESTORAGE -gt 90 ]] && EDGESTATUS="!! alert !!" || EDGESTATUS="ok"
+echo "cPodEdge $CPODEDGE_DATASTORE : ${EDGESTORAGE}% - ${EDGESTATUS}"
+echo =====================

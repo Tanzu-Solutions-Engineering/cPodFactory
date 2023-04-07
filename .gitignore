@@ -33,3 +33,4 @@ CPODFACTORY-ENVIRONMENTS-BACKUP/*
 vcf*.sh
 vsphere*.sh
 .vscode
+.idea/

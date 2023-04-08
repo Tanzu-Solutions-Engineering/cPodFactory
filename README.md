@@ -2,7 +2,7 @@
 Lab Automation in nested VMware SDDC with ludicrous speed.
 Like a Russian Dolls for vSDDC.
 
-![TheWhy](./cPodFactory.png)
+![TheWhy](docs/images/cPodFactory.png)
 
 Some links to bootstrap your env with download:\
 [Container used for executing powercli if you are airgapped](https://bucket-garage.s3.eu-central-1.amazonaws.com/powercli-container.tar.gz)\
@@ -64,4 +64,4 @@ Finally, merge your branch if you've finished working on it. `git merge issue-2`
 
 Check out the [LICENSE](./LICENSE)
 
-User manual : [HELP](./usermanual.md)
+User manual : [HELP](docs/usermanual.md)

@@ -34,8 +34,8 @@ or perform the following changes on cpodrouter
 - power-on cpodrouter
 - ssh to cpodrouter (using dhcp address)
 - modify following files on cpodrouter:
-    * /root/vlan.sh - see file content: [vlan.sh](../../install/vlan.sh)
-    * /root/update/update.sh - see file content : [update/update.sh](../../install/cpodrouter/root/update/update.sh)  - modified section (line 43->)
+    * /root/vlan.sh - see file content: [vlan.sh](../../src/install/vlan.sh)
+    * /root/update/update.sh - see file content : [update/update.sh](../../src/install/cpodrouter/root/update/update.sh)  - modified section (line 43->)
 
 - check as well :
     * /root/update/ssd_esx_tag.sh 

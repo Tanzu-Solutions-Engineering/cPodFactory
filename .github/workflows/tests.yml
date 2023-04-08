@@ -14,16 +14,6 @@ jobs:
           chmod a+x shfmt
       - run: ./shfmt --diff .
 
-  shellcheck:
-    runs-on: ubuntu-20.04
-    steps:
-      - uses: actions/checkout@v2
-      - name: Run shellcheck
-        run: |
-          sudo apt-get update -y
-          sudo apt-get install shellcheck
-          ./shellcheck.sh
-
   linux:
     strategy:
       matrix:

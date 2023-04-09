@@ -4,7 +4,7 @@
 # $1 from
 # $2 to
 
-. ./src/env
+. ./env
 CPOD="CDAY"
 . ./${COMPUTE_DIR}/cpod-xxx_env
 

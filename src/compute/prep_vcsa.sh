@@ -10,7 +10,7 @@
 #export PSC_DOMAIN="vsphere.local"
 #export PSC_PASSWORD="qPOW6Jq7RcQLvNh!"
 
-. ./src/env
+. ./env
 
 [ "$1" == "" ] && echo "usage: $0 <name_of_cpod> <num_of_esx> <start_number_esx (default=1)>" && exit 1
 

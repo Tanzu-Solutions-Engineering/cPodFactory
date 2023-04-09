@@ -9,7 +9,7 @@
 # $3 : Name of owner
 
 # source helper functions
-. ./src/env
+. ./env
 source ./extra/functions.sh
 
 #logging 

@@ -1,7 +1,7 @@
 #!/bin/bash
 #bdereims@vmware.com
 
-. ./src/env
+. ./env
 
 [ "$1" == "" -o "$2" == "" ] && echo "usage: $0 <peer_ip> <peer_asn>" && exit 1 
 

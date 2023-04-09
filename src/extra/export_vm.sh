@@ -4,7 +4,7 @@
 
 [ "${1}" == "" ] && echo "usage: ${0} deploy_env vm_name" && exit 1
 
-. ./src/env
+. ./env
 
 if [ -f "${1}" ]; then
 	. ./${COMPUTE_DIR}/"${1}"

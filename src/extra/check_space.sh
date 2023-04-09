@@ -1,6 +1,6 @@
 #!/bin/bash
 
-. ./src/env
+. ./env
 . ./govc_env
 
 

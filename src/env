@@ -2,7 +2,7 @@
 #bdereims@vmware.com
 
 DNSMASQ=/etc/dnsmasq.conf
-HOSTS=/etc/hosts
+HOSTS=hosts
 
 WHERE=$( ip addr show eth1 | grep inet | head -1 | awk '{print $2}' )
 

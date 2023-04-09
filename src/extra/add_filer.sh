@@ -3,7 +3,7 @@
 
 # Usage : ./add_filer.sh EUC (not cPod-EUC)
 
-. ./src/env
+. ./env
 
 [ "$1" == "" ] && echo "usage: $0 <name_of_cpod> <owner's email alias (ex: bdereims)>" && exit 1 
 

@@ -1,7 +1,7 @@
 #!/bin/bash
 #bdereims@vmware.com
 
-. ./src/env
+. ./env
 
 DNSMASQ=/etc/dnsmasq.conf
 

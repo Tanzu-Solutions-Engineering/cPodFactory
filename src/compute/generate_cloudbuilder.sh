@@ -5,7 +5,7 @@
 # add : "server=/5.23.172.in-addr.arpa/172.23.5.1" in dnsmasq.conf @ wdm in order to add cPod as WD
 # minimal deployment with : "excludedComponents": ["NSX-V", "AVN", "EBGP"] in json
 
-. ./src/env
+. ./env
 
 [ "$1" == "" ] && echo "usage: $0 <name_of_cpod>" && exit 1 
 

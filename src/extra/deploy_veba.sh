@@ -4,7 +4,7 @@
 
 [ "${1}" == "" ] && echo "usage: ${0} deploy_env" && exit 1
 
-. ./src/env
+. ./env
 
 [ "${1}" == "" ] && echo "usage: ${0}  <deploy_env or cPod Name> <path to OVA>" && exit 1
 

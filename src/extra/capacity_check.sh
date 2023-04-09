@@ -1,7 +1,7 @@
 #!/bin/bash
 
 . ./govc_env
-. ./src/env
+. ./env
 
 if [ "${FORCE}" == "1" ]; then
 	echo "Ok!"

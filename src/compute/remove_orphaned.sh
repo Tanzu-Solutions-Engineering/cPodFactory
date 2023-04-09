@@ -3,7 +3,7 @@
 
 # Usage: remove_orphaned.sh EUC
 
-. ./src/env
+. ./env
 
 [ "$1" == "" ] && echo "usage: $0 <name_of_cdpod>" && exit 1
 

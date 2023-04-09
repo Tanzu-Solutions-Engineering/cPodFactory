@@ -1,7 +1,7 @@
 #!/bin/bash
 #edewitte@vmware.com
 
-. ./src/env
+. ./env
 . ./govc_env
 
 CPODS=$(cat /etc/hosts |grep cpod- | wc -l)

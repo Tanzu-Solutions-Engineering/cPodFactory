@@ -5,7 +5,7 @@
 # This scrips deploys a VCF management domain using an already deployed cloudbuilder.
 
 # source helper functions
-. ./src/env
+. ./env
 source ./extra/functions.sh
 
 #input validation check

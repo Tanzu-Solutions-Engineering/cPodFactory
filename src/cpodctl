@@ -1,7 +1,7 @@
 #!/bin/bash
 #bdereims@vmware.com
 
-CPOD_FACTORY=/root/cPodFactory
+CPOD_FACTORY=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 
 show_help() {
   echo "=== cpodctl help"
@@ -24,19 +24,19 @@ show_help() {
 }
 
 list_cpod() {
-  cd ${CPOD_FACTORY} || exit
+  cd "${CPOD_FACTORY}" || exit
   ./list_cpod.sh
 }
 
 password_cpod() {
-  cd ${CPOD_FACTORY} || exit
+  cd "${CPOD_FACTORY}" || exit
   OWNER=${1}
   if [ "${1}" == "" ]; then OWNER="admin"; fi
-  ./password_cpod.sh ${OWNER}
+  ./password_cpod.sh "${OWNER}"
 }
 
 create_cpod() {
-  cd ${CPOD_FACTORY} || exit
+  cd "${CPOD_FACTORY}" || exit
   NAME=${1}
   NBESX=$(expr "${2}")
   OWNER=${3}
@@ -63,7 +63,7 @@ create_cpod() {
 }
 
 delete_cpod() {
-  cd ${CPOD_FACTORY} || exit
+  cd "${CPOD_FACTORY}" || exit
   NAME=${1}
   OWNER=${2}
   if [ "${NAME}" != "" ] && [ "${OWNER}" != "" ]; then
@@ -74,7 +74,7 @@ delete_cpod() {
 }
 
 vcsa() {
-  cd ${CPOD_FACTORY} || exit
+  cd "${CPOD_FACTORY}" || exit
   NAME=$(echo "${1}" | tr '[:lower:]' '[:upper:]')
   OWNER=${2}
   if [ "${NAME}" != "" ] && [ "${OWNER}" != "" ]; then
@@ -85,7 +85,7 @@ vcsa() {
 }
 
 cloudbuilder() {
-  cd ${CPOD_FACTORY} || exit
+  cd "${CPOD_FACTORY}" || exit
   NAME=$(echo "${1}" | tr '[:lower:]' '[:upper:]')
   OWNER=${2}
   if [ "${NAME}" != "" ] && [ "${OWNER}" != "" ]; then
@@ -96,7 +96,7 @@ cloudbuilder() {
 }
 
 addfiler() {
-  cd ${CPOD_FACTORY} || exit
+  cd "${CPOD_FACTORY}" || exit
   NAME=${1}
   OWNER=${2}
   if [ "${NAME}" != "" ] && [ "${OWNER}" != "" ]; then
@@ -107,13 +107,13 @@ addfiler() {
 }
 
 expose() {
-  cd ${CPOD_FACTORY} || exit
+  cd "${CPOD_FACTORY}" || exit
   NAME=${1}
   ./expose_cpod.sh "${NAME}"
 }
 
 lease() {
-  cd ${CPOD_FACTORY} || exit
+  cd "${CPOD_FACTORY}" || exit
   ACTION=${1}
   NAME=${2}
   OWNER=${3}

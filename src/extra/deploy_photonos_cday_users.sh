@@ -1,7 +1,7 @@
 #!/bin/bash
 #bdereims@vmware.com
 
-. ./src/env
+. ./env
 CPOD="CDAY"
 . ./${COMPUTE_DIR}/cpod-xxx_env
 

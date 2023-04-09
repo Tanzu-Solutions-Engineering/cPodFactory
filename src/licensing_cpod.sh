@@ -5,7 +5,7 @@
 # export PSC_DOMAIN
 # export PSC_PASSWORD
 
-. ./src/env
+. ./env
 . ./licenses.key
 
 [ "$1" == "" ] && echo "usage: $0 <name of cpod>, then the script automatically license vCenter, vSphere and vSAN if any" && exit 1

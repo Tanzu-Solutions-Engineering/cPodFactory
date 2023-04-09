@@ -2,7 +2,7 @@
 #bdereims@vmware.com
 
 pushd ~/cPodFactory
-. ./src/env
+. ./env
 popd
 
 cd openvpn

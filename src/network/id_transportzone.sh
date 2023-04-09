@@ -1,7 +1,7 @@
 #!/bin/bash
 #bdereims@vmware.com
 
-. ./src/env
+. ./env
 
 [ "$1" == "" ] && echo "usage: $0 <name_of_transportzone>" && exit 1 
 

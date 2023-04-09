@@ -4,7 +4,7 @@
 
 [ "${1}" == "" ] && echo "usage: ${0} vm_name" && exit 1
 
-. ./src/env
+. ./env
 
 ### Local vars ####
 

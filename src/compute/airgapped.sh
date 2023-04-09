@@ -4,7 +4,7 @@
 #for squid proxy on cPodRouter
 #docker run -d -p 3128:3128 --dns=172.16.1.1 b4tman/squid
 
-. ./src/env
+. ./env
 
 [ "${1}" == ""  -o "${2}" == "" ] && echo "usage: ${0} CPOD-NAME enable|disable" && exit 1
 CPODROUTER=$( echo ${1} | tr '[:upper:]' '[:lower:]' )

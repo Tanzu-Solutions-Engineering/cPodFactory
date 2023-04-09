@@ -7,7 +7,7 @@
 # export PSC_DOMAIN
 # export PSC_PASSWORD
 
-. ./src/env
+. ./env
 
 [ "$1" == "" ] && echo "usage: $0 <name_of_cpod> <num_of_esx>" && exit 1
 

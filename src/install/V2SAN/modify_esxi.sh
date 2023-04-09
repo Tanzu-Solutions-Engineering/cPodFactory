@@ -3,7 +3,7 @@
 
 # Modify ESX in cluster to enable nested vSAN Datastore on vSAN Datastore
 
-. ./src/env
+. ./env
 
 #[ "$1" == "" -o "$2" == "" -o "$3" == "" ] && echo "usage: $0 && exit 1 
 

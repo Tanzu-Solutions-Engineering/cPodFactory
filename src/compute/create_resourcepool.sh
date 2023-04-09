@@ -9,7 +9,7 @@
 # $6 : Owner 
 # $7 : Start Number ESX, for adding ESX on created cPod
 
-. ./src/env
+. ./env
 
 [ "$1" == "" -o "$2" == "" -o "$3" == "" ] && echo "usage: $0 <name_of_vapp> <name_of_port_group> <ip_on_transit> <num_esx> <root domain> <owner> <start number esx>" && exit 1 
 

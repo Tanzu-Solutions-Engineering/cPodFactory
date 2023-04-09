@@ -1,7 +1,7 @@
 #!/bin/bash
 #bdereims@vmware.com
 
-. ./src/env
+. ./env
 
 [ "$1" == "" -o "$2" == "" ] && echo "usage: $0 <vlan_id> <name_of_portgroup>" && exit 1 
 

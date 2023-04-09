@@ -1,7 +1,7 @@
 #!/bin/bash
 #bdereims@vmware.com
 
-. ./src/env
+. ./env
 
 SESSION_ID=$( ${COMPUTE_DIR}/session_vcenter.sh )
 

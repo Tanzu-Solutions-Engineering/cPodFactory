@@ -3,7 +3,7 @@
 
 # $1 : cPod Name
 
-. ./src/env
+. ./env
 
 [ "$1" == "" ] && echo "usage: $0 <name_of_cpod>"  && exit 1 
 

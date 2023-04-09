@@ -1,7 +1,7 @@
 #!/bin/bash
 #bdereims@vmware.com
 
-. ./src/env
+. ./env
 
 [ "$1" == "" -o "$2" == "" ] && echo "usage: $0 <id_of_edge> <ip_of_peer>" && exit 1 
 

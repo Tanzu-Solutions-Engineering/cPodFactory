@@ -1,7 +1,7 @@
 #!/bin/bash
 #bdereims@vmware.com
 
-. ./src/env
+. ./env
 
 [ "$1" == "" ] && echo "usage: $0 <id_of_edge>" && exit 1 
 

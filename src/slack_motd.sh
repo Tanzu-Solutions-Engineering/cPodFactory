@@ -1,7 +1,7 @@
 #!/bin/bash
 #jacobssimon@vmware.com
 
-. ./src/env
+. ./env
 . ./govc_env
 
 

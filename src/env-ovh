@@ -2,7 +2,7 @@
 #bdereims@vmware.com
 
 # this file is not synced in git
-. ./src/env.passwd
+. ./env.passwd
 
 SLACK=NO
 LEASE=NO

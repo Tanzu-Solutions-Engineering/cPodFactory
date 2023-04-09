@@ -3,7 +3,7 @@
 #requires the "at" package that allows the execution of a given command later in time (as a planned job)
 #please make sure the atd service is started and "enabled" (aka will restart if unexpectidly killed)
 
-. ./src/env
+. ./env
 
 [ "${LEASE}" == "NO" ] && exit 0
 

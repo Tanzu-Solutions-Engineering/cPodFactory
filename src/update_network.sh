@@ -2,7 +2,7 @@
 
 #exit 0
 
-. ./src/env
+. ./env
 
 CPOD=$( cat zz | grep "172.16" | grep "cpod-" | awk '{print $1}' )
 

@@ -5,7 +5,7 @@
 # This scrips generates an ems json for cloudbuilder and creates DNS entries in the cpod mostly used if you want to do the deployment by hand.
 # source helper functions
 
-. ./src/env
+. ./env
 source ./extra/functions.sh
 
 #input validation check

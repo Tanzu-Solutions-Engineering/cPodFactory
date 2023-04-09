@@ -3,7 +3,7 @@
 
 # Usage : ./expose_cpod.sh TEST (not cPod-TEST)
 
-. ./src/env
+. ./env
 
 [ "$1" == "" ] && echo "usage: $0 <name_of_cpod>" && exit 1 
 

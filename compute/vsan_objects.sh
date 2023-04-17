@@ -1,5 +1,12 @@
 #!/bin/bash
-#vtonev@vmware.com
+#tonev@gmx.net
+
+
+#govc device.info -vm /muc-dc01/vm/cPod-CPBU-V441-esx04
+#govc ls /*/vm/*
+#govc vm.info /muc-dc01/vm/cPod-CPBU-V441-esx04
+#govc device.ls -vm /muc-dc01/vm/cPod-CPBU-V441-esx04
+#govc datastore.disk.info 1280ce62-e49a-3a3f-d2f7-a4bf016abb56/cPod-CPBU-V441-esx04_6.vmdk
 
 # $1 : cPod Name
 . ./env
@@ -95,7 +102,7 @@ fetch)
 
 list)
 	get_objects 
-	VSANCPODS=$( grep -o $HEADER-[a-zA-Z0-9]*-[a-zA-Z0-9]* $OUTPUT | sed -e s/$HEADER-// |  sort -u )
+	VSANCPODS=$( grep -o $HEADER-[a-zA-Z0-9]*-[a-zA-Z0-9]* $OUTPUT | sed -e s/$HEADER-// | sed -e s/'-esx[0-9]*'// -e s/'-vcsa'// -e s/'-cpodrouter'// -e s/'-forty'// |  sort -u )
               
 	if [ "$2" == "" ]; then
 	#no second parameter after <list>

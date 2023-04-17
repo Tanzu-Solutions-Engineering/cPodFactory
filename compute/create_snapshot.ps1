@@ -16,6 +16,7 @@ $Datastore = "###DATASTORE###"
 $rootDomain = "###ROOT_DOMAIN###"
 $genPASSWD = "###GEN_PASSWD###"
 
+Set-PowerCLIConfiguration -Scope User -ParticipateInCEIP $false  -Confirm:$false
 Set-PowerCLIConfiguration -InvalidCertificateAction Ignore -Confirm:$false -DefaultVIServerMode multiple
 Connect-VIServer -Server $Vc -User $vcUser -Password $vcPass
 
@@ -30,6 +31,6 @@ foreach ($vm in  Get-VM -Name  "*$cPodName*") { New-Snapshot -VM $vm -Name $Port
 Start-VM "*$cPodName*"  -Confirm:$false
 #check if vms powered on
  do { $vmstatus = (get-vm -Name "*$cPodName*" ).PowerState ; Start-Sleep -Seconds 5} while ($vmstatus -ne "PoweredOn")
-Start-Sleep -Seconds 15 
+Start-Sleep -Seconds 3
 
 Disconnect-VIServer -Confirm:$false

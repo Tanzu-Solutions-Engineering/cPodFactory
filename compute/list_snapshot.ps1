@@ -17,6 +17,7 @@ $Datastore = "###DATASTORE###"
 $rootDomain = "###ROOT_DOMAIN###"
 $genPASSWD = "###GEN_PASSWD###"
 
+Set-PowerCLIConfiguration -Scope User -ParticipateInCEIP $false  -Confirm:$false
 Set-PowerCLIConfiguration -InvalidCertificateAction Ignore -Confirm:$false -DefaultVIServerMode multiple | Out-Null
 Connect-VIServer -Server $Vc -User $vcUser -Password $vcPass | Out-Null
 

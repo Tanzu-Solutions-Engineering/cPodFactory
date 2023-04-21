@@ -67,7 +67,18 @@ apply_licenses_clusters() {
 	done
 }
 
+remove_eval_license() {
+	govc license.remove "00000-00000-00000-00000-00000"
+}
 
+
+add_and_apply_licenses() {
+		add_licenses
+		apply_license_vcenter
+		apply_licenses_hosts
+		apply_licenses_clusters
+		remove_eval_license
+}
 #======================================
 
 VCENTER_VERSION=$(govc about |grep Version | awk '{print $2}' |cut -d "." -f1)
@@ -77,19 +88,13 @@ case $VCENTER_VERSION in
 		VCENTER_KEY=$V7_VCENTER_KEY
 		ESX_KEY=$V7_ESX_KEY
 		VSAN_KEY=$V7_VSAN_KEY
-		add_licenses
-		apply_license_vcenter
-		apply_licenses_hosts
-		apply_licenses_clusters
+		add_and_apply_licenses
 		;;
 	8)
 		VCENTER_KEY=$V8_VCENTER_KEY
 		ESX_KEY=$V8_ESX_KEY
 		VSAN_KEY=$V8_VSAN_KEY
-		add_licenses
-		apply_license_vcenter
-		apply_licenses_hosts
-		apply_licenses_clusters
+		add_and_apply_licenses
 		;;
 	*)
 		echo "Version $VCENTER_VERSION not foreseen yet by script"

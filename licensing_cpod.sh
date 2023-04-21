@@ -36,19 +36,28 @@ export GOVC_URL="https://${GOVC_LOGIN}:${GOVC_PWD}@vcsa.${POD_FQDN}"
 # Local Functions
 
 add_licenses() {
-	echo "adding license ..."
+	echo 
+	echo "Adding licenses to vCenter"
+	echo
 	govc license.add $VCENTER_KEY
 	govc license.add $ESX_KEY
 	govc license.add $VSAN_KEY
+	govc license.add $TANZU_KEY
 	govc license.ls
 }
 
 apply_license_vcenter() {
-	echo "Applying vCenter license ..."
+	echo 
+	echo "Applying vCenter license"
+	echo 
 	govc license.assign  $VCENTER_KEY
 }
 
 apply_licenses_hosts() {
+	echo 
+	echo "Applying hosts licenses"
+	echo 
+
 	NUM_ESX=$(govc datacenter.info "${POD_NAME}" | grep "Hosts" | cut -d : -f 2 | cut -d " " -f 14)
 	
 	for (( i=1; i<=$NUM_ESX; i++ ));
@@ -59,6 +68,10 @@ apply_licenses_hosts() {
 }
 
 apply_licenses_clusters() {
+	echo 
+	echo "Applying vCenter licenses"
+	echo 
+
 	CLUSTERS=$(govc ls -t ClusterComputeResource host |cut -d "/" -f4)
 	
 	for CLUSTER in $CLUSTERS;
@@ -69,9 +82,11 @@ apply_licenses_clusters() {
 }
 
 remove_eval_license() {
+	echo 
+	echo "Removing Eval license"
+	echo 
 	govc license.remove "00000-00000-00000-00000-00000"
 }
-
 
 add_and_apply_licenses() {
 		add_licenses

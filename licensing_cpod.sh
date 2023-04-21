@@ -64,6 +64,7 @@ apply_licenses_clusters() {
 	for CLUSTER in $CLUSTERS;
 	do
 		govc license.assign -cluster $CLUSTER $VSAN_KEY
+		govc license.assign -cluster $CLUSTER $TANZU_KEY
 	done
 }
 
@@ -88,12 +89,14 @@ case $VCENTER_VERSION in
 		VCENTER_KEY=$V7_VCENTER_KEY
 		ESX_KEY=$V7_ESX_KEY
 		VSAN_KEY=$V7_VSAN_KEY
+		TANZU_KEY=$V7_TANZU_KEY
 		add_and_apply_licenses
 		;;
 	8)
 		VCENTER_KEY=$V8_VCENTER_KEY
 		ESX_KEY=$V8_ESX_KEY
 		VSAN_KEY=$V8_VSAN_KEY
+		TANZU_KEY=$V8_TANZU_KEY
 		add_and_apply_licenses
 		;;
 	*)

@@ -35,49 +35,51 @@ export GOVC_URL="https://${GOVC_LOGIN}:${GOVC_PWD}@vcsa.${POD_FQDN}"
 #======================================
 # Local Functions
 
-add_licenses(
-	echo "Connecting vcsa.${POD_FQDN} ..."
-	for i in {0..4}
-	do
-		govc license.add -k=true ${KEYS[i]}
-	done
-	govc license.ls -k=true
-)
-apply_license_vcenter(
-	govc license.assign -k=true ${KEYS[0]}
-)
+add_licenses() {
+	echo "adding license ..."
+	govc license.add $VCENTER_KEY
+	govc license.add $ESX_KEY
+	govc license.add $VSAN_KEY
+	govc license.ls
+}
 
-apply_licenses_hosts(
-	NUM_ESX=$(govc datacenter.info -k=true "${POD_NAME}" | grep "Hosts" | cut -d : -f 2 | cut -d " " -f 14)
+apply_license_vcenter() {
+	echo "Applying vCenter license ..."
+	govc license.assign  $VCENTER_KEY
+}
+
+apply_licenses_hosts() {
+	NUM_ESX=$(govc datacenter.info "${POD_NAME}" | grep "Hosts" | cut -d : -f 2 | cut -d " " -f 14)
 	
 	for (( i=1; i<=$NUM_ESX; i++ ))
 	do
-		HOST="esx-0${i}.${POD_FQDN}"
-		govc license.assign -k=true -host ${HOST,,} ${KEYS[1]}
+		HOST="esx0${i}.${POD_FQDN}"
+		govc license.assign -host ${HOST,,} ${ESX_KEY}
+		govc license.assign -host ${HOST,,} ${VSAN_KEY}
 	done
-)
+}
 #======================================
 
 VCENTER_VERSION=$(govc about |grep Version | awk '{print $2}' |cut -d "." -f1)
 
 case $VCENTER_VERSION in
-		7)
-			VCENTER_KEY=$V7_VCENTER_KEY
-			ESX_KEY=$V7_ESX_KEY
-			VSAN_KEY=$V7_VSAN_KEY
-			add_licenses
-			apply_license_vcenter
-			apply_licenses_hosts
-			;;
-		8)
-			VCENTER_KEY=$V8_VCENTER_KEY
-			ESX_KEY=$V8_ESX_KEY
-			VSAN_KEY=$V8_VSAN_KEY
-			add_licenses
-			apply_license_vcenter
-			apply_licenses_hosts
-			;;
-		*)
+	7)
+		VCENTER_KEY=$V7_VCENTER_KEY
+		ESX_KEY=$V7_ESX_KEY
+		VSAN_KEY=$V7_VSAN_KEY
+		add_licenses
+		apply_license_vcenter
+		apply_licenses_hosts
+		;;
+	8)
+		VCENTER_KEY=$V8_VCENTER_KEY
+		ESX_KEY=$V8_ESX_KEY
+		VSAN_KEY=$V8_VSAN_KEY
+		add_licenses
+		apply_license_vcenter
+		apply_licenses_hosts
+		;;
+	*)
 		echo "Version $VCENTER_VERSION not foreseen yet by script"
 		;;
-	esac
+esac

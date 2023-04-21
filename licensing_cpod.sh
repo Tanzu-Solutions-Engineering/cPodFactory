@@ -51,13 +51,23 @@ apply_license_vcenter() {
 apply_licenses_hosts() {
 	NUM_ESX=$(govc datacenter.info "${POD_NAME}" | grep "Hosts" | cut -d : -f 2 | cut -d " " -f 14)
 	
-	for (( i=1; i<=$NUM_ESX; i++ ))
+	for (( i=1; i<=$NUM_ESX; i++ ));
 	do
 		HOST="esx0${i}.${POD_FQDN}"
 		govc license.assign -host ${HOST,,} ${ESX_KEY}
-		govc license.assign -host ${HOST,,} ${VSAN_KEY}
 	done
 }
+
+apply_licenses_clusters() {
+	CLUSTERS=$(govc ls -t ClusterComputeResource host |cut -d "/" -f4)
+	
+	for CLUSTER in $CLUSTERS;
+	do
+		govc license.assign -cluster $CLUSTER $VSAN_KEY
+	done
+}
+
+
 #======================================
 
 VCENTER_VERSION=$(govc about |grep Version | awk '{print $2}' |cut -d "." -f1)
@@ -70,6 +80,7 @@ case $VCENTER_VERSION in
 		add_licenses
 		apply_license_vcenter
 		apply_licenses_hosts
+		apply_licenses_clusters
 		;;
 	8)
 		VCENTER_KEY=$V8_VCENTER_KEY
@@ -78,6 +89,7 @@ case $VCENTER_VERSION in
 		add_licenses
 		apply_license_vcenter
 		apply_licenses_hosts
+		apply_licenses_clusters
 		;;
 	*)
 		echo "Version $VCENTER_VERSION not foreseen yet by script"

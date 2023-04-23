@@ -110,8 +110,8 @@ VCENTER_VERSION=$(govc about |grep Version | awk '{print $2}' |cut -d "." -f1)
 
 case $VCENTER_VERSION in
 	7)
-		check_license_file "V7"
 		echo "Applying Version 7"
+		check_license_file "V7"
 		VCENTER_KEY=$V7_VCENTER_KEY
 		ESX_KEY=$V7_ESX_KEY
 		VSAN_KEY=$V7_VSAN_KEY
@@ -119,8 +119,8 @@ case $VCENTER_VERSION in
 		add_and_apply_licenses
 		;;
 	8)
-		check_license_file "V8"
 		echo "Applying Version 8"
+		check_license_file "V8"
 		VCENTER_KEY=$V8_VCENTER_KEY
 		ESX_KEY=$V8_ESX_KEY
 		VSAN_KEY=$V8_VSAN_KEY

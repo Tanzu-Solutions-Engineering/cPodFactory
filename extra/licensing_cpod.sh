@@ -6,8 +6,14 @@
 # export PSC_DOMAIN
 # export PSC_PASSWORD
 
-. ./env
-. ./licenses.key
+source ./env
+
+if [ ! -f ./licenses.key ]; then
+	echo "./licenses.key does not exist. please create one by using the licenses.key.template as reference"
+	exit 1
+else
+	source ./licenses.key
+fi
 
 [ "$1" == "" ] && echo "usage: $0 <name of cpod>, then the script automatically license vCenter, vSphere and vSAN if any" && exit 1
 

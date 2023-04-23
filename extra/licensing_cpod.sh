@@ -98,7 +98,7 @@ add_and_apply_licenses() {
 }
 
 check_license_file(){
-	if [ $(cat ./licenses.key |grep $1 |grep XXXXX |wc -l)  >0 ]; then
+	if [[ $(cat ./licenses.key |grep $1 |grep XXXXX |wc -l) > 0 ]]; then
 		echo "./licenses.key includes undefined license keys :"
 		cat ./licenses.key |grep $1 |grep XXXXX 
 		exit 1

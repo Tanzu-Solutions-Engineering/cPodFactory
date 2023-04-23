@@ -44,7 +44,7 @@ add_licenses() {
 	govc license.add $ESX_KEY
 	govc license.add $VSAN_KEY
 	govc license.add $TANZU_KEY
-	govc license.ls
+	#govc license.ls
 }
 
 apply_license_vcenter() {
@@ -60,7 +60,6 @@ apply_licenses_hosts() {
 	echo 
 
 	NUM_ESX=$(govc datacenter.info "${POD_NAME}" | grep "Hosts" | cut -d : -f 2 | cut -d " " -f 14)
-	
 	for (( i=1; i<=$NUM_ESX; i++ ));
 	do
 		HOST="esx0${i}.${POD_FQDN}"

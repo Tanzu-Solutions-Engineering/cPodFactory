@@ -38,6 +38,7 @@ else
 fi
 
 export GOVC_URL="https://${GOVC_USERNAME}:${GOVC_PASSWORD}@vcsa.${POD_FQDN}"
+export GOVC_DATACENTER=""
 
 #======================================
 # Local Functions

@@ -13,7 +13,7 @@
 
 source ./extra/functions.sh
 
-JSON_TEMPLATE=${JSON_SIVT_TEMPLATE:-"sivt-tkgm-template.json"}
+JSON_TEMPLATE=${JSON_SIVT_TEMPLATE:-"sivt-vsphere-dvs-tkgs-wcp-template.json"}
 
 CPOD_NAME=$( echo ${1} | tr '[:lower:]' '[:upper:]' )
 NAME_LOWER=$( echo ${HEADER}-${CPOD_NAME} | tr '[:upper:]' '[:lower:]' )
@@ -52,7 +52,7 @@ PASSWORD=$( ${EXTRA_DIR}/passwd_for_cpod.sh ${CPOD_NAME} )
 PASSWORD64=$(echo -n ${PASSWORD} |base64 )
 
 SCRIPT_DIR=/tmp/scripts
-SCRIPT=/tmp/scripts/sivt-${NAME_LOWER}.json
+SCRIPT=/tmp/scripts/sivt-tkgs-${NAME_LOWER}.json
 
 mkdir -p ${SCRIPT_DIR} 
 cp ${EXTRA_DIR}/${JSON_TEMPLATE} ${SCRIPT} 
@@ -83,13 +83,5 @@ echo
 sshpass -p ${PASSWORD} scp -o StrictHostKeyChecking=no ~/.ssh/id_rsa.pub root@sivt.${NAME_LOWER}.${ROOT_DOMAIN}:/root/.ssh/authorized_keys
 scp -o StrictHostKeyChecking=no ${SCRIPT} root@sivt.${NAME_LOWER}.${ROOT_DOMAIN}:/opt/vmware/arcas/src/vsphere-dvs-tkgm.json
 echo "deploying NSX ALB and management cluster"
-ssh -o StrictHostKeyChecking=no root@sivt.${NAME_LOWER}.${ROOT_DOMAIN} "arcas --env vsphere --file /opt/vmware/arcas/src/vsphere-dvs-tkgm.json --avi_configuration --tkg_mgmt_configuration --verbose"
-echo "deploying shared service cluster"
-echo "press any key to continue"
-read a
-ssh -o StrictHostKeyChecking=no root@sivt.${NAME_LOWER}.${ROOT_DOMAIN} "arcas --env vsphere --file /opt/vmware/arcas/src/vsphere-dvs-tkgm.json --shared_service_configuration  --verbose"
-echo "deploying workload cluster"
-echo "press any key to continue"
-read a
-ssh -o StrictHostKeyChecking=no root@sivt.${NAME_LOWER}.${ROOT_DOMAIN} "arcas --env vsphere --file /opt/vmware/arcas/src/vsphere-dvs-tkgm.json  --workload_preconfig --workload_deploy --verbose"
-
+ssh -o StrictHostKeyChecking=no root@sivt.${NAME_LOWER}.${ROOT_DOMAIN} "arcas --env vsphere --file /opt/vmware/arcas/src/vsphere-dvs-tkgm.json --avi_configuration --tkg_mgmt_configuration --shared_service_configuration --workload_preconfig --workload_deploy --deploy_extensions --verbose &"
+ssh -o StrictHostKeyChecking=no root@sivt.${NAME_LOWER}.${ROOT_DOMAIN} "journalctl -u arcas -f"

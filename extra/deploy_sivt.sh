@@ -87,7 +87,8 @@ EOF
 sh ${MYSCRIPT}
 
 echo "Adding entries into hosts of ${CPOD_NAME_LOWER}."
-add_to_cpodrouter_hosts "${IP_SIVT}" "sivt" ${CPOD_NAME_LOWER}
-add_to_cpodrouter_hosts "10.${VLAN}.1.2" "nsxalb01" ${CPOD_NAME_LOWER}
+add_entry_cpodrouter_hosts "${IP_SIVT}" "sivt" ${CPOD_NAME_LOWER}
+add_entry_cpodrouter_hosts "10.${VLAN}.1.2" "nsxalb01" ${CPOD_NAME_LOWER}
+restart_cpodrouter_dnsmasq
 
 #rm ${MYSCRIPT}

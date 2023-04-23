@@ -65,7 +65,6 @@ apply_licenses_hosts() {
 	echo 
 	echo "Applying hosts licenses"
 	echo 
-
 	NUM_ESX=$(govc datacenter.info "${POD_NAME}" | grep "Hosts" | cut -d : -f 2 | cut -d " " -f 14)
 	for (( i=1; i<=$NUM_ESX; i++ ));
 	do
@@ -78,9 +77,7 @@ apply_licenses_clusters() {
 	echo 
 	echo "Applying vCenter licenses"
 	echo 
-
 	CLUSTERS=$(govc ls -t ClusterComputeResource host |cut -d "/" -f4)
-	
 	for CLUSTER in $CLUSTERS;
 	do
 		govc license.assign -cluster $CLUSTER $VSAN_KEY

@@ -96,6 +96,14 @@ add_and_apply_licenses() {
 		remove_eval_license
 		govc license.assigned.ls
 }
+
+check_license_file(){
+	if [ $(cat ./licenses.key |grep $1 |grep XXXXX |wc -l)  >0 ]; then
+		echo "./licenses.key includes undefined license keys :"
+		cat ./licenses.key |grep $1 |grep XXXXX 
+		exit 1
+	fi 
+}
 #======================================
 
 VCENTER_VERSION=$(govc about |grep Version | awk '{print $2}' |cut -d "." -f1)
@@ -103,6 +111,7 @@ VCENTER_VERSION=$(govc about |grep Version | awk '{print $2}' |cut -d "." -f1)
 case $VCENTER_VERSION in
 	7)
 		echo "Applying Version 7"
+		check_license_file "V7"
 		VCENTER_KEY=$V7_VCENTER_KEY
 		ESX_KEY=$V7_ESX_KEY
 		VSAN_KEY=$V7_VSAN_KEY
@@ -111,6 +120,7 @@ case $VCENTER_VERSION in
 		;;
 	8)
 		echo "Applying Version 8"
+		check_license_file "V8"
 		VCENTER_KEY=$V8_VCENTER_KEY
 		ESX_KEY=$V8_ESX_KEY
 		VSAN_KEY=$V8_VSAN_KEY

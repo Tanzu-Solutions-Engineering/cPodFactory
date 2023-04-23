@@ -1,5 +1,6 @@
 #!/bin/bash
 #jacobssimon@vmware.com
+#modified by : edewitte@vmware.com
 
 # ELM
 # export PSC_DOMAIN
@@ -77,7 +78,7 @@ apply_licenses_clusters() {
 	for CLUSTER in $CLUSTERS;
 	do
 		govc license.assign -cluster $CLUSTER $VSAN_KEY
-		govc license.assign -cluster $CLUSTER $TANZU_KEY
+		#govc license.assign -cluster $CLUSTER $TANZU_KEY
 	done
 }
 
@@ -94,6 +95,7 @@ add_and_apply_licenses() {
 		apply_licenses_hosts
 		apply_licenses_clusters
 		remove_eval_license
+		govc license.assigned.ls
 }
 #======================================
 

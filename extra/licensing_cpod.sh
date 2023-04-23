@@ -19,19 +19,19 @@ POD_NAME_LOWER="$( echo ${POD_NAME} | tr '[:upper:]' '[:lower:]' )"
 POD_FQDN="${POD_NAME_LOWER}.${ROOT_DOMAIN}"
 
 if [ -z ${PSC_DOMAIN} ]; then
-	GOVC_LOGIN="administrator@${POD_FQDN}"
+	GOVC_USERNAME="administrator@${POD_FQDN}"
 else
-	GOVC_LOGIN="administrator@${PSC_DOMAIN}"
+	GOVC_USERNAME="administrator@${PSC_DOMAIN}"
 fi
 
 if [ -z ${PSC_DOMAIN} ]; then
-	GOVC_PWD="$( ./extra/passwd_for_cpod.sh ${1} )"
+	GOVC_PASSWORD="$( ./extra/passwd_for_cpod.sh ${1} )"
 else
-	GOVC_PWD="${PSC_PASSWORD}"
+	GOVC_PASSWORD="${PSC_PASSWORD}"
 	VCENTER_CPOD_PASSWD=${PSC_PASSWORD}
 fi
 
-export GOVC_URL="https://${GOVC_LOGIN}:${GOVC_PWD}@vcsa.${POD_FQDN}"
+export GOVC_URL="https://${GOVC_USERNAME}:${GOVC_PASSWORD}@vcsa.${POD_FQDN}"
 
 #======================================
 # Local Functions

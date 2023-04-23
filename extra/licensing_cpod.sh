@@ -19,15 +19,15 @@ POD_NAME_LOWER="$( echo ${POD_NAME} | tr '[:upper:]' '[:lower:]' )"
 POD_FQDN="${POD_NAME_LOWER}.${ROOT_DOMAIN}"
 
 if [ -z ${PSC_DOMAIN} ]; then
-	GOVC_USERNAME="administrator@${POD_FQDN}"
+	export GOVC_USERNAME="administrator@${POD_FQDN}"
 else
-	GOVC_USERNAME="administrator@${PSC_DOMAIN}"
+	export GOVC_USERNAME="administrator@${PSC_DOMAIN}"
 fi
 
 if [ -z ${PSC_DOMAIN} ]; then
-	GOVC_PASSWORD="$( ./extra/passwd_for_cpod.sh ${1} )"
+	export GOVC_PASSWORD="$( ./extra/passwd_for_cpod.sh ${1} )"
 else
-	GOVC_PASSWORD="${PSC_PASSWORD}"
+	export GOVC_PASSWORD="${PSC_PASSWORD}"
 	VCENTER_CPOD_PASSWD=${PSC_PASSWORD}
 fi
 

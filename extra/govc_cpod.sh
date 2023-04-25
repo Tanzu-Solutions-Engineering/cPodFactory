@@ -5,8 +5,7 @@
 
 source ./env
 
-
-[ "$1" == "" ] && echo "usage: $0 <name of cpod>, then the script automatically license vCenter, vSphere and vSAN if any" && exit 1
+[ "$1" == "" ] && echo "usage: $0 <name of cpod>, then the script generates a govc env file in /tmp" && exit 1
 
 
 #==========CONNECTION DETAILS==========

@@ -27,6 +27,10 @@ OVA=${OVA_NSXMGR}
 #AUTH_DOMAIN="vsphere.local"
 AUTH_DOMAIN=${DOMAIN}
 
+### functions ####
+
+source ./extra/functions.sh
+
 ###################
 
 CPOD_NAME="cpod-$1"
@@ -78,5 +82,8 @@ ${OVA} \
 EOF
 
 sh ${MYSCRIPT}
+
+add_entry_cpodrouter_hosts ${IP} ${HOSTNAME} ${CPOD_NAME_LOWER}
+restart_cpodrouter_dnsmasq ${CPOD_NAME_LOWER}
 
 #rm ${MYSCRIPT}

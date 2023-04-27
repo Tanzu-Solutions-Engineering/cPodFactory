@@ -83,5 +83,5 @@ echo
 sshpass -p ${PASSWORD} scp -o StrictHostKeyChecking=no ~/.ssh/id_rsa.pub root@sivt.${NAME_LOWER}.${ROOT_DOMAIN}:/root/.ssh/authorized_keys
 scp -o StrictHostKeyChecking=no ${SCRIPT} root@sivt.${NAME_LOWER}.${ROOT_DOMAIN}:/opt/vmware/arcas/src/vsphere-dvs-tkgm.json
 echo "deploying NSX ALB and TGKm clusters"
-ssh -o StrictHostKeyChecking=no root@sivt.${NAME_LOWER}.${ROOT_DOMAIN} "arcas --env vsphere --file /opt/vmware/arcas/src/vsphere-dvs-tkgm.json --avi_configuration --tkg_mgmt_configuration --shared_service_configuration --workload_preconfig --workload_deploy --deploy_extensions --verbose &"
+ssh -o StrictHostKeyChecking=no root@sivt.${NAME_LOWER}.${ROOT_DOMAIN} "arcas --env vsphere --file /opt/vmware/arcas/src/vsphere-dvs-tkgm.json --avi_configuration --tkg_mgmt_configuration --shared_service_configuration --workload_preconfig --workload_deploy --deploy_extensions --verbose &" &
 ssh -o StrictHostKeyChecking=no root@sivt.${NAME_LOWER}.${ROOT_DOMAIN} "journalctl -u arcas -f"

@@ -96,6 +96,8 @@ done
 echo
 echo "sending json to sivt appliance"
 echo
+ssh-keygen -q -R sivt.${NAME_LOWER}.${ROOT_DOMAIN}
+
 sshpass -p ${PASSWORD} scp -o StrictHostKeyChecking=no ~/.ssh/id_rsa.pub root@sivt.${NAME_LOWER}.${ROOT_DOMAIN}:/root/.ssh/authorized_keys
 scp -o StrictHostKeyChecking=no ${SCRIPT} root@sivt.${NAME_LOWER}.${ROOT_DOMAIN}:/opt/vmware/arcas/src/vsphere-dvs-tkgs.json
 echo "deploying NSX ALB and management cluster"

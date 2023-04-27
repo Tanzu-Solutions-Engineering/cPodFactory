@@ -78,6 +78,21 @@ ${SCRIPT}
 
 echo "JSON is genereated: ${SCRIPT}"
 echo 
+echo "Checking SIVT is up and running"
+echo
+URL="sivt.${NAME_LOWER}.${ROOT_DOMAIN}:8888"
+RESPONSE=$(curl -s -w '####%{response_code}' http://${URL})
+HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+
+while [[ "${HTTPSTATUS}" != "200" ]]
+do
+	echo "status : ${HTTPSTATUS}"
+	sleep 20
+	RESPONSE=$(curl -s -w '####%{response_code}' http://${URL})
+	HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+done
+
+echo
 echo "sending json to sivt appliance"
 echo
 sshpass -p ${PASSWORD} scp -o StrictHostKeyChecking=no ~/.ssh/id_rsa.pub root@sivt.${NAME_LOWER}.${ROOT_DOMAIN}:/root/.ssh/authorized_keys

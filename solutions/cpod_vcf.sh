@@ -59,17 +59,17 @@ echo
 test_params_file ${VERSION}
 
 echo
-echo "====================================="
-echo "=== creating cpod / vsan / NLB  ==="
-echo "====================================="
+echo "============================================"
+echo "=== creating cpod / Cloudbuilder / WLD01 ==="
+echo "============================================"
 echo
 
 cpodctl create $1 $2 $3
 cpodctl cloudbuilder $1 $3
 ./compute/generate_cloudbuilder.sh $1 $3
 
-echo "press enter to create first wld"
-read a 
+read -n1 -s -r -p $'press enter to create first wld.\n' key
+
 cpodctl create $1-wld01 $2 $3
 ./compute/generate_sddc_vi.sh $1 $1-wld01
 

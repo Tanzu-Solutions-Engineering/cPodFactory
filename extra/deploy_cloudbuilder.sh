@@ -9,9 +9,7 @@ if [ -f "${1}" ]; then
 	. ./${COMPUTE_DIR}/"${1}"
 else
 	SUBNET=$( ./${COMPUTE_DIR}/cpod_ip.sh ${1} )
-
 	[ $? -ne 0 ] && echo "error: file or env '${1}' does not exist" && exit 1
-
 	CPOD=${1}
 	unset DATASTORE
 	. ./${COMPUTE_DIR}/cpod-xxx_env

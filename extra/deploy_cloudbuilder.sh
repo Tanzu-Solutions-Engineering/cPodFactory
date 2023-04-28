@@ -77,7 +77,6 @@ cd /root/cPodFactory/ovftool
 ${OVA} \
 'vi://${VCENTER_ADMIN}:${VCENTER_PASSWD}@${VCENTER}/${VCENTER_DATACENTER}/host/${VCENTER_CLUSTER}/Resources/cPod-Workload/${VAPP}'
 EOF
-
 sh ${MYSCRIPT}
 
 echo "Adding entries into hosts of ${CPOD_NAME_LOWER}."

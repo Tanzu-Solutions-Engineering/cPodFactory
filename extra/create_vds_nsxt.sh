@@ -77,12 +77,6 @@ sed -i -e "s/###VLAN###/${VLAN}/" ${SCRIPT}
 docker run --interactive --tty --dns=${DNS} --entrypoint="/usr/bin/pwsh" -v /tmp/scripts:/tmp/scripts vmware/powerclicore:12.4 ${SCRIPT}
 #rm -fr ${SCRIPT}
 
-
-#add dhcp segments
-#dhcp-range=eth2.1202:eth2,10.12.2.2,10.12.2.254,255.255.255.0,12h
-#dhcp-range=eth2.1206:eth2,10.12.6.2,10.12.6.254,255.255.255.0,12h
-#dhcp-range=eth2.1207:eth2,10.12.7.2,10.12.7.254,255.255.255.0,12h
-
 END=$( date +%s )
 TIME=$( expr ${END} - ${START} )
 

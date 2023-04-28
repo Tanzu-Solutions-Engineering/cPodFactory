@@ -41,6 +41,7 @@ fi
 
 VAPP="cPod-${NAME_HIGHER}"
 NAME="${VAPP}-${HOSTNAME_CLOUDBUILDER}"
+CPOD_PORTGROUP="${CPOD_NAME_LOWER}"
 
 echo "Testing if something is already on the same @IP..."
 STATUS=$( ping -c 1 ${IP} 2>&1 > /dev/null ; echo $? )

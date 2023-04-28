@@ -70,7 +70,7 @@ cpodctl vcsa $1 $3
 ./extra/create_vds_sivt.sh $1 $3
 ./extra/enable_drs_vsan.sh $1 $3
 ./extra/deploy_sivt.sh $1 $3
-./extra/generate_sivt_json.sh $1
+./extra/generate_sivt_tkgs_json.sh $1
 
 #get data
 CPOD_NAME=$( echo ${1} | tr '[:lower:]' '[:upper:]' )
@@ -89,7 +89,7 @@ echo "============================="
 echo "=== connect to cpod vcsa ==="
 echo "=== url: https://vcsa.${NAME_LOWER}.${ROOT_DOMAIN}/ui"
 echo "=== user : administrator@${NAME_LOWER}.${ROOT_DOMAIN}"
-echo "=== url: https://sivt.${NAME_LOWER}.${ROOT_DOMAIN}:8888"
+echo "=== url: http://sivt.${NAME_LOWER}.${ROOT_DOMAIN}:8888"
 echo "=== user : root"
 echo "=== pwd : ${PASSWORD}"
 echo "============================="

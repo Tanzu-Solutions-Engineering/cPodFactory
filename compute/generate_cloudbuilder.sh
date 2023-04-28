@@ -129,7 +129,7 @@ do
 	echo ${EXECUTIONSTATUS}
 	case ${EXECUTIONSTATUS} in 
 		IN_PROGRESS)
-			echo ${VALIDATIONRESULT} | jq 'select(.validationChecks[].resultStatus == "IN_PROGRESS") | .description'
+			echo ${VALIDATIONRESULT} |jq '.validationChecks[] | select(.resultStatus == "IN_PROGRESS") | .description'
 			;;
 		FAILED)
 			echo ${VALIDATIONRESULT} | jq .
@@ -162,7 +162,7 @@ do
 	echo ${EXECUTIONSTATUS}
 	case ${EXECUTIONSTATUS} in 
 		IN_PROGRESS)
-			echo ${VALIDATIONRESULT} | jq 'select(.sddcSubTasks[].status == "IN_PROGRESS") | .description'
+			echo ${VALIDATIONRESULT} |jq '.sddcSubTasks[] | select(.status == "IN_PROGRESS") | .description'
 			;;
 		FAILED)
 			echo ${VALIDATIONRESULT} | jq .

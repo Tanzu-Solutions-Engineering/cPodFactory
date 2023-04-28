@@ -129,7 +129,7 @@ do
 	echo ${EXECUTIONSTATUS}
 	case ${EXECUTIONSTATUS} in 
 		IN_PROGRESS)
-			echo ${VALIDATIONRESULT} |jq '.validationChecks[] |.description .resultStatus'
+			echo ${VALIDATIONRESULT} | jq 'select(.validationChecks[].resultStatus == "IN_PROGRESS") | .description'
 			;;
 		FAILED)
 			echo ${VALIDATIONRESULT} | jq .
@@ -137,17 +137,47 @@ do
 			exit 1
 			;;
 		*)
-			echo ${EXECUTIONSTATUS}
+			echo ${VALIDATIONRESULT}
 			;;
 	esac
-	sleep 10
+	sleep 30
 	VALIDATIONRESULT=$(curl -s -k -u admin:${PASSWORD} -H 'Content-Type: application/json' -H 'Accept: application/json' -X GET https://cloudbuilder.${NAME_LOWER}.${ROOT_DOMAIN}/v1/sddcs/validations/${VALIDATIONID})
-	EXECUTIONSTATUS=$(echo ${VALIDATIONRESULT} | jq .executionStatus | sed 's/"//g')
+	EXECUTIONSTATUS=$(echo ${VALIDATIONRESULT} | jq -r .executionStatus )
 done
 
 read -n1 -s -r -p $'Hit enter to launch deployment or ctrl-c to stop.\n' key
 
-curl -i -k -u admin:${PASSWORD} -H 'Content-Type: application/json' -H 'Accept: application/json' -d @${SCRIPT} -X POST https://cloudbuilder.${NAME_LOWER}.${ROOT_DOMAIN}/v1/sddcs
+echo "Submitting SDDC deployment"
+
+VALIDATIONJSON=$(curl -s -k -u admin:${PASSWORD} -H 'Content-Type: application/json' -H 'Accept: application/json' -d @${SCRIPT} -X POST https://cloudbuilder.${NAME_LOWER}.${ROOT_DOMAIN}/v1/sddcs)
+VALIDATIONID=$(echo ${VALIDATIONJSON} | jq -r .id )
+echo "validationId = ${VALIDATIONID}"
+
+echo "Querying bringup status"
+VALIDATIONRESULT=$(curl -s -k -u admin:${PASSWORD} -H 'Content-Type: application/json' -H 'Accept: application/json' -X GET https://cloudbuilder.${NAME_LOWER}.${ROOT_DOMAIN}/v1/sddcs/${VALIDATIONID})
+EXECUTIONSTATUS=$(echo ${VALIDATIONRESULT} | jq -r .status )
+
+while [[ "${EXECUTIONSTATUS}" != "COMPLETED" ]]
+do
+	echo ${EXECUTIONSTATUS}
+	case ${EXECUTIONSTATUS} in 
+		IN_PROGRESS)
+			echo ${VALIDATIONRESULT} | jq 'select(.sddcSubTasks[].status == "IN_PROGRESS") | .description'
+			;;
+		FAILED)
+			echo ${VALIDATIONRESULT} | jq .
+			echo "stopping script"
+			exit 1
+			;;
+		*)
+			echo ${VALIDATIONRESULT}
+			;;
+	esac
+	sleep 30
+	VALIDATIONRESULT=$(curl -s -k -u admin:${PASSWORD} -H 'Content-Type: application/json' -H 'Accept: application/json' -X GET https://cloudbuilder.${NAME_LOWER}.${ROOT_DOMAIN}/v1/sddcs/${VALIDATIONID})
+	EXECUTIONSTATUS=$(echo ${VALIDATIONRESULT} | jq -r .status )
+done
+
 echo
 echo "Check deployment in CloudBuilder:"
 echo "check url : https://cloudbuilder.${NAME_LOWER}.${ROOT_DOMAIN}"

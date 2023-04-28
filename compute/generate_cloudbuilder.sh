@@ -126,12 +126,12 @@ EXECUTIONSTATUS=$(echo ${VALIDATIONRESULT} | jq .executionStatus | sed 's/"//g')
 
 while [[ "${EXECUTIONSTATUS}" != "COMPLETED" ]]
 do
-	case  ${EXECUTIONSTATUS} in 
+	echo ${EXECUTIONSTATUS}
+	case ${EXECUTIONSTATUS} in 
 		IN_PROGRESS)
-			echo "IN_PROGRESS"
+			echo ${VALIDATIONRESULT} |jq '.validationChecks[] |.description .resultStatus'
 			;;
 		FAILED)
-			echo "FAILED"
 			echo ${VALIDATIONRESULT} | jq .
 			echo "stopping script"
 			exit 1
@@ -144,7 +144,6 @@ do
 	VALIDATIONRESULT=$(curl -s -k -u admin:${PASSWORD} -H 'Content-Type: application/json' -H 'Accept: application/json' -X GET https://cloudbuilder.${NAME_LOWER}.${ROOT_DOMAIN}/v1/sddcs/validations/${VALIDATIONID})
 	EXECUTIONSTATUS=$(echo ${VALIDATIONRESULT} | jq .executionStatus | sed 's/"//g')
 done
-
 
 read -n1 -s -r -p $'Hit enter to launch deployment or ctrl-c to stop.\n' key
 

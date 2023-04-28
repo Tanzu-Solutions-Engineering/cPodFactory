@@ -68,7 +68,6 @@ cpodctl create $1 $2 $3
 cpodctl cloudbuilder $1 $3
 ./compute/generate_cloudbuilder.sh $1 $3
 
-
 read -n1 -s -r -p $'press enter to create first wld.\n' key
 
 cpodctl create $1-wld01 $2 $3

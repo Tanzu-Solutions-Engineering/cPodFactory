@@ -107,22 +107,88 @@ add_entry_cpodrouter_hosts "${SUBNET}.11" "sddc" ${NAME_LOWER}
 restart_cpodrouter_dnsmasq ${NAME_LOWER}
 
 echo "JSON is genereated: ${SCRIPT}"
-
-echo ""
-echo "Hit enter or ctrl-c to launch prereqs validation:"
-read answer
-curl -i -k -u admin:${PASSWORD} -H 'Content-Type: application/json' -H 'Accept: application/json' -d @${SCRIPT} -X POST https://cloudbuilder.${NAME_LOWER}.${ROOT_DOMAIN}/v1/sddcs/validations
-echo ""
-echo ""
-echo "Check prereqs in CloudBuilder:"
-echo "check url : https://cloudbuilder.${NAME_LOWER}.${ROOT_DOMAIN}"
-echo "using pwd : ${PASSWORD}"
 echo 
-echo "when validation confirmed,"
-echo "Hit enter or ctrl-c to launch deployment:"
-read answer
-curl -i -k -u admin:${PASSWORD} -H 'Content-Type: application/json' -H 'Accept: application/json' -d @${SCRIPT} -X POST https://cloudbuilder.${NAME_LOWER}.${ROOT_DOMAIN}/v1/sddcs
-echo ""
+
+read -n1 -s -r -p $'Hit enter to launch prereqs validation or ctrl-c to stop.\n' key
+
+echo "Submitting SDDC validation"
+VALIDATIONJSON=$(curl -s -k -u admin:${PASSWORD} -H 'Content-Type: application/json' -H 'Accept: application/json' -d @${SCRIPT} -X POST https://cloudbuilder.${NAME_LOWER}.${ROOT_DOMAIN}/v1/sddcs/validations)
+VALIDATIONID=$(echo ${VALIDATIONJSON} | jq -r .id )
+echo "validationId = ${VALIDATIONID}"
+
+echo "Querying validation result"
+VALIDATIONRESULT=$(curl -s -k -u admin:${PASSWORD} -H 'Content-Type: application/json' -H 'Accept: application/json' -X GET https://cloudbuilder.${NAME_LOWER}.${ROOT_DOMAIN}/v1/sddcs/validations/${VALIDATIONID})
+EXECUTIONSTATUS=$(echo ${VALIDATIONRESULT} | jq -r .executionStatus )
+
+CURRENTSTEP=""
+while [[ "${EXECUTIONSTATUS}" != "COMPLETED" ]]
+do
+#	echo ${EXECUTIONSTATUS}
+	case ${EXECUTIONSTATUS} in 
+		IN_PROGRESS)
+			STEPNAME=$(echo ${VALIDATIONRESULT} |jq '.validationChecks[] | select(.resultStatus == "IN_PROGRESS") | .description')
+			if [ ${STEPNAME} == ${CURRENTSTEP} ]; then
+				printf '.' >/dev/tty
+			else
+				CURRENTSTEP=${STEPNAME}
+				printf "\n%s"  "${STEPNAME}"
+			fi
+			;;
+		FAILED)
+			echo ${VALIDATIONRESULT} | jq .
+			echo "stopping script"
+			exit 1
+			;;
+		*)
+			echo ${VALIDATIONRESULT}
+			;;
+	esac
+	sleep 5
+	VALIDATIONRESULT=$(curl -s -k -u admin:${PASSWORD} -H 'Content-Type: application/json' -H 'Accept: application/json' -X GET https://cloudbuilder.${NAME_LOWER}.${ROOT_DOMAIN}/v1/sddcs/validations/${VALIDATIONID})
+	EXECUTIONSTATUS=$(echo ${VALIDATIONRESULT} | jq -r .executionStatus )
+done
+
+read -n1 -s -r -p $'Hit enter to launch deployment or ctrl-c to stop.\n' key
+
+echo "Submitting SDDC deployment"
+
+VALIDATIONJSON=$(curl -s -k -u admin:${PASSWORD} -H 'Content-Type: application/json' -H 'Accept: application/json' -d @${SCRIPT} -X POST https://cloudbuilder.${NAME_LOWER}.${ROOT_DOMAIN}/v1/sddcs)
+VALIDATIONID=$(echo ${VALIDATIONJSON} | jq -r .id )
+echo "validationId = ${VALIDATIONID}"
+
+echo "Querying bringup status"
+VALIDATIONRESULT=$(curl -s -k -u admin:${PASSWORD} -H 'Content-Type: application/json' -H 'Accept: application/json' -X GET https://cloudbuilder.${NAME_LOWER}.${ROOT_DOMAIN}/v1/sddcs/${VALIDATIONID})
+EXECUTIONSTATUS=$(echo ${VALIDATIONRESULT} | jq -r .status )
+
+CURRENTSTEP=""
+while [[ "${EXECUTIONSTATUS}" != "COMPLETED" ]]
+do
+#	echo ${EXECUTIONSTATUS}
+	case ${EXECUTIONSTATUS} in 
+		IN_PROGRESS)
+			STEPNAME=$(echo ${VALIDATIONRESULT} |jq '.sddcSubTasks[] | select(.status == "IN_PROGRESS") | .name')
+			if [ ${STEPNAME} == ${CURRENTSTEP} ]; then
+				printf '.' >/dev/tty
+			else
+				CURRENTSTEP=${STEPNAME}
+				printf "\n%s"  "${STEPNAME}"
+			fi
+			;;
+		FAILED)
+			echo ${VALIDATIONRESULT} | jq .
+			echo "stopping script"
+			exit 1
+			;;
+		*)
+			echo ${VALIDATIONRESULT}
+			;;
+	esac
+	sleep 5
+	VALIDATIONRESULT=$(curl -s -k -u admin:${PASSWORD} -H 'Content-Type: application/json' -H 'Accept: application/json' -X GET https://cloudbuilder.${NAME_LOWER}.${ROOT_DOMAIN}/v1/sddcs/${VALIDATIONID})
+	EXECUTIONSTATUS=$(echo ${VALIDATIONRESULT} | jq -r .status )
+done
+
+echo
 echo "Check deployment in CloudBuilder:"
 echo "check url : https://cloudbuilder.${NAME_LOWER}.${ROOT_DOMAIN}"
 echo "using pwd : ${PASSWORD}"

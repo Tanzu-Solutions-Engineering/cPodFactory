@@ -9,15 +9,13 @@
 
 [ "$1" == "" ] && echo "usage: $0 <name_of_cpod>" && exit 1 
 
-add_to_cpodrouter_hosts() {
-	echo "add ${1} -> ${2}"
-	ssh -o LogLevel=error ${NAME_LOWER} "sed "/${1}/d" -i /etc/hosts ; printf \"${1}\\t${2}\\n\" >> /etc/hosts"
-}
+### functions ####
+source ./extra/functions.sh
 
-#JSON_TEMPLATE=cloudbuilder-401.json
-#JSON_TEMPLATE=cloudbuilder-43.json
-JSON_TEMPLATE=${JSON_TEMPLATE:-"cloudbuilder-43.json"}
-#JSON_TEMPLATE=cloudbuilder-43.json
+if [ "${JSON_TEMPLATE}" == "" ]; then
+	echo "JSON_TEMPLATE var not set. please source vcfxx.sh as needed"
+fi
+
 DNSMASQ_TEMPLATE=dnsmasq.conf-vcf
 BGPD_TEMPLATE=bgpd.conf-vcf
 
@@ -97,102 +95,34 @@ echo "Modifying bgpd on cpodrouter."
 #scp ${BGPD} ${NAME_LOWER}:/etc/quagga/bgpd.conf
 
 echo "Adding entries into hosts of ${NAME_LOWER}."
-add_to_cpodrouter_hosts "${SUBNET}.3" "cloudbuilder"
-add_to_cpodrouter_hosts "${SUBNET}.4" "vcsa"
-add_to_cpodrouter_hosts "${SUBNET}.5" "nsx01"
-add_to_cpodrouter_hosts "${SUBNET}.6" "nsx01a"
-add_to_cpodrouter_hosts "${SUBNET}.7" "nsx01b"
-add_to_cpodrouter_hosts "${SUBNET}.8" "nsx01c"
-add_to_cpodrouter_hosts "${SUBNET}.9" "en01"
-add_to_cpodrouter_hosts "${SUBNET}.10" "en02"
-add_to_cpodrouter_hosts "${SUBNET}.11" "sddc"
-	
-ssh -o LogLevel=error ${NAME_LOWER} "systemctl restart dnsmasq"
-ssh -o LogLevel=error ${NAME_LOWER} "systemctl restart bgpd"
+add_entry_cpodrouter_hosts "${SUBNET}.3" "cloudbuilder" ${NAME_LOWER}
+add_entry_cpodrouter_hosts "${SUBNET}.4" "vcsa" ${NAME_LOWER}
+add_entry_cpodrouter_hosts "${SUBNET}.5" "nsx01" ${NAME_LOWER}
+add_entry_cpodrouter_hosts "${SUBNET}.6" "nsx01a" ${NAME_LOWER}
+add_entry_cpodrouter_hosts "${SUBNET}.7" "nsx01b" ${NAME_LOWER}
+add_entry_cpodrouter_hosts "${SUBNET}.8" "nsx01c" ${NAME_LOWER}
+add_entry_cpodrouter_hosts "${SUBNET}.9" "en01" ${NAME_LOWER}
+add_entry_cpodrouter_hosts "${SUBNET}.10" "en02" ${NAME_LOWER}
+add_entry_cpodrouter_hosts "${SUBNET}.11" "sddc" ${NAME_LOWER}
+restart_cpodrouter_dnsmasq ${NAME_LOWER}
 
 echo "JSON is genereated: ${SCRIPT}"
-echo
 
-read -n1 -s -r -p $'Hit enter to launch prereqs validation or ctrl-c to stop.\n' key
-
-echo "Submitting SDDC validation"
-VALIDATIONJSON=$(curl -s -k -u admin:${PASSWORD} -H 'Content-Type: application/json' -H 'Accept: application/json' -d @${SCRIPT} -X POST https://cloudbuilder.${NAME_LOWER}.${ROOT_DOMAIN}/v1/sddcs/validations)
-VALIDATIONID=$(echo ${VALIDATIONJSON} | jq -r .id )
-echo "validationId = ${VALIDATIONID}"
-
-echo "Querying validation result"
-VALIDATIONRESULT=$(curl -s -k -u admin:${PASSWORD} -H 'Content-Type: application/json' -H 'Accept: application/json' -X GET https://cloudbuilder.${NAME_LOWER}.${ROOT_DOMAIN}/v1/sddcs/validations/${VALIDATIONID})
-EXECUTIONSTATUS=$(echo ${VALIDATIONRESULT} | jq -r .executionStatus )
-
-CURRENTSTEP=""
-while [[ "${EXECUTIONSTATUS}" != "COMPLETED" ]]
-do
-#	echo ${EXECUTIONSTATUS}
-	case ${EXECUTIONSTATUS} in 
-		IN_PROGRESS)
-			STEPNAME=$(echo ${VALIDATIONRESULT} |jq '.validationChecks[] | select(.resultStatus == "IN_PROGRESS") | .description')
-			if [ ${STEPNAME} == ${CURRENTSTEP} ]; then
-				printf '.' >/dev/tty
-			else
-				CURRENTSTEP=${STEPNAME}
-				printf "\n%s"  "${STEPNAME}"
-			fi
-			;;
-		FAILED)
-			echo ${VALIDATIONRESULT} | jq .
-			echo "stopping script"
-			exit 1
-			;;
-		*)
-			echo ${VALIDATIONRESULT}
-			;;
-	esac
-	sleep 5
-	VALIDATIONRESULT=$(curl -s -k -u admin:${PASSWORD} -H 'Content-Type: application/json' -H 'Accept: application/json' -X GET https://cloudbuilder.${NAME_LOWER}.${ROOT_DOMAIN}/v1/sddcs/validations/${VALIDATIONID})
-	EXECUTIONSTATUS=$(echo ${VALIDATIONRESULT} | jq -r .executionStatus )
-done
-
-read -n1 -s -r -p $'Hit enter to launch deployment or ctrl-c to stop.\n' key
-
-echo "Submitting SDDC deployment"
-
-VALIDATIONJSON=$(curl -s -k -u admin:${PASSWORD} -H 'Content-Type: application/json' -H 'Accept: application/json' -d @${SCRIPT} -X POST https://cloudbuilder.${NAME_LOWER}.${ROOT_DOMAIN}/v1/sddcs)
-VALIDATIONID=$(echo ${VALIDATIONJSON} | jq -r .id )
-echo "validationId = ${VALIDATIONID}"
-
-echo "Querying bringup status"
-VALIDATIONRESULT=$(curl -s -k -u admin:${PASSWORD} -H 'Content-Type: application/json' -H 'Accept: application/json' -X GET https://cloudbuilder.${NAME_LOWER}.${ROOT_DOMAIN}/v1/sddcs/${VALIDATIONID})
-EXECUTIONSTATUS=$(echo ${VALIDATIONRESULT} | jq -r .status )
-
-CURRENTSTEP=""
-while [[ "${EXECUTIONSTATUS}" != "COMPLETED" ]]
-do
-#	echo ${EXECUTIONSTATUS}
-	case ${EXECUTIONSTATUS} in 
-		IN_PROGRESS)
-			STEPNAME=$(echo ${VALIDATIONRESULT} |jq '.sddcSubTasks[] | select(.status == "IN_PROGRESS") | .name')
-			if [ ${STEPNAME} == ${CURRENTSTEP} ]; then
-				printf '.' >/dev/tty
-			else
-				CURRENTSTEP=${STEPNAME}
-				printf "\n%s"  "${STEPNAME}"
-			fi
-			;;
-		FAILED)
-			echo ${VALIDATIONRESULT} | jq .
-			echo "stopping script"
-			exit 1
-			;;
-		*)
-			echo ${VALIDATIONRESULT}
-			;;
-	esac
-	sleep 5
-	VALIDATIONRESULT=$(curl -s -k -u admin:${PASSWORD} -H 'Content-Type: application/json' -H 'Accept: application/json' -X GET https://cloudbuilder.${NAME_LOWER}.${ROOT_DOMAIN}/v1/sddcs/${VALIDATIONID})
-	EXECUTIONSTATUS=$(echo ${VALIDATIONRESULT} | jq -r .status )
-done
-
-echo
+echo ""
+echo "Hit enter or ctrl-c to launch prereqs validation:"
+read answer
+curl -i -k -u admin:${PASSWORD} -H 'Content-Type: application/json' -H 'Accept: application/json' -d @${SCRIPT} -X POST https://cloudbuilder.${NAME_LOWER}.${ROOT_DOMAIN}/v1/sddcs/validations
+echo ""
+echo ""
+echo "Check prereqs in CloudBuilder:"
+echo "check url : https://cloudbuilder.${NAME_LOWER}.${ROOT_DOMAIN}"
+echo "using pwd : ${PASSWORD}"
+echo 
+echo "when validation confirmed,"
+echo "Hit enter or ctrl-c to launch deployment:"
+read answer
+curl -i -k -u admin:${PASSWORD} -H 'Content-Type: application/json' -H 'Accept: application/json' -d @${SCRIPT} -X POST https://cloudbuilder.${NAME_LOWER}.${ROOT_DOMAIN}/v1/sddcs
+echo ""
 echo "Check deployment in CloudBuilder:"
 echo "check url : https://cloudbuilder.${NAME_LOWER}.${ROOT_DOMAIN}"
 echo "using pwd : ${PASSWORD}"

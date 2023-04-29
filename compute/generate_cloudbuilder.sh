@@ -154,6 +154,9 @@ echo "Submitting SDDC deployment"
 
 VALIDATIONJSON=$(curl -s -k -u admin:${PASSWORD} -H 'Content-Type: application/json' -H 'Accept: application/json' -d @${SCRIPT} -X POST https://cloudbuilder.${NAME_LOWER}.${ROOT_DOMAIN}/v1/sddcs)
 VALIDATIONID=$(echo ${VALIDATIONJSON} | jq -r .id )
+if [ "${VALIDATIONID}" == "null" ]; then
+	VALIDATIONID=$(echo ${VALIDATIONJSON} |jq 'first(.elements[] | select (.executionStatus == "COMPLETED") | .id)')
+fi
 echo "validationId = ${VALIDATIONID}"
 
 echo "Querying bringup status"

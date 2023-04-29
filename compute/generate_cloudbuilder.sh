@@ -124,12 +124,19 @@ echo "Querying validation result"
 VALIDATIONRESULT=$(curl -s -k -u admin:${PASSWORD} -H 'Content-Type: application/json' -H 'Accept: application/json' -X GET https://cloudbuilder.${NAME_LOWER}.${ROOT_DOMAIN}/v1/sddcs/validations/${VALIDATIONID})
 EXECUTIONSTATUS=$(echo ${VALIDATIONRESULT} | jq -r .executionStatus )
 
+CURRENTSTEP=""
 while [[ "${EXECUTIONSTATUS}" != "COMPLETED" ]]
 do
-	echo ${EXECUTIONSTATUS}
+#	echo ${EXECUTIONSTATUS}
 	case ${EXECUTIONSTATUS} in 
 		IN_PROGRESS)
-			echo ${VALIDATIONRESULT} |jq '.validationChecks[] | select(.resultStatus == "IN_PROGRESS") | .description'
+			STEPNAME=$(echo ${VALIDATIONRESULT} |jq '.validationChecks[] | select(.resultStatus == "IN_PROGRESS") | .description')
+			if [ ${STEPNAME} == ${CURRENTSTEP} ]; then
+				printf '.' >/dev/tty
+			else
+				CURRENTSTEP=${STEPNAME}
+				printf "\n%s"  "${STEPNAME}"
+			fi
 			;;
 		FAILED)
 			echo ${VALIDATIONRESULT} | jq .
@@ -140,7 +147,7 @@ do
 			echo ${VALIDATIONRESULT}
 			;;
 	esac
-	sleep 30
+	sleep 5
 	VALIDATIONRESULT=$(curl -s -k -u admin:${PASSWORD} -H 'Content-Type: application/json' -H 'Accept: application/json' -X GET https://cloudbuilder.${NAME_LOWER}.${ROOT_DOMAIN}/v1/sddcs/validations/${VALIDATIONID})
 	EXECUTIONSTATUS=$(echo ${VALIDATIONRESULT} | jq -r .executionStatus )
 done
@@ -157,12 +164,19 @@ echo "Querying bringup status"
 VALIDATIONRESULT=$(curl -s -k -u admin:${PASSWORD} -H 'Content-Type: application/json' -H 'Accept: application/json' -X GET https://cloudbuilder.${NAME_LOWER}.${ROOT_DOMAIN}/v1/sddcs/${VALIDATIONID})
 EXECUTIONSTATUS=$(echo ${VALIDATIONRESULT} | jq -r .status )
 
+CURRENTSTEP=""
 while [[ "${EXECUTIONSTATUS}" != "COMPLETED" ]]
 do
-	echo ${EXECUTIONSTATUS}
+#	echo ${EXECUTIONSTATUS}
 	case ${EXECUTIONSTATUS} in 
 		IN_PROGRESS)
-			echo ${VALIDATIONRESULT} |jq '.sddcSubTasks[] | select(.status == "IN_PROGRESS") | .description'
+			STEPNAME=$(echo ${VALIDATIONRESULT} |jq '.sddcSubTasks[] | select(.status == "IN_PROGRESS") | .name')
+			if [ ${STEPNAME} == ${CURRENTSTEP} ]; then
+				printf '.' >/dev/tty
+			else
+				CURRENTSTEP=${STEPNAME}
+				printf "\n%s"  "${STEPNAME}"
+			fi
 			;;
 		FAILED)
 			echo ${VALIDATIONRESULT} | jq .
@@ -173,7 +187,7 @@ do
 			echo ${VALIDATIONRESULT}
 			;;
 	esac
-	sleep 30
+	sleep 5
 	VALIDATIONRESULT=$(curl -s -k -u admin:${PASSWORD} -H 'Content-Type: application/json' -H 'Accept: application/json' -X GET https://cloudbuilder.${NAME_LOWER}.${ROOT_DOMAIN}/v1/sddcs/${VALIDATIONID})
 	EXECUTIONSTATUS=$(echo ${VALIDATIONRESULT} | jq -r .status )
 done

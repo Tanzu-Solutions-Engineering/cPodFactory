@@ -127,7 +127,7 @@ do
 	case ${EXECUTIONSTATUS} in 
 		IN_PROGRESS)
 			STEPNAME=$(echo ${VALIDATIONRESULT} |jq '.validationChecks[] | select(.resultStatus == "IN_PROGRESS") | .description')
-			if [ ${STEPNAME} == ${CURRENTSTEP} ]; then
+			if [ "${STEPNAME}" == "${CURRENTSTEP}" ]; then
 				printf '.' >/dev/tty
 			else
 				CURRENTSTEP=${STEPNAME}
@@ -167,7 +167,7 @@ do
 	case ${EXECUTIONSTATUS} in 
 		IN_PROGRESS)
 			STEPNAME=$(echo ${VALIDATIONRESULT} |jq '.sddcSubTasks[] | select(.status == "IN_PROGRESS") | .name')
-			if [ ${STEPNAME} == ${CURRENTSTEP} ]; then
+			if [ "${STEPNAME}" == "${CURRENTSTEP}" ]; then
 				printf '.' >/dev/tty
 			else
 				CURRENTSTEP=${STEPNAME}

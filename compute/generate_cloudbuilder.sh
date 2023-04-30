@@ -140,6 +140,11 @@ do
 			exit 1
 			;;
 		*)
+			echo
+			echo ${EXECUTIONSTATUS}
+			echo
+			echo "JSON response:"
+			echo
 			echo ${VALIDATIONRESULT}
 			;;
 	esac
@@ -148,7 +153,9 @@ do
 	EXECUTIONSTATUS=$(echo ${VALIDATIONRESULT} | jq -r .executionStatus )
 done
 
+echo
 read -n1 -s -r -p $'Hit enter to launch deployment or ctrl-c to stop.\n' key
+echo
 
 echo "Submitting SDDC deployment"
 
@@ -164,7 +171,7 @@ VALIDATIONRESULT=$(curl -s -k -u admin:${PASSWORD} -H 'Content-Type: application
 EXECUTIONSTATUS=$(echo ${VALIDATIONRESULT} | jq -r .status )
 
 CURRENTSTEP=""
-while [[ "${EXECUTIONSTATUS}" != "COMPLETED" ]]
+while [[ "${EXECUTIONSTATUS}" != "COMPLETED_WITH_SUCCESS" ]]
 do
 #	echo ${EXECUTIONSTATUS}
 	case ${EXECUTIONSTATUS} in 
@@ -183,6 +190,11 @@ do
 			exit 1
 			;;
 		*)
+			echo
+			echo ${EXECUTIONSTATUS}
+			echo
+			echo "JSON response:"
+			echo
 			echo ${VALIDATIONRESULT}
 			;;
 	esac

@@ -152,32 +152,45 @@ echo "]" >> ${HOSTSSCRIPT}
 echo "Submitting host validation"
 VALIDATIONJSON=$(curl -s -k -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}" -d @${HOSTSSCRIPT} -X POST  https://sddc.${NAME_LOWER}.${ROOT_DOMAIN}/v1/hosts/validations)
 VALIDATIONID=$(echo ${VALIDATIONJSON} | jq .id | sed 's/"//g')
-#echo ${VALIDATIONID}
+echo "validationId = ${VALIDATIONID}"
 
 echo "Querying validation result"
 VALIDATIONRESULT=$(curl -s -k -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}" -X GET  https://sddc.${NAME_LOWER}.${ROOT_DOMAIN}/v1/hosts/validations/${VALIDATIONID})
-EXECUTIONSTATUS=$(echo ${VALIDATIONRESULT} | jq .executionStatus | sed 's/"//g')
+EXECUTIONSTATUS=$(echo ${VALIDATIONRESULT} | jq -r .executionStatus)
 
+CURRENTSTEP=""
 while [[ "${EXECUTIONSTATUS}" != "COMPLETED" ]]
 do
-	case  ${EXECUTIONSTATUS} in 
+#	echo ${EXECUTIONSTATUS}
+	case ${EXECUTIONSTATUS} in 
 		IN_PROGRESS)
-			echo "IN_PROGRESS"
+			STEPNAME=$(echo ${VALIDATIONRESULT} |jq '.validationChecks[] | select(.executionStatus == "IN_PROGRESS") | .description')
+			if [ "${STEPNAME}" == "${CURRENTSTEP}" ]; then
+				printf '.' >/dev/tty
+			else
+				CURRENTSTEP=${STEPNAME}
+				printf "\n%s"  "${STEPNAME}"
+			fi
 			;;
 		FAILED)
-			echo "FAILED"
 			echo ${VALIDATIONRESULT} | jq .
 			echo "stopping script"
 			exit 1
 			;;
 		*)
+			echo
 			echo ${EXECUTIONSTATUS}
+			echo
+			echo "JSON response:"
+			echo
+			echo ${VALIDATIONRESULT}
 			;;
 	esac
-	sleep 10
+	sleep 5
 	VALIDATIONRESULT=$(curl -s -k -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}" -X GET  https://sddc.${NAME_LOWER}.${ROOT_DOMAIN}/v1/hosts/validations/${VALIDATIONID})
-	EXECUTIONSTATUS=$(echo ${VALIDATIONRESULT} | jq .executionStatus | sed 's/"//g')
+	EXECUTIONSTATUS=$(echo ${VALIDATIONRESULT} | jq -r .executionStatus )
 done
+
 
 echo "Submitting host commisioning"
 COMMISIONJSON=$(curl -s -k -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}" -d @${HOSTSSCRIPT} -X POST  https://sddc.${NAME_LOWER}.${ROOT_DOMAIN}/v1/hosts)
@@ -186,29 +199,41 @@ echo ${VALIDATIONID}
 
 echo "Querying commisioning result"
 VALIDATIONRESULT=$(curl -s -k -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}" -X GET  https://sddc.${NAME_LOWER}.${ROOT_DOMAIN}/v1/tasks/${VALIDATIONID})
-EXECUTIONSTATUS=$(echo ${VALIDATIONRESULT} | jq .status | sed 's/"//g')
+EXECUTIONSTATUS=$(echo ${VALIDATIONRESULT} | jq -r .status)
 
+CURRENTSTEP=""
 while [[ "${EXECUTIONSTATUS}" != "Successful" ]]
 do
-	case  ${EXECUTIONSTATUS} in 
-		"In Progress")
-			echo "In Progress"
+#	echo ${EXECUTIONSTATUS}
+	case ${EXECUTIONSTATUS} in 
+		IN_PROGRESS)
+			STEPNAME=$(echo ${VALIDATIONRESULT} |jq '.validationChecks[] | select(.status == "IN_PROGRESS") | .description')
+			if [ "${STEPNAME}" == "${CURRENTSTEP}" ]; then
+				printf '.' >/dev/tty
+			else
+				CURRENTSTEP=${STEPNAME}
+				printf "\n%s"  "${STEPNAME}"
+			fi
 			;;
 		FAILED)
-			echo "FAILED"
 			echo ${VALIDATIONRESULT} | jq .
 			echo "stopping script"
 			exit 1
 			;;
 		*)
+			echo
 			echo ${EXECUTIONSTATUS}
+			echo
+			echo "JSON response:"
+			echo
+			echo ${VALIDATIONRESULT}
 			;;
 	esac
-	sleep 30
+	sleep 5
 	VALIDATIONRESULT=$(curl -s -k -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}" -X GET  https://sddc.${NAME_LOWER}.${ROOT_DOMAIN}/v1/tasks/${VALIDATIONID})
-	echo ${VALIDATIONRESULT} | jq .
-	EXECUTIONSTATUS=$(echo ${VALIDATIONRESULT} | jq .status | sed 's/"//g')
+	EXECUTIONSTATUS=$(echo ${VALIDATIONRESULT} | jq -r .status )
 done
+
 echo "Host commisionned"
 echo "Getting list of unassigned hosts"
 VALIDATIONRESULT=$(curl -s -k -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}" -X GET  'https://sddc.'${NAME_LOWER}.${ROOT_DOMAIN}'/v1/hosts?status=UNASSIGNED_USEABLE')

@@ -191,12 +191,11 @@ do
 	EXECUTIONSTATUS=$(echo ${VALIDATIONRESULT} | jq -r .executionStatus )
 done
 
-
+echo
 echo "Submitting host commisioning"
 COMMISIONJSON=$(curl -s -k -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}" -d @${HOSTSSCRIPT} -X POST  https://sddc.${NAME_LOWER}.${ROOT_DOMAIN}/v1/hosts)
 VALIDATIONID=$(echo ${COMMISIONJSON} | jq .id | sed 's/"//g')
-echo ${VALIDATIONID}
-
+echo "taskID = ${VALIDATIONID}"
 echo "Querying commisioning result"
 VALIDATIONRESULT=$(curl -s -k -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}" -X GET  https://sddc.${NAME_LOWER}.${ROOT_DOMAIN}/v1/tasks/${VALIDATIONID})
 EXECUTIONSTATUS=$(echo ${VALIDATIONRESULT} | jq -r .status)

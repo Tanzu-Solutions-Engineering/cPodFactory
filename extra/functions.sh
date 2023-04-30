@@ -90,7 +90,7 @@ add_entry_cpodrouter_hosts() {
 	# ${3} : cpod_name_lower
 
 	echo "add ${1} -> ${2} in ${3}"
-	ssh -o LogLevel=error ${3} "sed "/${1}/d" -i /etc/hosts ; printf \"${1}\\t${2}\\n\" >> /etc/hosts"
+	ssh -o LogLevel=error ${3} "sed "/${1}/d" -i /etc/hosts ; sed "/${2}/d" -i /etc/hosts ; printf \"${1}\\t${2}\\n\" >> /etc/hosts"
 }
 
 enable_dhcp_cpod_vlanx() {

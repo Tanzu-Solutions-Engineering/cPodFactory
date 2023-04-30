@@ -103,7 +103,7 @@ fi
 
 #USERNAME="administrator@${NAME_LOWER}.${ROOT_DOMAIN}"
 echo "Getting VCF API Token"
-TOKEN=$(curl -s -k -X POST -H "Content-Type: application/json" -d '{"password":"'${PASSWORD}'","username":"administrator@'${NAME_LOWER}.${ROOT_DOMAIN}'"}' https://sddc.${NAME_LOWER}.${ROOT_DOMAIN}/v1/tokens | jq .accessToken | sed 's/"//g')
+TOKEN=$(curl -s -k -X POST -H "Content-Type: application/json" -d '{"password":"'${PASSWORD}'","username":"administrator@'${NAME_LOWER}.${ROOT_DOMAIN}'"}' https://sddc.${NAME_LOWER}.${ROOT_DOMAIN}/v1/tokens | jq -r .accessToken)
 echo "Listing Hosts"
 SDDCHOSTS=$(curl -s -k -X GET -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}" https://sddc.${NAME_LOWER}.${ROOT_DOMAIN}/v1/hosts | jq .elements[].fqdn)
 echo $SDDCHOSTS
@@ -118,9 +118,9 @@ echo
 echo "Listing Network Pools"
 SDDCNETPOOLS=$(curl -s -k -X GET -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}" https://sddc.${NAME_LOWER}.${ROOT_DOMAIN}/v1/network-pools | jq '.elements[] | {id, name}')
 echo $SDDCNETPOOLS
-echo "id of WLD NP POOL"
-WLDNPPOOLID=$(curl -s -k -X GET -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}" https://sddc.${NAME_LOWER}.${ROOT_DOMAIN}/v1/network-pools | jq '.elements[] | select(.name == "'${NPPOOLNAME}'") | .id' | sed 's/"//g')
-echo $WLDNPPOOLID
+echo 
+WLDNPPOOLID=$(curl -s -k -X GET -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}" https://sddc.${NAME_LOWER}.${ROOT_DOMAIN}/v1/network-pools | jq -r '.elements[] | select(.name == "'${NPPOOLNAME}'") | .id')
+echo "id of WLD NP POOL: $WLDNPPOOLID"
 
 # get wld esx hosts
 
@@ -164,7 +164,7 @@ do
 #	echo ${EXECUTIONSTATUS}
 	case ${EXECUTIONSTATUS} in 
 		IN_PROGRESS)
-			STEPNAME=$(echo ${VALIDATIONRESULT} |jq '.validationChecks[] | select(.executionStatus == "IN_PROGRESS") | .description')
+			STEPNAME=$(echo ${VALIDATIONRESULT} |jq '.description')
 			if [ "${STEPNAME}" == "${CURRENTSTEP}" ]; then
 				printf '.' >/dev/tty
 			else
@@ -205,9 +205,9 @@ CURRENTSTEP=""
 while [[ "${EXECUTIONSTATUS}" != "Successful" ]]
 do
 #	echo ${EXECUTIONSTATUS}
-	case ${EXECUTIONSTATUS} in 
-		IN_PROGRESS)
-			STEPNAME=$(echo ${VALIDATIONRESULT} |jq '.validationChecks[] | select(.status == "IN_PROGRESS") | .description')
+	case "${EXECUTIONSTATUS}" in 
+		"In Progress")
+			STEPNAME=$(echo ${VALIDATIONRESULT} |jq '.subTasks[] | select(.status == "IN_PROGRESS") | .description')
 			if [ "${STEPNAME}" == "${CURRENTSTEP}" ]; then
 				printf '.' >/dev/tty
 			else
@@ -215,7 +215,7 @@ do
 				printf "\n%s"  "${STEPNAME}"
 			fi
 			;;
-		FAILED)
+		"FAILED")
 			echo ${VALIDATIONRESULT} | jq .
 			echo "stopping script"
 			exit 1
@@ -237,7 +237,7 @@ done
 echo "Host commisionned"
 echo "Getting list of unassigned hosts"
 VALIDATIONRESULT=$(curl -s -k -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}" -X GET  'https://sddc.'${NAME_LOWER}.${ROOT_DOMAIN}'/v1/hosts?status=UNASSIGNED_USEABLE')
-echo ${VALIDATIONRESULT} | jq .
+echo ${VALIDATIONRESULT} | jq '.elements[]| .fqdn'
 
 echo "Adding host entries into hosts of ${NAME_LOWER}."
 LASTIP=$(get_last_ip  ${SUBNET}  ${NAME_LOWER})

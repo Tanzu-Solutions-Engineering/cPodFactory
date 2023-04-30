@@ -93,6 +93,14 @@ add_entry_cpodrouter_hosts() {
 	ssh -o LogLevel=error ${3} "sed "/${1}/d" -i /etc/hosts ; sed "/${2}/d" -i /etc/hosts ; printf \"${1}\\t${2}\\n\" >> /etc/hosts"
 }
 
+remove_entry_cpodrouter_hosts() {
+	# ${1} : ip address to add
+	# ${2} : cpod_name_lower
+
+	echo "remove ${1} in ${2}"
+	ssh -o LogLevel=error ${2} "sed "/${1}/d" -i /etc/hosts"
+}
+
 enable_dhcp_cpod_vlanx() {
 	# ${1} : internal cpod vlan (1-8) to enable dhcp on
 	# ${2} : cpod_name_lower

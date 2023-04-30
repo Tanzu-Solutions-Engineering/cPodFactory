@@ -258,5 +258,7 @@ IPADDRESS=$((${LASTIP}+1))
 add_entry_cpodrouter_hosts "${WLDSUBNET}.${IPADDRESS}" "en01-"${WLDCPOD_NAME} ${WLDNAME_LOWER} 
 IPADDRESS=$((${IPADDRESS}+1))
 add_entry_cpodrouter_hosts "${WLDSUBNET}.${IPADDRESS}" "en02-"${WLDCPOD_NAME} ${WLDNAME_LOWER} 
+remove_entry_cpodrouter_hosts "vcsa" ${WLDNAME_LOWER} 
 restart_cpodrouter_dnsmasq ${WLDNAME_LOWER} 
+
 

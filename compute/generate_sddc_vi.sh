@@ -241,21 +241,22 @@ echo ${VALIDATIONRESULT} | jq '.elements[]| .fqdn'
 echo "Adding host entries into hosts of ${NAME_LOWER}."
 LASTIP=$(get_last_ip  ${SUBNET}  ${NAME_LOWER})
 IPADDRESS=$((${LASTIP}+1))
-add_to_cpodrouter_hosts "${SUBNET}.${IPADDRESS}" "vcsa-"${WLDCPOD_NAME} ${NAME_LOWER} 
+add_entry_cpodrouter_hosts "${SUBNET}.${IPADDRESS}" "vcsa-"${WLDCPOD_NAME} ${NAME_LOWER} 
 IPADDRESS=$((${IPADDRESS}+1))
-add_to_cpodrouter_hosts "${SUBNET}.${IPADDRESS}" "nsx01-"${WLDCPOD_NAME} ${NAME_LOWER} 
+add_entry_cpodrouter_hosts "${SUBNET}.${IPADDRESS}" "nsx01-"${WLDCPOD_NAME} ${NAME_LOWER} 
 IPADDRESS=$((${IPADDRESS}+1))
-add_to_cpodrouter_hosts "${SUBNET}.${IPADDRESS}" "nsx01a-"${WLDCPOD_NAME} ${NAME_LOWER} 
+add_entry_cpodrouter_hosts "${SUBNET}.${IPADDRESS}" "nsx01a-"${WLDCPOD_NAME} ${NAME_LOWER} 
 IPADDRESS=$((${IPADDRESS}+1))
-add_to_cpodrouter_hosts "${SUBNET}.${IPADDRESS}" "nsx01b-"${WLDCPOD_NAME} ${NAME_LOWER} 
+add_entry_cpodrouter_hosts "${SUBNET}.${IPADDRESS}" "nsx01b-"${WLDCPOD_NAME} ${NAME_LOWER} 
 IPADDRESS=$((${IPADDRESS}+1))
-add_to_cpodrouter_hosts "${SUBNET}.${IPADDRESS}" "nsx01c-"${WLDCPOD_NAME} ${NAME_LOWER} 
+add_entry_cpodrouter_hosts "${SUBNET}.${IPADDRESS}" "nsx01c-"${WLDCPOD_NAME} ${NAME_LOWER} 
+restart_cpodrouter_dnsmasq ${NAME_LOWER} 
 
 echo "Adding host entries into hosts of ${WLDNAME_LOWER}."
 LASTIP=$(get_last_ip  ${WLDSUBNET}  ${WLDNAME_LOWER})
 IPADDRESS=$((${LASTIP}+1))
-add_to_cpodrouter_hosts "${WLDSUBNET}.${IPADDRESS}" "en01-"${WLDCPOD_NAME} ${WLDNAME_LOWER} 
+add_entry_cpodrouter_hosts "${WLDSUBNET}.${IPADDRESS}" "en01-"${WLDCPOD_NAME} ${WLDNAME_LOWER} 
 IPADDRESS=$((${IPADDRESS}+1))
-add_to_cpodrouter_hosts "${WLDSUBNET}.${IPADDRESS}" "en02-"${WLDCPOD_NAME} ${WLDNAME_LOWER} 
-
+add_entry_cpodrouter_hosts "${WLDSUBNET}.${IPADDRESS}" "en02-"${WLDCPOD_NAME} ${WLDNAME_LOWER} 
+restart_cpodrouter_dnsmasq ${WLDNAME_LOWER} 
 

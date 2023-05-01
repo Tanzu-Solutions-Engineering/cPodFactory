@@ -88,16 +88,17 @@ CM_JSON='{
 }'
 
 echo ${CM_JSON}
-exit
 
-RESPONSE=$(curl -s -k -w '####%{response_code}' -b /tmp/session.txt -H "X-XSRF-TOKEN: ${XSRF}" -d ${CM_JSON} -X POST https://${NSXFQDN}/api/v1/node/version)
+# Check existing manager
+RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/api/v1/fabric/compute-managers)
 HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
 
 if [ $HTTPSTATUS -eq 200 ]
 then
-        VERSIONINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
-        PRODUCTVERSION=$(echo $VERSIONINFO |jq .product_version)
-        echo "  Product: ${PRODUCTVERSION}"
+        MANAGERSINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+        echo ${MANAGERSINFO}
+        #PRODUCTVERSION=$(echo $VERSIONINFO |jq .product_version)
+        echo "  Managers: ${MANAGERSINFO}"
 else
         echo "  error getting version"
         echo ${HTTPSTATUS}

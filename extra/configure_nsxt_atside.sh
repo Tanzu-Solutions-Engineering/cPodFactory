@@ -100,7 +100,7 @@ then
         echo "  Managers: ${MANAGERSINFO}"
         if [[ ${MANAGERSCOUNT} -gt 0 ]]
         then
-                EXISTINGMNGR=$(echo $MANAGERSINFO| jq .results[0].server)
+                EXISTINGMNGR=$(echo $MANAGERSINFO| jq -r .results[0].server)
                 if [[ "${EXISTINGMNGR}" == "vcsa.${CPOD_NAME_LOWER}.${ROOT_DOMAIN}" ]]
                 then
                         echo "existing manager set correctly"

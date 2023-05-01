@@ -96,9 +96,18 @@ HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
 if [ $HTTPSTATUS -eq 200 ]
 then
         MANAGERSINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
-        echo ${MANAGERSINFO}
-        #PRODUCTVERSION=$(echo $VERSIONINFO |jq .product_version)
+        MANAGERSCOUNT=$(echo $MANAGERSINFO | jq .result_count)
         echo "  Managers: ${MANAGERSINFO}"
+        if [[ ${MANAGERSCOUNT} -gt 0 ]]
+        then
+                EXISTINGMNGR=$(echo $MANAGERSINFO| jq .results[0].server)
+                if [ "${EXISTINGMNGR}" == "vcsa.${CPOD_NAME_LOWER}.${ROOT_DOMAIN}" ]
+                then
+                        echo "existing manager set correctly"
+                else
+                        echo " ${EXISTINGMNGR} does not match vcsa.${CPOD_NAME_LOWER}.${ROOT_DOMAIN}"
+                fi
+        fi
 else
         echo "  error getting version"
         echo ${HTTPSTATUS}

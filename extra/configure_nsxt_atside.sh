@@ -101,7 +101,7 @@ then
         if [[ ${MANAGERSCOUNT} -gt 0 ]]
         then
                 EXISTINGMNGR=$(echo $MANAGERSINFO| jq .results[0].server)
-                if [ "${EXISTINGMNGR}" == "vcsa.${CPOD_NAME_LOWER}.${ROOT_DOMAIN}" ]
+                if [ ${EXISTINGMNGR} == "vcsa.${CPOD_NAME_LOWER}.${ROOT_DOMAIN}" ]
                 then
                         echo "existing manager set correctly"
                 else
@@ -109,7 +109,7 @@ then
                 fi
         fi
 else
-        echo "  error getting version"
+        echo "  error getting managers"
         echo ${HTTPSTATUS}
         echo ${RESPONSE}
         exit

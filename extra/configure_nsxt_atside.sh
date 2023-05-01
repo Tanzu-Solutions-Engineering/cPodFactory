@@ -58,12 +58,6 @@ XSRF=$(echo $RESPONSE | awk '{print $3}')
 JSESSIONID=$(cat /tmp/session.txt | grep JSESSIONID | rev | awk '{print $1}' | rev)
 
 
-
-# ===== Login with basic auth =====
-RESPONSE=$(curl -vvv -k -c /tmp/session.txt -X POST -d 'j_username='${NSX_ADMIN}'&j_password='${NSX_PASSWD}'' https://${NSXFQDN}/api/session/create 2>&1 > /dev/null | grep XSRF)
-XSRF=$(echo $RESPONSE | awk '{print $3}')
-JSESSIONID=$(cat /tmp/session.txt | grep JSESSIONID | rev | awk '{print $1}' | rev)
-
 # ===== checking nsx version =====
 echo "Checking nsx version"
 

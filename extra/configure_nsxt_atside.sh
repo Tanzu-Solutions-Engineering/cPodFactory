@@ -35,6 +35,35 @@ AUTH_DOMAIN=${DOMAIN}
 
 source ./extra/functions.sh
 
+add_computer_manager() {
+        CM_JSON='{
+        "server": "'vcsa.${CPOD_NAME_LOWER}.${ROOT_DOMAIN}'",
+        "origin_type": "vCenter",
+        "credential" : {
+        "credential_type" : "UsernamePasswordLoginCredential",
+        "username": "administrator@'${CPOD_NAME_LOWER}.${ROOT_DOMAIN}'",
+        "password": "'${PASSWORD}'",
+        "thumbprint": "'${VCENTERTP}'"
+        }
+        }'
+
+        echo ${CM_JSON}
+
+        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD}  --data-binary ${CM_JSON} https://${NSXFQDN}/api/v1/fabric/compute-managers)
+        HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+
+        if [ $HTTPSTATUS -eq 201 ]
+        then
+                MANAGERSINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+                echo ${MANAGERSINFO}
+        else
+                echo "  error setting manager"
+                echo ${HTTPSTATUS}
+                echo ${RESPONSE}
+                exit
+        fi
+}
+
 ###################
 
 CPOD_NAME="cpod-$1"
@@ -76,19 +105,6 @@ fi
 VCENTERTP=$(echo | openssl s_client -connect vcsa.${CPOD_NAME_LOWER}.${ROOT_DOMAIN}:443 2>/dev/null | openssl x509 -noout -fingerprint -sha256 | cut -d "=" -f2)
 
 # ===== add computer manager =====
-CM_JSON='{
-  "server": "'vcsa.${CPOD_NAME_LOWER}.${ROOT_DOMAIN}'",
-  "origin_type": "vCenter",
-  "credential" : {
-    "credential_type" : "UsernamePasswordLoginCredential",
-    "username": "administrator@'${CPOD_NAME_LOWER}.${ROOT_DOMAIN}'",
-    "password": "'${PASSWORD}'",
-    "thumbprint": "'${VCENTERTP}'"
-  }
-}'
-
-echo ${CM_JSON}
-
 # Check existing manager
 RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/api/v1/fabric/compute-managers)
 HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
@@ -97,7 +113,6 @@ if [ $HTTPSTATUS -eq 200 ]
 then
         MANAGERSINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
         MANAGERSCOUNT=$(echo $MANAGERSINFO | jq .result_count)
-        echo "  Managers: ${MANAGERSINFO}"
         if [[ ${MANAGERSCOUNT} -gt 0 ]]
         then
                 EXISTINGMNGR=$(echo $MANAGERSINFO| jq -r .results[0].server)
@@ -107,6 +122,9 @@ then
                 else
                         echo " ${EXISTINGMNGR} does not match vcsa.${CPOD_NAME_LOWER}.${ROOT_DOMAIN}"
                 fi
+        else
+                echo "adding compute manager"
+                add_computer_manager
         fi
 else
         echo "  error getting managers"

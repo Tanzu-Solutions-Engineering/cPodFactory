@@ -101,7 +101,7 @@ then
         if [[ ${MANAGERSCOUNT} -gt 0 ]]
         then
                 EXISTINGMNGR=$(echo $MANAGERSINFO| jq .results[0].server)
-                if [[ ${EXISTINGMNGR} == "vcsa.${CPOD_NAME_LOWER}.${ROOT_DOMAIN}" ]]
+                if [[ "${EXISTINGMNGR}" == "vcsa.${CPOD_NAME_LOWER}.${ROOT_DOMAIN}" ]]
                 then
                         echo "existing manager set correctly"
                 else
@@ -117,6 +117,3 @@ fi
 
 # ===== Script finished =====
 echo "Configuration done"
-
-vcsa.cpod-nsxtv3.az-lhr.cloud-garage.net
-vcsa.cpod-nsxtv3.az-lhr.cloud-garage.net

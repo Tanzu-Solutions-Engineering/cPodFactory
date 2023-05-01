@@ -29,7 +29,13 @@ AUTH_DOMAIN=${DOMAIN}
 
 ###################
 
-[ "${HOSTNAME}" == ""  -o "${IP_NSXALBMGR}" == "" ] && echo "missing parameters - please source version file !" && exit 1
+[ "${HOSTNAME}" == ""  -o "${IP}" == "" ] && echo "missing parameters - please source version file !" && exit 1
+
+### functions ####
+
+source ./extra/functions.sh
+
+###################
 
 CPOD_NAME="cpod-$1"
 NAME_HIGHER=$( echo ${1} | tr '[:lower:]' '[:upper:]' )
@@ -45,22 +51,23 @@ PASSWORD=$( ./${EXTRA_DIR}/passwd_for_cpod.sh ${1} )
 # ===== Start of code =====
 
 NSXFQDN=${HOSTNAME}.${CPOD_NAME_LOWER}.${ROOT_DOMAIN}
+echo ${NSXFQDN}
 # ===== Login with basic auth =====
-RESPONSE=$(curl -vvv -k -c /tmp/session.txt -X POST -d 'j_username='${NSX_ADMIN}'&j_password='${NSX_PASSWD}'' https://${NSXFQDN}/api/session/create 2>&1 > /dev/null | grep XSRF)
+RESPONSE=$(curl -vvv -k -c /tmp/session.txt -X POST -d 'j_username='admin'&j_password='${PASSWORD}'' https://${NSXFQDN}/api/session/create 2>&1 > /dev/null | grep XSRF)
 XSRF=$(echo $RESPONSE | awk '{print $3}')
 JSESSIONID=$(cat /tmp/session.txt | grep JSESSIONID | rev | awk '{print $1}' | rev)
 
 
 
 # ===== Login with basic auth =====
-RESPONSE=$(curl -vvv -k -c /tmp/session.txt -X POST -d 'j_username='${NSX_ADMIN}'&j_password='${NSX_PASSWD}'' https://${NSX}/api/session/create 2>&1 > /dev/null | grep XSRF)
+RESPONSE=$(curl -vvv -k -c /tmp/session.txt -X POST -d 'j_username='${NSX_ADMIN}'&j_password='${NSX_PASSWD}'' https://${NSXFQDN}/api/session/create 2>&1 > /dev/null | grep XSRF)
 XSRF=$(echo $RESPONSE | awk '{print $3}')
 JSESSIONID=$(cat /tmp/session.txt | grep JSESSIONID | rev | awk '{print $1}' | rev)
 
 # ===== checking nsx version =====
 echo "Checking nsx version"
 
-RESPONSE=$(curl -s -k -w '####%{response_code}' -b /tmp/session.txt -H "X-XSRF-TOKEN: ${XSRF}" https://${NSX}/api/v1/node/version)
+RESPONSE=$(curl -s -k -w '####%{response_code}' -b /tmp/session.txt -H "X-XSRF-TOKEN: ${XSRF}" https://${NSXFQDN}/api/v1/node/version)
 HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
 
 if [ $HTTPSTATUS -eq 200 ]

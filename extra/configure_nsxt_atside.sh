@@ -49,7 +49,7 @@ add_computer_manager() {
 
         echo ${CM_JSON}
 
-        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD}  --data-binary ${CM_JSON} https://${NSXFQDN}/api/v1/fabric/compute-managers)
+        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} -H 'Content-Type: application/json' -X POST --data-binary ${CM_JSON} https://${NSXFQDN}/api/v1/fabric/compute-managers)
         HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
 
         if [ $HTTPSTATUS -eq 201 ]

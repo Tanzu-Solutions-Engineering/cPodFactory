@@ -76,6 +76,40 @@ else
         exit
 fi
 
+#======== get venter thubprint ========
+
+VCENTERTP=$(echo | openssl s_client -connect vcsa.${CPOD_NAME_LOWER}.${ROOT_DOMAIN}:443 2>/dev/null | openssl x509 -noout -fingerprint -sha256 | cut -d "=" -f2)
+
+# ===== add computer manager =====
+CM_JSON='{
+  "server": "'vcsa.${CPOD_NAME_LOWER}.${ROOT_DOMAIN}'",
+  "origin_type": "vCenter",
+  "credential" : {
+    "credential_type" : "UsernamePasswordLoginCredential",
+    "username": "administrator@'${CPOD_NAME_LOWER}.${ROOT_DOMAIN}'",
+    "password": "'${PASSWORD}'",
+    "thumbprint": "'${VCENTERTP}'"
+  }
+}'
+
+echo ${CM_JSON}
+exit
+
+RESPONSE=$(curl -s -k -w '####%{response_code}' -b /tmp/session.txt -H "X-XSRF-TOKEN: ${XSRF}" -d ${CM_JSON} -X POST https://${NSXFQDN}/api/v1/node/version)
+HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+
+if [ $HTTPSTATUS -eq 200 ]
+then
+        VERSIONINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+        PRODUCTVERSION=$(echo $VERSIONINFO |jq .product_version)
+        echo "  Product: ${PRODUCTVERSION}"
+else
+        echo "  error getting version"
+        echo ${HTTPSTATUS}
+        echo ${RESPONSE}
+        exit
+fi
+
 # ===== Script finished =====
 echo "Configuration done"
 

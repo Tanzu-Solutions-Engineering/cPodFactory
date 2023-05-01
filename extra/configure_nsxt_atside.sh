@@ -46,10 +46,10 @@ add_computer_manager() {
         "thumbprint": "'${VCENTERTP}'"
         }
         }'
+        SCRIPT="/tmp/CM_JSON"
+        echo ${CM_JSON} > ${SCRIPT}
 
-        echo ${CM_JSON}
-
-        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} -H 'Content-Type: application/json' -X POST --data-binary ${CM_JSON} https://${NSXFQDN}/api/v1/fabric/compute-managers)
+        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} -H 'Content-Type: application/json' -X POST -d @${SCRIPT} https://${NSXFQDN}/api/v1/fabric/compute-managers)
         HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
 
         if [ $HTTPSTATUS -eq 201 ]

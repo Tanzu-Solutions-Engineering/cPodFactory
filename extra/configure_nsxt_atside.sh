@@ -192,7 +192,45 @@ echo
 echo "processing transport zones"
 echo
 
-RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/policy/api/v1/infra/sites/default/enforcement-points/nsxt-ep/transport-zones)
+echo "get enforcement points"
+echo
+
+RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/policy/api/v1/infra/sites/default/enforcement-points)
+HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+echo $RESPONSE
+echo $HTTPSTATUS
+
+if [ $HTTPSTATUS -eq 200 ]
+then
+        EPINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+        echo ${EPINFO}
+        EPCOUNT=$(echo ${EPINFO} | jq .result_count)
+        echo ${EPCOUNT}
+        if [[ ${EPCOUNT} -gt 0 ]]
+        then
+                EXISTINGEP=$(echo $PROFITZINFOLESINFO| jq -r '.results[].display_name')
+                echo $EXISTINGTZ
+                EXISTINGEPRP=$(echo $PROFITZINFOLESINFO| jq -r '.results[].relative_path')
+                echo $EXISTINGEPRP
+                
+                if [[ "${EXISTINGEP}" == "default" ]]
+                then
+                        echo "existing EP is default"
+                else
+                        echo " ${EXISTINGEP} does not match default"
+                fi
+        else
+                echo "TODO : what when no EP ?"
+                exit
+        fi
+else
+        echo "  error getting enforcement-points"
+        echo ${HTTPSTATUS}
+        echo ${RESPONSE}
+        exit
+fi
+
+RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/policy/api/v1/infra/sites/default/enforcement-points/${EXISTINGEPRP}/transport-zones)
 HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
 echo $RESPONSE
 echo $HTTPSTATUS

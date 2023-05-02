@@ -171,8 +171,6 @@ then
                 fi
         else
                 echo "TODO : adding uplink profiles"
-
-                exit
         fi
 else
         echo "  error getting uplink profiles"

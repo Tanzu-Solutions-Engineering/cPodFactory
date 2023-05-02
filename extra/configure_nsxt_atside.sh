@@ -159,7 +159,8 @@ then
         PROFILESCOUNT=$(echo $PROFILESINFO | jq .result_count)
         if [[ ${PROFILESCOUNT} -gt 0 ]]
         then
-                EXISTINGPROFILES=$(echo $PROFILESINFO| jq -r .results[].server)
+                EXISTINGPROFILES=$(echo $PROFILESINFO| jq -r '.results[].display_name')
+                echo $EXISTINGPROFILES
                 if [[ "${EXISTINGPROFILES}" == "blahblah" ]]
                 then
                         echo "existing manager set correctly"

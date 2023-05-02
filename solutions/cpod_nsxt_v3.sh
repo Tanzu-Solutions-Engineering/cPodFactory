@@ -87,6 +87,6 @@ echo "=== In ${TIME} Seconds ==="
 echo "============================="
 
 echo
-./info_cpod.sh ${NAME_LOWER}
+./info_cpod.sh ${CPOD_NAME}
 
 export LOGGING=""

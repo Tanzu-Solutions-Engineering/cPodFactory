@@ -96,6 +96,33 @@ then
         PRODUCTVERSION=$(echo $VERSIONINFO |jq .product_version)
         echo "  Product: ${PRODUCTVERSION}"
         #Check if 3.2 or 4.1 or better. if not stop script.
+        MAJORVERSION=$(echo ${PRODUCTVERSION} | head -c1)
+        MINORVERSION=$(echo ${PRODUCTVERSION} | head -c3)
+       	case $MAJORVERSION in
+		3)
+		        LOWESTVERSION=$(echo "3.2\n${MINORVERSION}" | sort -V | head -n1)
+                        if [[ "${LOWESTVERSION}" == "3.2" ]]
+                        then
+                                echo "Version is at lease 3.2"
+                        else
+                                echo "Version is below 3.2. Script uses newer API (>3.2 or >4.1). stopping here."
+                                exit
+                        fi
+			;;
+		4)
+		        LOWESTVERSION=$(echo "4.1\n${MINORVERSION}" | sort -V | head -n1)
+                        if [[ "${LOWESTVERSION}" == "4.1" ]]
+                        then
+                                echo "Version is at lease 4.1"
+                        else
+                                echo "Version is below 4.1. Script uses newer API (>3.2 or >4.1). stopping here."
+                                exit
+                        fi			
+			;;
+		*)
+		        echo "This script is not ready yet for nsx-t version $MAJORVERSION"
+		        ;;
+	esac
 
 else
         echo "  error getting version"
@@ -195,15 +222,11 @@ echo
 
 RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/policy/api/v1/infra/sites/default/enforcement-points)
 HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
-echo $RESPONSE
-echo $HTTPSTATUS
 
 if [ $HTTPSTATUS -eq 200 ]
 then
         EPINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
-        echo ${EPINFO}
         EPCOUNT=$(echo ${EPINFO} | jq .result_count)
-        echo ${EPCOUNT}
         if [[ ${EPCOUNT} -gt 0 ]]
         then
                 EXISTINGEP=$(echo $EPINFO| jq -r '.results[].display_name')
@@ -230,15 +253,11 @@ fi
 
 RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/policy/api/v1/infra/sites/default/enforcement-points/${EXISTINGEPRP}/transport-zones)
 HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
-echo $RESPONSE
-echo $HTTPSTATUS
 
 if [ $HTTPSTATUS -eq 200 ]
 then
         TZINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
-        echo ${TZINFO}
         TZCOUNT=$(echo ${TZINFO} | jq .result_count)
-        echo ${TZCOUNT}
         if [[ ${TZCOUNT} -gt 0 ]]
         then
                 EXISTINGTZ=$(echo $TZINFO| jq -r '.results[].display_name')
@@ -248,6 +267,7 @@ then
                         echo "existing manager set correctly"
                 else
                         echo " ${EXISTINGTZ} does not match blahblah"
+                        echo ${TZINFO}
                 fi
         else
                 echo "TODO : adding uplink profiles"

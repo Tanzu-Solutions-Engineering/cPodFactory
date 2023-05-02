@@ -54,7 +54,7 @@ Foreach ($ESXhost in ($Cluster | Get-VMHost)) {
 }
 
 #add vlans
-for ($num = 1 ; $num -le 2 ; $num++){
+for ($num = 1 ; $num -le 4 ; $num++){
     if ([int]$vlan -gt 40) {
         $vlanID = $vlan + $num
     }else{

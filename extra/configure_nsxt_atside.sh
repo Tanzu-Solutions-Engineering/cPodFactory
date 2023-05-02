@@ -156,7 +156,9 @@ echo $HTTPSTATUS
 if [ $HTTPSTATUS -eq 200 ]
 then
         PROFILESINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
-        PROFILESCOUNT=$(echo $PROFILESINFO | jq .result_count)
+        echo ${PROFILESINFO}
+        PROFILESCOUNT=$(echo ${PROFILESINFO} | jq .result_count)
+        echo ${PROFILESCOUNT}
         if [[ ${PROFILESCOUNT} -gt 0 ]]
         then
                 EXISTINGPROFILES=$(echo $PROFILESINFO| jq -r '.results[].display_name')

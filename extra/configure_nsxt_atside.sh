@@ -208,9 +208,9 @@ then
         echo ${EPCOUNT}
         if [[ ${EPCOUNT} -gt 0 ]]
         then
-                EXISTINGEP=$(echo $PROFITZINFOLESINFO| jq -r '.results[].display_name')
-                echo $EXISTINGTZ
-                EXISTINGEPRP=$(echo $PROFITZINFOLESINFO| jq -r '.results[].relative_path')
+                EXISTINGEP=$(echo $EPINFO| jq -r '.results[].display_name')
+                echo $EXISTINGEP
+                EXISTINGEPRP=$(echo $EPINFO| jq -r '.results[].relative_path')
                 echo $EXISTINGEPRP
                 
                 if [[ "${EXISTINGEP}" == "default" ]]

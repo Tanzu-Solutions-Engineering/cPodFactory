@@ -83,7 +83,9 @@ NSXFQDN=${HOSTNAME}.${CPOD_NAME_LOWER}.${ROOT_DOMAIN}
 echo ${NSXFQDN}
 
 # ===== checking nsx version =====
+echo
 echo "Checking nsx version"
+echo
 
 RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/api/v1/node/version)
 HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
@@ -93,6 +95,8 @@ then
         VERSIONINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
         PRODUCTVERSION=$(echo $VERSIONINFO |jq .product_version)
         echo "  Product: ${PRODUCTVERSION}"
+        #Check if 3.2 or 4.1 or better. if not stop script.
+
 else
         echo "  error getting version"
         echo ${HTTPSTATUS}
@@ -106,6 +110,9 @@ VCENTERTP=$(echo | openssl s_client -connect vcsa.${CPOD_NAME_LOWER}.${ROOT_DOMA
 
 # ===== add computer manager =====
 # Check existing manager
+echo
+echo "processing computer manager"
+echo
 RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/api/v1/fabric/compute-managers)
 HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
 
@@ -132,6 +139,75 @@ else
         echo ${RESPONSE}
         exit
 fi
+
+
+# ===== Create Uplink profiles =====
+# Check existing uplink profiles
+# 1 for edge
+# 1 for hosts
+echo
+echo "processing uplink profiles"
+echo
+RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/policy/api/v1/infra/host-switch-profiles)
+HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+echo $RESPONSE
+echo $HTTPSTATUS
+
+if [ $HTTPSTATUS -eq 200 ]
+then
+        PROFILESINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+        PROFILESCOUNT=$(echo $PROFILESINFO | jq .result_count)
+        if [[ ${PROFILESCOUNT} -gt 0 ]]
+        then
+                EXISTINGPROFILES=$(echo $PROFILESINFO| jq -r .results[].server)
+                if [[ "${EXISTINGPROFILES}" == "blahblah" ]]
+                then
+                        echo "existing manager set correctly"
+                else
+                        echo " ${EXISTINGPROFILES} does not match blahblah"
+                fi
+        else
+                echo "TODO : adding uplink profiles"
+                exit
+        fi
+else
+        echo "  error getting uplink profiles"
+        echo ${HTTPSTATUS}
+        echo ${RESPONSE}
+        exit
+fi
+
+
+# ===== transport node profile =====
+# Check existing transport node profile
+RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/api/v1/transport-node-profiles)
+HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+
+if [ $HTTPSTATUS -eq 200 ]
+then
+        TNPROFILESINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+        TNPROFILESCOUNT=$(echo $TNPROFILESINFO | jq .result_count)
+        if [[ ${TNPROFILESCOUNT} -gt 0 ]]
+        then
+                EXISTINGTNPROFILES=$(echo $TNPROFILESINFO| jq -r .results[0].display_name)
+                if [[ "${EXISTINGMNGR}" == "vcsa.${CPOD_NAME_LOWER}.${ROOT_DOMAIN}" ]]
+                then
+                        echo "existing manager set correctly"
+                else
+                        echo " ${EXISTINGMNGR} does not match vcsa.${CPOD_NAME_LOWER}.${ROOT_DOMAIN}"
+                fi
+        else
+                echo "adding TN PROFILES"
+                #add_computer_manager
+        fi
+else
+        echo "  error getting managers"
+        echo ${HTTPSTATUS}
+        echo ${RESPONSE}
+        exit
+fi
+
+
 
 # ===== Script finished =====
 echo "Configuration done"

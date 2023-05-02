@@ -67,8 +67,8 @@ echo
 
 cpodctl create $1 $2 $3
 cpodctl vcsa $1 $3
-./extra/create_vds_nsxt.sh $1 $3
-./extra/enable_drs_vsan.sh $1 $3
+./extra/create_vds_vsan_nsxt.sh $1 $3
+./extra/enable_vsanOSA.sh $1 $3
 ./extra/deploy_nsxt_mgr_v4.sh $1 $3
 
 #get data

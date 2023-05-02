@@ -171,6 +171,51 @@ then
                 fi
         else
                 echo "TODO : adding uplink profiles"
+
+                exit
+        fi
+else
+        echo "  error getting uplink profiles"
+        echo ${HTTPSTATUS}
+        echo ${RESPONSE}
+        exit
+fi
+
+# ===== Create transport zones =====
+# Check existing uplink profiles
+# 1 for edge
+# 1 for hosts
+# 1 for overlay
+# because we can ! and we are following the NSX best practices
+
+echo
+echo "processing transport zones"
+echo
+
+RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/policy/api/v1/infra/sites/default/enforcement-points/nsxt-ep/transport-zones)
+HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+echo $RESPONSE
+echo $HTTPSTATUS
+
+if [ $HTTPSTATUS -eq 200 ]
+then
+        TZINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+        echo ${TZINFO}
+        TZCOUNT=$(echo ${TZINFO} | jq .result_count)
+        echo ${TZCOUNT}
+        if [[ ${TZCOUNT} -gt 0 ]]
+        then
+                EXISTINGTZ=$(echo $PROFITZINFOLESINFO| jq -r '.results[].display_name')
+                echo $EXISTINGTZ
+                if [[ "${EXISTINGTZ}" == "blahblah" ]]
+                then
+                        echo "existing manager set correctly"
+                else
+                        echo " ${EXISTINGTZ} does not match blahblah"
+                fi
+        else
+                echo "TODO : adding uplink profiles"
+
                 exit
         fi
 else

@@ -243,7 +243,7 @@ then
         echo ${TZCOUNT}
         if [[ ${TZCOUNT} -gt 0 ]]
         then
-                EXISTINGTZ=$(echo $PROFITZINFOLESINFO| jq -r '.results[].display_name')
+                EXISTINGTZ=$(echo $TZINFO| jq -r '.results[].display_name')
                 echo $EXISTINGTZ
                 if [[ "${EXISTINGTZ}" == "blahblah" ]]
                 then

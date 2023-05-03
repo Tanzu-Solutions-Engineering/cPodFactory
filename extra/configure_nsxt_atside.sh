@@ -91,6 +91,33 @@ check_uplink_profile() {
 
 }
 
+create_uplink_profile() {
+        #$1 profile name string
+        #$2 VLAN
+        #returns json
+        PROFILENAME=$1
+        
+        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/policy/api/v1/infra/host-switch-profiles)
+        HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+        #echo $RESPONSE
+        #echo $HTTPSTATUS
+
+        if [ $HTTPSTATUS -eq 200 ]
+        then
+                PROFILESINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+                #echo ${PROFILESINFO}
+                PROFILESCOUNT=$(echo ${PROFILESINFO} | jq .result_count)
+                #echo ${PROFILESCOUNT}
+                echo $PROFILESINFO |jq '.results[] | select (.display_name =="'$PROFILENAME'")'
+        else
+                echo "  error getting uplink profiles"
+                echo ${HTTPSTATUS}
+                echo ${RESPONSE}
+                exit
+        fi
+
+}
+
 ###################
 
 CPOD_NAME="cpod-$1"
@@ -212,6 +239,7 @@ then
         echo "create edge-profile"
 else 
         echo "edge-profile exists"
+        echo $EDGE
 fi
 
 HOST=$(check_uplink_profile "host-profile")
@@ -220,6 +248,7 @@ then
         echo "create host-profile"
 else 
         echo "host-profile exists"
+        echo $HOST
 fi
 
 

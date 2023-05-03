@@ -566,7 +566,7 @@ if [ $HTTPSTATUS -eq 200 ]
 then
         IPPOOLINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
         IPPOOLCOUNT=$(echo ${IPPOOLINFO} | jq .result_count)
-        if [[ ${TZCOUNT} -gt 0 ]]
+        if [[ ${IPPOOLCOUNT} -gt 0 ]]
         then
                 EXISTINGIPPOOL=$(echo $IPPOOLINFO| jq -r '.results[].display_name')
                 echo $EXISTINGIPPOOL
@@ -580,7 +580,7 @@ then
         else
                 echo "TODO : adding IP POOL"
 
-                exit
+                #exit
         fi
 else
         echo "  error getting IP Pools"

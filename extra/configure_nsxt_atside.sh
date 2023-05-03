@@ -213,7 +213,7 @@ check_transport_zone() {
                 echo $TZINFO |jq '.results[] | select (.display_name =="'$TZNAME'")'
                 
         else
-                echo "  error getting uplink profiles"
+                echo "  error getting transport zones"
                 echo ${HTTPSTATUS}
                 echo ${RESPONSE}
                 exit
@@ -265,7 +265,7 @@ create_transport_zone() {
                 echo "  ${TZNAME} created succesfully"
                 #echo ${TZINFO}
         else
-                echo "  error creating uplink profile : ${TZNAME}"
+                echo "  error creating transport zone : ${TZNAME}"
                 echo ${HTTPSTATUS}
                 echo ${RESPONSE}
                 exit
@@ -309,7 +309,7 @@ check_ip_pool_subnet() {
                 SUBNETINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
                 echo $SUBNETINFO |jq .
         else
-                echo "  error getting IP Pools"
+                echo "  error getting IP Pool subnets"
                 echo ${HTTPSTATUS}
                 echo ${RESPONSE}
                 exit
@@ -343,7 +343,7 @@ create_ip_pool() {
                 IPPOOLID=$(echo ${IPPOOLINFO} |jq .id)
                 create_ip_pool_subnet $IPPOOLID $2 $3 $4 $5 $6
         else
-                echo "  error creating uplink profile : ${PROFILENAME}"
+                echo "  error creating IP Pool : ${IPPOOLNAME}"
                 echo ${HTTPSTATUS}
                 echo ${RESPONSE}
                 exit
@@ -394,7 +394,7 @@ create_ip_pool_subnet() {
                 echo "${SUBNETNAME} created succesfully"
                 echo ${SUBNETINFO} |jq . 
         else
-                echo "  error creating uplink profile : ${PROFILENAME}"
+                echo "  error creating ip pool subnet : ${SUBNETNAME}"
                 echo ${HTTPSTATUS}
                 echo ${RESPONSE}
                 exit
@@ -676,7 +676,7 @@ else
         #echo $HOST
 fi
 
-
+exit
 # ===== transport node profile =====
 # Check existing transport node profile
 RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/policy/api/v1/infra/host-transport-node-profiles)
@@ -689,6 +689,7 @@ then
         if [[ ${TNPROFILESCOUNT} -gt 0 ]]
         then
                 EXISTINGTNPROFILES=$(echo $TNPROFILESINFO| jq -r .results[0].display_name)
+
                 if [[ "${EXISTINGMNGR}" == "vcsa.${CPOD_NAME_LOWER}.${ROOT_DOMAIN}" ]]
                 then
                         echo "existing manager set correctly"

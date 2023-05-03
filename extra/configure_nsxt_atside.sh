@@ -93,11 +93,60 @@ check_uplink_profile() {
 
 create_uplink_profile() {
         #$1 profile name string
-        #$2 VLAN
+        #$2 VLAN ID
         #returns json
         PROFILENAME=$1
-        
-        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/policy/api/v1/infra/host-switch-profiles)
+        VLANID=$2
+
+        PROFILE_JSON='{
+        "teaming": {
+        "policy": "LOADBALANCE_SRCID",
+        "active_list": [
+        {
+                "uplink_name": "uplink-1",
+                "uplink_type": "PNIC"
+        },
+        {
+                "uplink_name": "uplink-2",
+                "uplink_type": "PNIC"
+        }
+        ],
+        "rolling_order": false
+        },
+        "named_teamings": [
+        {
+        "name": "'$PROFILENAME'-uplink-2",
+        "policy": "FAILOVER_ORDER",
+        "active_list": [
+                {
+                "uplink_name": "uplink-2",
+                "uplink_type": "PNIC"
+                }
+        ],
+        "rolling_order": false
+        },
+        {
+        "name": "'$PROFILENAME'-uplink-1",
+        "policy": "FAILOVER_ORDER",
+        "active_list": [
+                {
+                "uplink_name": "uplink-1",
+                "uplink_type": "PNIC"
+                }
+        ],
+        "rolling_order": false
+        }
+        ],
+        "transport_vlan": '$VLANID',
+        "overlay_encap": "GENEVE",
+        "resource_type": "PolicyUplinkHostSwitchProfile",
+        "id": "'$PROFILENAME'",
+        "display_name": "'$PROFILENAME'"
+        }'
+
+        SCRIPT="/tmp/PROFILE_JSON"
+        echo ${PROFILE_JSON} > ${SCRIPT}
+        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD}  -H 'Content-Type: application/json' -X POST -d @${SCRIPT} https://${NSXFQDN}/policy/api/v1/infra/host-switch-profiles/${PROFILENAME})
         HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
         #echo $RESPONSE
         #echo $HTTPSTATUS
@@ -105,12 +154,10 @@ create_uplink_profile() {
         if [ $HTTPSTATUS -eq 200 ]
         then
                 PROFILESINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
-                #echo ${PROFILESINFO}
-                PROFILESCOUNT=$(echo ${PROFILESINFO} | jq .result_count)
-                #echo ${PROFILESCOUNT}
-                echo $PROFILESINFO |jq '.results[] | select (.display_name =="'$PROFILENAME'")'
+                echo "${PROFILENAME} created succesfully"
+                echo ${PROFILESINFO}
         else
-                echo "  error getting uplink profiles"
+                echo "  error creating uplink profile : ${PROFILENAME}"
                 echo ${HTTPSTATUS}
                 echo ${RESPONSE}
                 exit
@@ -128,6 +175,16 @@ VAPP="cPod-${NAME_HIGHER}"
 VMNAME="${VAPP}-${HOSTNAME}"
 
 VLAN=$( grep -m 1 "${CPOD_NAME_LOWER}\s" /etc/hosts | awk '{print $1}' | cut -d "." -f 4 )
+
+if [ ${VLAN} -gt 40 ]; then
+	VMOTIONVLANID=${WLDVLAN}1
+	VSANVLANID=${WLDVLAN}2
+	TEPVLANID=${WLDVLAN}3
+else
+	VMOTIONVLANID=${WLDVLAN}01
+	VSANVLANID=${WLDVLAN}02
+	TEPVLANID=${WLDVLAN}03
+fi
 
 PASSWORD=$( ./${EXTRA_DIR}/passwd_for_cpod.sh ${1} )
 
@@ -237,6 +294,7 @@ EDGE=$(check_uplink_profile "edge-profile")
 if [ "${EDGE}" == "" ]
 then
         echo "create edge-profile"
+        create_uplink_profile "edge-profile" $TEPVLANID
 else 
         echo "edge-profile exists"
         echo $EDGE
@@ -246,6 +304,7 @@ HOST=$(check_uplink_profile "host-profile")
 if [ "${HOST}" == "" ]
 then
         echo "create host-profile"
+        create_uplink_profile "host-profile" $TEPVLANID
 else 
         echo "host-profile exists"
         echo $HOST

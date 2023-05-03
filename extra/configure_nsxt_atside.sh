@@ -64,6 +64,32 @@ add_computer_manager() {
         fi
 }
 
+check_uplink_profile() {
+        #$1 profile name string
+        #returns json
+        PROFILENAME=$1
+        
+        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/policy/api/v1/infra/host-switch-profiles)
+        HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+        #echo $RESPONSE
+        #echo $HTTPSTATUS
+
+        if [ $HTTPSTATUS -eq 200 ]
+        then
+                PROFILESINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+                #echo ${PROFILESINFO}
+                PROFILESCOUNT=$(echo ${PROFILESINFO} | jq .result_count)
+                #echo ${PROFILESCOUNT}
+                echo $PROFILESINFO |jq '.results[] | select (.display_name =="'$PROFILENAME'")'
+        else
+                echo "  error getting uplink profiles"
+                echo ${HTTPSTATUS}
+                echo ${RESPONSE}
+                exit
+        fi
+
+}
+
 ###################
 
 CPOD_NAME="cpod-$1"
@@ -178,42 +204,23 @@ fi
 echo
 echo "processing uplink profiles"
 echo
-RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/policy/api/v1/infra/host-switch-profiles)
-HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
-echo $RESPONSE
-echo $HTTPSTATUS
 
-if [ $HTTPSTATUS -eq 200 ]
+EDGE=$(check_uplink_profile "edge-profile")
+if [ "${EDGE}" == "" ]
 then
-        PROFILESINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
-        echo ${PROFILESINFO}
-        PROFILESCOUNT=$(echo ${PROFILESINFO} | jq .result_count)
-        echo ${PROFILESCOUNT}
-        if [[ ${PROFILESCOUNT} -gt 0 ]]
-        then
-                EXISTINGPROFILES=$(echo $PROFILESINFO| jq -r '.results[].display_name')
-                echo $EXISTINGPROFILES
-                for EXISTINGPROFILE in $EXISTINGPROFILES ; do
-                        echo $EXISTINGPROFILE
-                        echo $PROFILESINFO |jq '.results[] | select (.display_name =="'$EXISTINGPROFILE'") | .mtu,.transport_vlan'
-
-                done
-
-                if [[ "${EXISTINGPROFILES}" == "blahblah" ]]
-                then
-                        echo "existing manager set correctly"
-                else
-                        echo " ${EXISTINGPROFILES} does not match blahblah"
-                fi
-        else
-                echo "TODO : adding uplink profiles"
-        fi
-else
-        echo "  error getting uplink profiles"
-        echo ${HTTPSTATUS}
-        echo ${RESPONSE}
-        exit
+        echo "create edge-profile"
+else 
+        echo "edge-profile exists"
 fi
+
+HOST=$(check_uplink_profile "host-profile")
+if [ "${HOST}" == "" ]
+then
+        echo "create host-profile"
+else 
+        echo "host-profile exists"
+fi
+
 
 # ===== Create transport zones =====
 # Check existing uplink profiles

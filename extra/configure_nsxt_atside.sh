@@ -146,7 +146,7 @@ create_uplink_profile() {
 
         SCRIPT="/tmp/PROFILE_JSON"
         echo ${PROFILE_JSON} > ${SCRIPT}
-        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD}  -H 'Content-Type: application/json' -X POST -d @${SCRIPT} https://${NSXFQDN}/policy/api/v1/infra/host-switch-profiles/${PROFILENAME})
+        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD}  -H 'Content-Type: application/json' -X PUT -d @${SCRIPT} https://${NSXFQDN}/policy/api/v1/infra/host-switch-profiles/${PROFILENAME})
         HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
         #echo $RESPONSE
         #echo $HTTPSTATUS

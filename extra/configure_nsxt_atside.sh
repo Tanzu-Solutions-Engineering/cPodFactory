@@ -610,6 +610,7 @@ fi
 #Check if subnets present
 
 POOL=$(check_ip_pool "TEP-pool")
+echo ${POOL}
 if [ "${POOL}" == "" ]
 then
         echo "  create TEP IP pool"

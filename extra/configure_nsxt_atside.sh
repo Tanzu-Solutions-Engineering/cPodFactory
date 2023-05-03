@@ -341,7 +341,7 @@ create_ip_pool() {
                 IPPOOLINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
                 echo "${IPPOOLINFO} created succesfully"
                 echo ${IPPOOLINFO} |jq .
-                IPPOOLID=$(echo ${IPPOOLINFO} |jq .id)
+                IPPOOLID=$(echo ${IPPOOLINFO} |jq -r .id)
                 create_ip_pool_subnet $IPPOOLID $2 $3 $4 $5 $6
         else
                 echo "  error creating IP Pool : ${IPPOOLNAME}"

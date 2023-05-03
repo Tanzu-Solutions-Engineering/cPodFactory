@@ -421,6 +421,86 @@ check_ip_pool_subnet() {
                 exit 1
         fi
 }
+
+create_transport_node_profile() {
+        #$1 profile name string
+        #$2 VLAN ID
+        #returns json
+        TNPROFILENAME=$1
+        
+        TNPROFILE_JSON='{
+        "resource_type": "PolicyHostTransportNodeProfile",
+        "id": "'${TNPROFILENAME}'",
+        "display_name": "'${TNPROFILENAME}'",
+        
+        "host_switch_spec": {
+        "resource_type": "StandardHostSwitchSpec",
+        "host_switches": [
+        {
+                "host_switch_profile_ids": [
+                {
+                "value": "/infra/host-switch-profiles/e331116d-f59e-4004-8cfd-c577aefe563a",
+                "key": "UplinkHostSwitchProfile"
+                }
+                ],
+                "host_switch_name": "nsxvswitch",
+                "pnics": [
+                {
+                "device_name": "vmnic1",
+                "uplink_name": "uplink1"
+                }
+                ],
+                "ip_assignment_spec": {
+                "resource_type": "StaticIpPoolSpec",
+                "ip_pool_id": "/infra/manager-ip-pools/f306c78e-6ee7-4475-b06f-724ad431cb9e"
+                },
+                "vmk_install_migration": [
+                {
+                "device_name": "vmk1",
+                "destination_network": "849e339e-64b7-47cb-9480-33068f70dc5a"
+                },
+                {
+                "device_name": "vmk2",
+                "destination_network": "849e339e-64b7-47cb-9480-33068f70dc5a"
+                }
+                ],
+                "vmk_uninstall_migration": [
+                ],
+                "transport_zone_endpoints": [
+                {
+                "transport_zone_id": "/infra/sites/default/enforcement-points/default/transport-zones/e14c6b8a-9edd-489f-b624-f9ef12afbd8f"
+                }
+                ]
+        }
+        ]
+        },
+        "_create_time": 1485299990773,
+        "_last_modified_user": "admin",
+        "_last_modified_time": 1485301913130,
+        "_create_user": "admin",
+        "_revision": 0
+        }'
+
+        SCRIPT="/tmp/PROFILE_JSON"
+        echo ${PROFILE_JSON} > ${SCRIPT}
+        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD}  -H 'Content-Type: application/json' -X PUT -d @${SCRIPT} https://${NSXFQDN}/policy/api/v1/infra/host-switch-profiles/${PROFILENAME})
+        HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+        #echo $RESPONSE
+        #echo $HTTPSTATUS
+
+        if [ $HTTPSTATUS -eq 200 ]
+        then
+                PROFILESINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+                echo "${PROFILENAME} created succesfully"
+                #echo ${PROFILESINFO}
+        else
+                echo "  error creating uplink profile : ${PROFILENAME}"
+                echo ${HTTPSTATUS}
+                echo ${RESPONSE}
+                exit
+        fi
+
+}
 ###################
 
 CPOD_NAME="cpod-$1"
@@ -684,9 +764,6 @@ fi
 #Check if one present
 #Check if subnets present
 
-
-check_ip_pool "TEP-pool"
-
 POOL=$(check_ip_pool "TEP-pool")
 echo ${POOL}
 if [ "${POOL}" == "" ]
@@ -695,12 +772,45 @@ then
         create_ip_pool "TEP-pool" "TEP-pool-subnet"  "10.${VLAN}.3.2" "10.${VLAN}.3.200" "10.${VLAN}.3.0/24"  "10.${VLAN}.3.1" 
 else 
         echo "  TEP-pool exists"
-        #echo $HOST
 fi
 
 # ===== transport node profile =====
 # Check existing transport node profile
 
+
+#/policy/api/v1/infra/host-switch-profiles
+RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/policy/api/v1/infra/host-switch-profiles)
+HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+
+if [ $HTTPSTATUS -eq 200 ]
+then
+        HSPROFILESINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+        HSPROFILESCOUNT=$(echo $TNPROFHSPROFILESINFOILESINFO | jq .result_count)
+        if [[ ${HSPROFILESCOUNT} -gt 0 ]]
+        then
+                echo ${HSPROFILESINFO} |jq .
+                
+                EXISTINGTNPROFILES=$(echo $HSPROFILESINFO| jq -r .results[0].display_name)
+                
+                if [[ "${EXISTINGTNPROFILES}" == "${TNPROFILENAME}" ]]
+                then
+                        echo "existing host-switch-profiles set correctly : ${EXISTINGTNPROFILES}"
+                else
+                        echo " ${EXISTINGTNPROFILES} does not match ${TNPROFILENAME}"
+                fi
+        else
+                echo "adding host-switch-profiles ?"
+                #add_tn_profiles
+        fi
+else
+        echo "  error getting host-switch-profiles"
+        echo ${HTTPSTATUS}
+        echo ${RESPONSE}
+        exit
+fi
+
+
+TNPROFILENAME="cluster-transport-node-profile"
 
 RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/policy/api/v1/infra/host-transport-node-profiles)
 HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
@@ -712,27 +822,27 @@ then
         if [[ ${TNPROFILESCOUNT} -gt 0 ]]
         then
                 echo ${TNPROFILESINFO} |jq .
-                exit
+                
                 EXISTINGTNPROFILES=$(echo $TNPROFILESINFO| jq -r .results[0].display_name)
 
-                if [[ "${EXISTINGMNGR}" == "vcsa.${CPOD_NAME_LOWER}.${ROOT_DOMAIN}" ]]
+                if [[ "${EXISTINGTNPROFILES}" == "${TNPROFILENAME}" ]]
                 then
-                        echo "existing manager set correctly"
+                        echo "existing transport node profile set correctly : ${EXISTINGTNPROFILES}"
                 else
-                        echo " ${EXISTINGMNGR} does not match vcsa.${CPOD_NAME_LOWER}.${ROOT_DOMAIN}"
+                        echo " ${EXISTINGTNPROFILES} does not match ${TNPROFILENAME}"
                 fi
         else
                 echo "adding TN PROFILES"
                 #add_tn_profiles
         fi
 else
-        echo "  error getting managers"
+        echo "  error getting transport node profile"
         echo ${HTTPSTATUS}
         echo ${RESPONSE}
         exit
 fi
 
-
+exit
 # ===== Configure NSX on ESX hosts =====
 
 #/policy/api/v1/infra/sites/{site-id}/enforcement-points/{enforcementpoint-id}/host-transport-nodes

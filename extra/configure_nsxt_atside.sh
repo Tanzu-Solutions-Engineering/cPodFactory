@@ -66,7 +66,9 @@ add_computer_manager() {
         if [ $HTTPSTATUS -eq 201 ]
         then
                 MANAGERSINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
-                echo ${MANAGERSINFO}
+                #echo ${MANAGERSINFO}
+                MANAGERSRV=$(echo $MANAGERSINFO | jq -r .server)
+                echo "  Compute Manager added succesfully = ${MANAGERSRV}"
         else
                 echo "  error setting manager"
                 echo ${HTTPSTATUS}
@@ -111,7 +113,7 @@ check_uplink_profile() {
         then
                 PROFILESINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
                 #echo ${PROFILESINFO}
-                PROFILESCOUNT=$(echo ${PROFILESINFO} | jq .result_count)
+                #PROFILESCOUNT=$(echo ${PROFILESINFO} | jq .result_count)
                 #echo ${PROFILESCOUNT}
                 echo $PROFILESINFO |jq '.results[] | select (.display_name =="'$PROFILENAME'")'
         else
@@ -187,9 +189,84 @@ create_uplink_profile() {
         then
                 PROFILESINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
                 echo "${PROFILENAME} created succesfully"
-                echo ${PROFILESINFO}
+                #echo ${PROFILESINFO}
         else
                 echo "  error creating uplink profile : ${PROFILENAME}"
+                echo ${HTTPSTATUS}
+                echo ${RESPONSE}
+                exit
+        fi
+
+}
+
+check_transport_zone() {
+        #$1 transport zone name string
+        #returns json
+        TZNAME=$1
+
+        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/policy/api/v1/infra/sites/default/enforcement-points/${EXISTINGEPRP}/transport-zones)
+        HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+
+        if [ $HTTPSTATUS -eq 200 ]
+        then
+                TZINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+                #TZCOUNT=$(echo ${TZINFO} | jq .result_count)                
+                echo $TZINFO |jq '.results[] | select (.display_name =="'$TZNAME'")'
+                
+        else
+                echo "  error getting uplink profiles"
+                echo ${HTTPSTATUS}
+                echo ${RESPONSE}
+                exit
+        fi
+
+}
+
+create_transport_zone() {
+        #$1 transport zone string
+        #$2 tz_type (OVERLAY_STANDARD, VLAN_BACKED )
+        #$3 uplink names (i.e. : edge-uplink)
+        #returns json
+        TZNAME=$1
+        TZTYPE=$2
+        UPLINKNAME=$3
+        if [ "${UPLINKNAME}" == "" ]
+        then
+                TZ_JSON='{
+                "tz_type": "'${TZTYPE}'",
+                "is_default": false,
+                "nested_nsx": false,
+                "resource_type": "PolicyTransportZone",
+                "display_name": "'${TZNAME}'"
+                }'
+
+        else
+                TZ_JSON='{
+                "tz_type": "'${TZTYPE}'",
+                "is_default": false,
+                "uplink_teaming_policy_names": [
+                "'${UPLINKNAME}'-1",
+                "'${UPLINKNAME}'-2"
+                ],
+                "nested_nsx": false,
+                "resource_type": "PolicyTransportZone",
+                "display_name": "'${TZNAME}'"
+                }'
+        fi
+        SCRIPT="/tmp/TZ_JSON"
+        echo ${TZ_JSON} > ${SCRIPT}
+        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD}  -H 'Content-Type: application/json' -X PUT -d @${SCRIPT} https://${NSXFQDN}/policy/api/v1/infra/sites/default/enforcement-points/${EXISTINGEPRP}/transport-zones/${TZNAME})
+        HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+        #echo $RESPONSE
+        #echo $HTTPSTATUS
+
+        if [ $HTTPSTATUS -eq 200 ]
+        then
+                TZINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+                echo "  ${TZNAME} created succesfully"
+                echo ${TZINFO}
+        else
+                echo "  error creating uplink profile : ${TZNAME}"
                 echo ${HTTPSTATUS}
                 echo ${RESPONSE}
                 exit
@@ -295,11 +372,11 @@ then
                 EXISTINGLIC=$(echo ${LICENSESINFO} |jq '.results[] | select (.description =="NSX Data Center Enterprise Plus")')
                 if [[ "${EXISTINGLIC}" == "" ]]
                 then
-                        echo "No NSX datacenter License assigned."
+                        echo "No NSX datacenter License present."
                         echo "adding NSX license"
                         add_nsx_license
                 else
-                        echo "NSX Datacenter license assigned. proceeding with configuration"
+                        echo "NSX Datacenter license present. proceeding with configuration"
                 fi
         else
                 echo "No License assigned."
@@ -335,7 +412,7 @@ then
                 EXISTINGMNGR=$(echo $MANAGERSINFO| jq -r .results[0].server)
                 if [[ "${EXISTINGMNGR}" == "vcsa.${CPOD_NAME_LOWER}.${ROOT_DOMAIN}" ]]
                 then
-                        echo "existing manager set correctly"
+                        echo "existing manager set correctly : ${EXISTINGMNGR}"
                 else
                         echo " ${EXISTINGMNGR} does not match vcsa.${CPOD_NAME_LOWER}.${ROOT_DOMAIN}"
                 fi
@@ -362,23 +439,22 @@ echo
 EDGE=$(check_uplink_profile "edge-profile")
 if [ "${EDGE}" == "" ]
 then
-        echo "create edge-profile"
+        echo "  create edge-profile"
         create_uplink_profile "edge-profile" $TEPVLANID
 else 
-        echo "edge-profile exists"
-        echo $EDGE
+        echo "  edge-profile exists"
+        #echo $EDGE
 fi
 
 HOST=$(check_uplink_profile "host-profile")
 if [ "${HOST}" == "" ]
 then
-        echo "create host-profile"
+        echo "  create host-profile"
         create_uplink_profile "host-profile" $TEPVLANID
 else 
-        echo "host-profile exists"
-        echo $HOST
+        echo "  host-profile exists"
+        #echo $HOST
 fi
-
 
 # ===== Create transport zones =====
 # Check existing uplink profiles
@@ -391,7 +467,7 @@ echo
 echo "processing transport zones"
 echo
 
-echo "get enforcement points"
+echo "  get enforcement points"
 echo
 
 RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/policy/api/v1/infra/sites/default/enforcement-points)
@@ -404,15 +480,15 @@ then
         if [[ ${EPCOUNT} -gt 0 ]]
         then
                 EXISTINGEP=$(echo $EPINFO| jq -r '.results[].display_name')
-                echo $EXISTINGEP
+                #echo $EXISTINGEP
                 EXISTINGEPRP=$(echo $EPINFO| jq -r '.results[].relative_path')
-                echo $EXISTINGEPRP
+                #echo $EXISTINGEPRP
                 
                 if [[ "${EXISTINGEP}" == "default" ]]
                 then
-                        echo "existing EP is default"
+                        echo "  existing EP is default"
                 else
-                        echo " ${EXISTINGEP} does not match default"
+                        echo "  ${EXISTINGEP} does not match default"
                 fi
         else
                 echo "TODO : what when no EP ?"
@@ -425,35 +501,37 @@ else
         exit
 fi
 
-RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/policy/api/v1/infra/sites/default/enforcement-points/${EXISTINGEPRP}/transport-zones)
-HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
 
-if [ $HTTPSTATUS -eq 200 ]
+EDGE=$(check_transport_zone "edge-vlan-tz")
+if [ "${EDGE}" == "" ]
 then
-        TZINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
-        TZCOUNT=$(echo ${TZINFO} | jq .result_count)
-        if [[ ${TZCOUNT} -gt 0 ]]
-        then
-                EXISTINGTZ=$(echo $TZINFO| jq -r '.results[].display_name')
-                echo $EXISTINGTZ
-                if [[ "${EXISTINGTZ}" == "blahblah" ]]
-                then
-                        echo "existing manager set correctly"
-                else
-                        echo " ${EXISTINGTZ} does not match blahblah"
-                        echo ${TZINFO}
-                fi
-        else
-                echo "TODO : adding uplink profiles"
-
-                exit
-        fi
-else
-        echo "  error getting uplink profiles"
-        echo ${HTTPSTATUS}
-        echo ${RESPONSE}
-        exit
+        echo "  create check_transport_zone "edge-vlan-tz""
+        create_transport_zone "edge-vlan-tz" "VLAN_BACKED" "edge-uplink"
+else 
+        echo "  edge-vlan-tz exists"
+        #echo $EDGE
 fi
+
+HOST=$(check_transport_zone "host-vlan-tz")
+if [ "${HOST}" == "" ]
+then
+        echo "  create check_transport_zone "host-vlan-tz""
+        create_transport_zone "host-vlan-tz" "VLAN_BACKED" "host-uplink"
+else 
+        echo "  host-vlan-tz exists"
+        #echo $HOST
+fi
+
+OVERLAY=$(check_transport_zone "overlay-tz")
+if [ "${OVERLAY}" == "" ]
+then
+        echo "  create check_transport_zone "overlay-tz""
+        create_transport_zone "overlay-tz" "OVERLAY_STANDARD"
+else 
+        echo "  overlay-tz exists"
+        #echo $OVERLAY
+fi
+
 
 # ===== create IP pools =====
 

@@ -286,8 +286,8 @@ check_ip_pool() {
         if [ $HTTPSTATUS -eq 200 ]
         then
                 IPPOOLINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
-                #TZCOUNT=$(echo ${TZINFO} | jq .result_count)                
-                if [ "${IPPOOLINFO}" != "" ]
+                IPPOOLCOUNT=$(echo ${TZINFO} | jq .result_count)                
+                if [[ ${IPPOOLCOUNT} -gt 0 ]]
                 then
                         echo $IPPOOLINFO |jq '.results[] | select (.display_name =="'$IPPOOLNAME'")'
                         IPPOOLID=$(echo $IPPOOLINFO |jq -r '.results[] | select (.display_name =="'$IPPOOLNAME'") | .id')

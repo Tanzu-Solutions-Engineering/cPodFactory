@@ -287,12 +287,13 @@ check_ip_pool() {
                 #TZCOUNT=$(echo ${TZINFO} | jq .result_count)                
                 echo $IPPOOLINFO |jq '.results[] | select (.display_name =="'$IPPOOLNAME'")'
                 IPPOOLID=$(echo $IPPOOLINFO |jq -r '.results[] | select (.display_name =="'$IPPOOLNAME'") | .id')
+                echo $IPPOOLID
                 check_ip_pool_subnet ${IPPOOLID}
         else
                 echo "  error getting IP Pools"
                 echo ${HTTPSTATUS}
                 echo ${RESPONSE}
-                exit
+                exit 1
         fi
 }
 
@@ -312,7 +313,7 @@ check_ip_pool_subnet() {
                 echo "  error getting IP Pool subnets"
                 echo ${HTTPSTATUS}
                 echo ${RESPONSE}
-                exit
+                exit 1
         fi
 }
 
@@ -346,7 +347,7 @@ create_ip_pool() {
                 echo "  error creating IP Pool : ${IPPOOLNAME}"
                 echo ${HTTPSTATUS}
                 echo ${RESPONSE}
-                exit
+                exit 1
         fi
 
 }
@@ -397,7 +398,7 @@ create_ip_pool_subnet() {
                 echo "  error creating ip pool subnet : ${SUBNETNAME}"
                 echo ${HTTPSTATUS}
                 echo ${RESPONSE}
-                exit
+                exit 1
         fi
 
 }
@@ -664,6 +665,9 @@ fi
 #/policy/api/v1/infra/ip-pools
 #Check if one present
 #Check if subnets present
+
+
+check_ip_pool "TEP-pool"
 
 POOL=$(check_ip_pool "TEP-pool")
 echo ${POOL}

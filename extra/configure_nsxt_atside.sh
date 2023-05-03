@@ -100,7 +100,7 @@ then
         MINORVERSION=$(echo ${PRODUCTVERSION} | head -c3)
        	case $MAJORVERSION in
 		3)
-		        LOWESTVERSION=$(echo "3.2\n${MINORVERSION}" | sort -V | head -n1)
+		        LOWESTVERSION=$(printf "%s\n" "3.2" ${MINORVERSION} | sort -V | head -n1)
                         echo "lowestversion: $LOWESTVERSION"
                         if [[ "${LOWESTVERSION}" == "3.2" ]]
                         then
@@ -111,7 +111,7 @@ then
                         fi
 			;;
 		4)
-		        LOWESTVERSION=$(echo "4.1\n${MINORVERSION}" | sort -V | head -n1)
+		        LOWESTVERSION=$( printf "%s\n" "4.1" ${MINORVERSION} | sort -V | head -n1)
                         echo "lowestversion: $LOWESTVERSION"
                         if [[ "${LOWESTVERSION}" == "4.1" ]]
                         then

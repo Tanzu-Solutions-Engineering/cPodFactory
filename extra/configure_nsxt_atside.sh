@@ -340,7 +340,7 @@ create_ip_pool() {
         then
                 IPPOOLINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
                 echo "${IPPOOLINFO} created succesfully"
-                echo ${IPPOOLINFO} |jq .
+                #echo ${IPPOOLINFO} |jq .
                 IPPOOLID=$(echo ${IPPOOLINFO} |jq -r .id)
                 create_ip_pool_subnet $IPPOOLID $2 $3 $4 $5 $6
         else
@@ -393,7 +393,7 @@ create_ip_pool_subnet() {
         then
                 SUBNETINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
                 echo "${SUBNETNAME} created succesfully"
-                echo ${SUBNETINFO} |jq . 
+                #echo ${SUBNETINFO} |jq . 
         else
                 echo "  error creating ip pool subnet : ${SUBNETNAME}"
                 echo ${HTTPSTATUS}
@@ -403,6 +403,24 @@ create_ip_pool_subnet() {
 
 }
 
+check_ip_pool_subnet() {
+        #$1 transport zone name string
+        #returns json
+        IPPOOLID=$1
+        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/policy/api/v1/infra/ip-pools/${IPPOOLID}/ip-subnets)
+        HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+
+        if [ $HTTPSTATUS -eq 200 ]
+        then
+                SUBNETINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+                echo $SUBNETINFO |jq .
+        else
+                echo "  error getting IP Pool subnets"
+                echo ${HTTPSTATUS}
+                echo ${RESPONSE}
+                exit 1
+        fi
+}
 ###################
 
 CPOD_NAME="cpod-$1"
@@ -680,9 +698,10 @@ else
         #echo $HOST
 fi
 
-exit
 # ===== transport node profile =====
 # Check existing transport node profile
+
+
 RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/policy/api/v1/infra/host-transport-node-profiles)
 HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
 
@@ -692,6 +711,8 @@ then
         TNPROFILESCOUNT=$(echo $TNPROFILESINFO | jq .result_count)
         if [[ ${TNPROFILESCOUNT} -gt 0 ]]
         then
+                echo ${TNPROFILESINFO} |jq .
+                exit
                 EXISTINGTNPROFILES=$(echo $TNPROFILESINFO| jq -r .results[0].display_name)
 
                 if [[ "${EXISTINGMNGR}" == "vcsa.${CPOD_NAME_LOWER}.${ROOT_DOMAIN}" ]]
@@ -710,6 +731,7 @@ else
         echo ${RESPONSE}
         exit
 fi
+
 
 # ===== Configure NSX on ESX hosts =====
 

@@ -38,6 +38,7 @@ source ./extra/functions.sh
 add_computer_manager() {
         CM_JSON='{
         "server": "'vcsa.${CPOD_NAME_LOWER}.${ROOT_DOMAIN}'",
+        "display_name": "'vcsa.${CPOD_NAME_LOWER}.${ROOT_DOMAIN}'",
         "origin_type": "vCenter",
         "credential" : {
         "credential_type" : "UsernamePasswordLoginCredential",

@@ -245,8 +245,8 @@ create_transport_zone() {
                 "tz_type": "'${TZTYPE}'",
                 "is_default": false,
                 "uplink_teaming_policy_names": [
-                "'${UPLINKNAME}'-1",
-                "'${UPLINKNAME}'-2"
+                "'${UPLINKNAME}'-uplink-1",
+                "'${UPLINKNAME}'-uplink-2"
                 ],
                 "nested_nsx": false,
                 "resource_type": "PolicyTransportZone",
@@ -506,7 +506,7 @@ EDGE=$(check_transport_zone "edge-vlan-tz")
 if [ "${EDGE}" == "" ]
 then
         echo "  create check_transport_zone "edge-vlan-tz""
-        create_transport_zone "edge-vlan-tz" "VLAN_BACKED" "edge-uplink"
+        create_transport_zone "edge-vlan-tz" "VLAN_BACKED" "edge-profile"
 else 
         echo "  edge-vlan-tz exists"
         #echo $EDGE
@@ -516,7 +516,7 @@ HOST=$(check_transport_zone "host-vlan-tz")
 if [ "${HOST}" == "" ]
 then
         echo "  create check_transport_zone "host-vlan-tz""
-        create_transport_zone "host-vlan-tz" "VLAN_BACKED" "host-uplink"
+        create_transport_zone "host-vlan-tz" "VLAN_BACKED" "host-profile"
 else 
         echo "  host-vlan-tz exists"
         #echo $HOST

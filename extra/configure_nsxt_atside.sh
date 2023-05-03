@@ -765,7 +765,6 @@ fi
 #Check if subnets present
 
 POOL=$(check_ip_pool "TEP-pool")
-echo ${POOL}
 if [ "${POOL}" == "" ]
 then
         echo "  create TEP IP pool"
@@ -785,13 +784,13 @@ HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
 if [ $HTTPSTATUS -eq 200 ]
 then
         HSPROFILESINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
-        HSPROFILESCOUNT=$(echo $TNPROFHSPROFILESINFOILESINFO | jq .result_count)
+        HSPROFILESCOUNT=$(echo $HSPROFILESINFO | jq .result_count)
         if [[ ${HSPROFILESCOUNT} -gt 0 ]]
         then
                 echo ${HSPROFILESINFO} |jq .
                 
                 EXISTINGTNPROFILES=$(echo $HSPROFILESINFO| jq -r .results[0].display_name)
-                
+
                 if [[ "${EXISTINGTNPROFILES}" == "${TNPROFILENAME}" ]]
                 then
                         echo "existing host-switch-profiles set correctly : ${EXISTINGTNPROFILES}"

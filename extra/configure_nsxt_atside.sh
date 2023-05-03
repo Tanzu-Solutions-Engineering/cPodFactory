@@ -264,7 +264,7 @@ create_transport_zone() {
         then
                 TZINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
                 echo "  ${TZNAME} created succesfully"
-                echo ${TZINFO}
+                #echo ${TZINFO}
         else
                 echo "  error creating uplink profile : ${TZNAME}"
                 echo ${HTTPSTATUS}
@@ -273,6 +273,30 @@ create_transport_zone() {
         fi
 
 }
+
+check_ip_pool() {
+        #$1 transport zone name string
+        #returns json
+        IPPOOLNAME=$1
+
+        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/policy/api/v1/infra/sites/default/enforcement-points/${EXISTINGEPRP}/transport-zones)
+        HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+
+        if [ $HTTPSTATUS -eq 200 ]
+        then
+                IPPOOLINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+                #TZCOUNT=$(echo ${TZINFO} | jq .result_count)                
+                echo $IPPOOLINFO |jq '.results[] | select (.display_name =="'$IPPOOLNAME'")'
+                
+        else
+                echo "  error getting uplink profiles"
+                echo ${HTTPSTATUS}
+                echo ${RESPONSE}
+                exit
+        fi
+
+}
+
 
 ###################
 
@@ -501,7 +525,6 @@ else
         exit
 fi
 
-
 EDGE=$(check_transport_zone "edge-vlan-tz")
 if [ "${EDGE}" == "" ]
 then
@@ -532,7 +555,6 @@ else
         #echo $OVERLAY
 fi
 
-
 # ===== create IP pools =====
 
 #/policy/api/v1/infra/ip-pools
@@ -544,18 +566,18 @@ HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
 
 if [ $HTTPSTATUS -eq 200 ]
 then
-        TZINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
-        TZCOUNT=$(echo ${TZINFO} | jq .result_count)
+        IPPOOLINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+        IPPOOLCOUNT=$(echo ${IPPOOLINFO} | jq .result_count)
         if [[ ${TZCOUNT} -gt 0 ]]
         then
-                EXISTINGTZ=$(echo $TZINFO| jq -r '.results[].display_name')
-                echo $EXISTINGTZ
-                if [[ "${EXISTINGTZ}" == "blahblah" ]]
+                EXISTINGIPPOOL=$(echo $IPPOOLINFO| jq -r '.results[].display_name')
+                echo $EXISTINGIPPOOL
+                if [[ "${EXISTINGIPPOOL}" == "blahblah" ]]
                 then
                         echo "existing manager set correctly"
                 else
-                        echo " ${EXISTINGTZ} does not match blahblah"
-                        echo ${TZINFO}
+                        echo " ${EXISTINGIPPOOL} does not match blahblah"
+                        echo ${IPPOOLINFO}
                 fi
         else
                 echo "TODO : adding IP POOL"
@@ -563,11 +585,14 @@ then
                 exit
         fi
 else
-        echo "  error getting uplink profiles"
+        echo "  error getting IP Pools"
         echo ${HTTPSTATUS}
         echo ${RESPONSE}
         exit
 fi
+
+check_ip_pool "TEP-pool"
+
 
 
 # ===== transport node profile =====

@@ -286,7 +286,7 @@ check_ip_pool() {
                 IPPOOLINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
                 #TZCOUNT=$(echo ${TZINFO} | jq .result_count)                
                 echo $IPPOOLINFO |jq '.results[] | select (.display_name =="'$IPPOOLNAME'")'
-                IPPOOLID=$(echo $IPPOOLINFO |jq '.results[] | select (.display_name =="'$IPPOOLNAME'") | .id')
+                IPPOOLID=$(echo $IPPOOLINFO |jq -r '.results[] | select (.display_name =="'$IPPOOLNAME'") | .id')
                 check_ip_pool_subnet ${IPPOOLID}
         else
                 echo "  error getting IP Pools"

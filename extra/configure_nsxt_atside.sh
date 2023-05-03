@@ -294,7 +294,6 @@ check_ip_pool() {
                 echo ${RESPONSE}
                 exit
         fi
-
 }
 
 check_ip_pool_subnet() {
@@ -315,11 +314,16 @@ check_ip_pool_subnet() {
                 echo ${RESPONSE}
                 exit
         fi
-
 }
 
 create_ip_pool() {
-        #$1 ip pool name string
+        # $1 ip pool name string
+        # $2 SUBNETNAME
+        # $3 SUBNETSTART
+        # $4 SUBNETEND
+        # $5 SUBNETCIDR
+        # $6 SUBNETGW
+
         #returns json
         IPPOOLNAME=$1
         IPPOOL_JSON='{"display_name": "'${IPPOOLNAME}'"}'
@@ -333,9 +337,11 @@ create_ip_pool() {
 
         if [ $HTTPSTATUS -eq 200 ]
         then
-                PROFILESINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
-                echo "${PROFILENAME} created succesfully"
-                #echo ${PROFILESINFO}
+                IPPOOLINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+                echo "${IPPOOLINFO} created succesfully"
+                echo ${IPPOOLINFO} |jq .
+                IPPOOLID=$(echo ${IPPOOLINFO} |jq .id)
+                create_ip_pool_subnet $IPPOOLID $2 $3 $4 $5 $6
         else
                 echo "  error creating uplink profile : ${PROFILENAME}"
                 echo ${HTTPSTATUS}
@@ -345,6 +351,56 @@ create_ip_pool() {
 
 }
 
+create_ip_pool_subnet() {
+        # $1 IP POOL ID
+        # $2 SUBNETNAME
+        # $3 SUBNETSTART
+        # $4 SUBNETEND
+        # $5 SUBNETCIDR
+        # $6 SUBNETGW
+
+        #returns json
+
+        IPPOOLID=$1
+        SUBNETNAME=$2
+        SUBNETSTART=$3
+        SUBNETEND=$4
+        SUBNETCIDR=$5
+        SUBNETGW=$6
+
+        SUBNET_JSON='{
+        "display_name": "'${SUBNETNAME}'",
+        "resource_type": "IpAddressPoolStaticSubnet",
+        "allocation_ranges": [
+        {
+                "start":"'${SUBNETSTART}'",
+                "end":"'${SUBNETEND}'"
+        }
+        ],
+        "gateway_ip": "'${SUBNETGW}'",
+        "cidr":"'${SUBNETCIDR}'"
+        }'
+
+        SCRIPT="/tmp/SUBNET_JSON"
+        echo ${SUBNET_JSON} > ${SCRIPT}
+        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD}  -H 'Content-Type: application/json' -X PATCH -d @${SCRIPT} https://${NSXFQDN}/policy/api/v1/infra/ip-pools/${IPPOOLID}/ip-subnets/${SUBNETNAME})
+        HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+        #echo $RESPONSE
+        #echo $HTTPSTATUS
+
+        if [ $HTTPSTATUS -eq 200 ]
+        then
+                SUBNETINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+                echo "${SUBNETNAME} created succesfully"
+                echo ${SUBNETINFO} |jq . 
+        else
+                echo "  error creating uplink profile : ${PROFILENAME}"
+                echo ${HTTPSTATUS}
+                echo ${RESPONSE}
+                exit
+        fi
+
+}
 
 ###################
 
@@ -614,7 +670,7 @@ echo ${POOL}
 if [ "${POOL}" == "" ]
 then
         echo "  create TEP IP pool"
-        create_ip_pool "TEP-pool"
+        create_ip_pool "TEP-pool" "TEP-pool-subnet"  "10.${VLAN}.3.2" "10.${VLAN}.3.200" "10.${VLAN}.3.0/24"  "10.${VLAN}.3.1" 
 else 
         echo "  TEP-pool exists"
         #echo $HOST

@@ -98,7 +98,6 @@ add_nsx_license() {
         fi
 }
 
-
 check_uplink_profile() {
         #$1 profile name string
         #returns json
@@ -248,7 +247,7 @@ create_transport_zone() {
                 "'${UPLINKNAME}'-uplink-1",
                 "'${UPLINKNAME}'-uplink-2"
                 ],
-                "nested_nsx": false,
+                "nested_nsx": true,
                 "resource_type": "PolicyTransportZone",
                 "display_name": "'${TZNAME}'"
                 }'
@@ -296,7 +295,6 @@ check_ip_pool() {
         fi
 
 }
-
 
 ###################
 
@@ -574,7 +572,7 @@ then
                 echo $EXISTINGIPPOOL
                 if [[ "${EXISTINGIPPOOL}" == "blahblah" ]]
                 then
-                        echo "existing manager set correctly"
+                        echo "existing ip pool set correctly"
                 else
                         echo " ${EXISTINGIPPOOL} does not match blahblah"
                         echo ${IPPOOLINFO}
@@ -659,13 +657,69 @@ else
         exit
 fi
 
+# ===== create nsx segments for edge vms =====
+# edge-uplink-trunk-1 - tz = host-vlan-tz - teaming policy : host-uplink-1 - vlan : 0-4094
+# edge-uplink-trunk-2 - tz = host-vlan-tz - teaming policy : host-uplink-2 - vlan : 0-4094
+
+
 
 # ===== create edge nodes =====
+# edge-1 - fqdn : edge-1.cpod... - size : large 
+# set password
+# allow ssh for admin
+# set computer manager: vcenter - cluster - datastore : vsandatastore
+# node settings : ip : mgmt.54/24 - GW - Portgroup (vm network / vds pg : mgmt - search domain - dns - ntp )
+# "configure nsx" - "new node switch" - switch name nsxHostSwitch - TZ : edge-vlan-tz + overlay-tz - uplink : edge-profile - ip assignment : ip pool - ip pool : TEP-pool - /
+#    teaming policy uplink mapping : type "vlan segment" : "edge-uplink-trunk-1" / 2
+
+
+# deploy edge code here
+
+
+# check edge node status - Not Available -> ready  in "configuration state" - "Registration Pending" - Success
+
 
 
 # ===== create edge cluster =====
+# create edge cluster and add nodes to it
+
+
+# ===== create nsx segments for T0 =====
+# name: t0-uplink-1 - no gw - tz : edge-vlan-tz - teaming : edge-uplink-1 - vlan id : VLAN#4 (uplinks)
+
 
 # ===== create T0 =====
+# create TO in network - T0 gateways
+# name : Tier-0 - HA mode : active-active - edge cluster : edge-cluster
+# save
+# set interfaces
+# add interfce
+# name : edge-1-uplink-1 - type : external - ip : 10.vlan.4.11 - segment : t0-uplink-1 - edge node : edge-1
+# add interfce
+# name : edge-2-uplink-2 - type : external - ip : 10.vlan.4.12 - segment : t0-uplink-1 - edge node : edge-2
+
+
+# configure cpodrouter bgp:
+#
+# cpodrouter-nsxtv3# configure terminal
+# cpodrouter-nsxtv3(config)# router bgp 65934
+# cpodrouter-nsxtv3(config-router)# neighbor 10.134.4.11 remote-as 66934
+# cpodrouter-nsxtv3(config-router)# neighbor 10.134.4.11 default-originate
+# cpodrouter-nsxtv3(config-router)# do write memory
+# 
+
+# configure T0 bgp
+# set AS number = cpodrouter + 1000
+# save
+# set neighbors
+# add neighbor
+# ip address : 10.vlan.4.1 - remote as number : cpodrouter asn
+
+# route redistribution
+# set redistribution
+# add route redistribution
+# name: default - set route redistribution:
+# T1 subnets : LB vip - nat ip - static routes - connected interfaces and segments
 
 
 

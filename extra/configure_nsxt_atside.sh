@@ -29,6 +29,16 @@ AUTH_DOMAIN=${DOMAIN}
 
 ###################
 
+
+if [ ! -f ./licenses.key ]; then
+	echo "./licenses.key does not exist. please create one by using the licenses.key.template as reference"
+	exit
+else
+	source ./licenses.key
+fi
+
+[ "${LIC_NSXT}" == ""  -o "${LIC_NSXT}" == "XXXXX-XXXXX-XXXXX-XXXXX-XXXXX" ] && echo "LIC_NSXT not set - please check licenses.key file !" && exit 1
+
 [ "${HOSTNAME}" == ""  -o "${IP}" == "" ] && echo "missing parameters - please source version file !" && exit 1
 
 ### functions ####
@@ -64,6 +74,27 @@ add_computer_manager() {
                 exit
         fi
 }
+
+add_nsx_license() {
+        LIC_JSON='{ "license_key": "'${LIC_NSXT}'" }'
+        SCRIPT="/tmp/LIC_JSON"
+        echo ${LIC_JSON} > ${SCRIPT}
+
+        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} -H 'Content-Type: application/json' -X POST -d @${SCRIPT} https://${NSXFQDN}/api/v1/licenses)
+        HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+
+        if [ $HTTPSTATUS -eq 200 ]
+        then
+                LICINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+                echo ${LICINFO}
+        else
+                echo "  error setting license"
+                echo ${HTTPSTATUS}
+                echo ${RESPONSE}
+                exit
+        fi
+}
+
 
 check_uplink_profile() {
         #$1 profile name string
@@ -244,6 +275,43 @@ else
         echo ${RESPONSE}
         exit
 fi
+
+#======== License NSX-T ========
+
+#check License
+echo
+echo "processing computer manager"
+echo
+RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/api/v1/licenses)
+HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+
+if [ $HTTPSTATUS -eq 200 ]
+then
+        LICENSESINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+        LICENSESCOUNT=$(echo $LICENSESINFO | jq .result_count)
+        if [[ ${LICENSESCOUNT} -gt 0 ]]
+        then
+                EXISTINGLIC=$(echo ${LICENSESINFO} |jq '.results[] | select (.description =="NSX Data Center Enterprise Plus")')
+                if [[ "${EXISTINGLIC}" == "" ]]
+                then
+                        echo "No NSX datacenter License assigned."
+                        echo "add NSX license"
+                        add_nsx_license
+                else
+                        echo "NSX Datacenter license assigned. proceding with configuration"
+                fi
+        else
+                echo "No License assigned."
+                echo "add NSX License"
+                add_nsx_license                
+        fi
+else
+        echo "  error getting licenses"
+        echo ${HTTPSTATUS}
+        echo ${RESPONSE}
+        exit
+fi
+
 
 #======== get venter thumbprint ========
 

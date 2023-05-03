@@ -86,9 +86,10 @@ add_nsx_license() {
         if [ $HTTPSTATUS -eq 200 ]
         then
                 LICINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
-                echo ${LICINFO}
+                #echo ${LICINFO}
+                echo "License added succesfully"
         else
-                echo "  error setting license"
+                echo "  error adding license"
                 echo ${HTTPSTATUS}
                 echo ${RESPONSE}
                 exit
@@ -280,7 +281,7 @@ fi
 
 #check License
 echo
-echo "processing computer manager"
+echo "Checking NSX Licenses"
 echo
 RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/api/v1/licenses)
 HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
@@ -295,10 +296,10 @@ then
                 if [[ "${EXISTINGLIC}" == "" ]]
                 then
                         echo "No NSX datacenter License assigned."
-                        echo "add NSX license"
+                        echo "adding NSX license"
                         add_nsx_license
                 else
-                        echo "NSX Datacenter license assigned. proceding with configuration"
+                        echo "NSX Datacenter license assigned. proceeding with configuration"
                 fi
         else
                 echo "No License assigned."

@@ -193,6 +193,12 @@ then
         then
                 EXISTINGPROFILES=$(echo $PROFILESINFO| jq -r '.results[].display_name')
                 echo $EXISTINGPROFILES
+                for EXISTINGPROFILE in $EXISTINGPROFILES ; do
+                        echo $EXISTINGPROFILE
+                        echo $PROFILESINFO |jq '.results[] | select (.display_name =="'$EXISTINGPROFILE'") | .mtu,.transport_vlan'
+
+                done
+
                 if [[ "${EXISTINGPROFILES}" == "blahblah" ]]
                 then
                         echo "existing manager set correctly"

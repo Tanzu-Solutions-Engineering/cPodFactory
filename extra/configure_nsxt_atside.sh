@@ -101,6 +101,7 @@ then
        	case $MAJORVERSION in
 		3)
 		        LOWESTVERSION=$(echo "3.2\n${MINORVERSION}" | sort -V | head -n1)
+                        echo "lowestversion: $LOWESTVERSION"
                         if [[ "${LOWESTVERSION}" == "3.2" ]]
                         then
                                 echo "Version is at lease 3.2"
@@ -111,6 +112,7 @@ then
 			;;
 		4)
 		        LOWESTVERSION=$(echo "4.1\n${MINORVERSION}" | sort -V | head -n1)
+                        echo "lowestversion: $LOWESTVERSION"
                         if [[ "${LOWESTVERSION}" == "4.1" ]]
                         then
                                 echo "Version is at lease 4.1"

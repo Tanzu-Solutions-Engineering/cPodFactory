@@ -278,7 +278,7 @@ check_ip_pool() {
         #returns json
         IPPOOLNAME=$1
 
-        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/policy/api/v1/infra/sites/default/enforcement-points/${EXISTINGEPRP}/transport-zones)
+        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/policy/api/v1/infra/ip-pools)
         HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
 
         if [ $HTTPSTATUS -eq 200 ]
@@ -286,15 +286,65 @@ check_ip_pool() {
                 IPPOOLINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
                 #TZCOUNT=$(echo ${TZINFO} | jq .result_count)                
                 echo $IPPOOLINFO |jq '.results[] | select (.display_name =="'$IPPOOLNAME'")'
-                
+                IPPOOLID=$(echo $IPPOOLINFO |jq '.results[] | select (.display_name =="'$IPPOOLNAME'") | .id')
+                check_ip_pool_subnet ${IPPOOLID}
         else
-                echo "  error getting uplink profiles"
+                echo "  error getting IP Pools"
                 echo ${HTTPSTATUS}
                 echo ${RESPONSE}
                 exit
         fi
 
 }
+
+check_ip_pool_subnet() {
+        #$1 transport zone name string
+        #returns json
+        IPPOOLID=$1
+
+        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/policy/api/v1/infra/ip-pools/${IPPOOLID}/ip-subnets)
+        HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+
+        if [ $HTTPSTATUS -eq 200 ]
+        then
+                SUBNETINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+                echo $SUBNETINFO |jq .
+        else
+                echo "  error getting IP Pools"
+                echo ${HTTPSTATUS}
+                echo ${RESPONSE}
+                exit
+        fi
+
+}
+
+create_ip_pool() {
+        #$1 ip pool name string
+        #returns json
+        IPPOOLNAME=$1
+        IPPOOL_JSON='{"display_name": "'${IPPOOLNAME}'"}'
+
+        SCRIPT="/tmp/IPPOOL_JSON"
+        echo ${IPPOOL_JSON} > ${SCRIPT}
+        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD}  -H 'Content-Type: application/json' -X PUT -d @${SCRIPT} https://${NSXFQDN}/policy/api/v1/infra/ip-pools/${IPPOOLNAME})
+        HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+        #echo $RESPONSE
+        #echo $HTTPSTATUS
+
+        if [ $HTTPSTATUS -eq 200 ]
+        then
+                PROFILESINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+                echo "${PROFILENAME} created succesfully"
+                #echo ${PROFILESINFO}
+        else
+                echo "  error creating uplink profile : ${PROFILENAME}"
+                echo ${HTTPSTATUS}
+                echo ${RESPONSE}
+                exit
+        fi
+
+}
+
 
 ###################
 
@@ -559,38 +609,15 @@ fi
 #Check if one present
 #Check if subnets present
 
-RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/policy/api/v1/infra/ip-pools)
-HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
-
-if [ $HTTPSTATUS -eq 200 ]
+POOL=$(check_ip_pool "TEP-pool")
+if [ "${POOL}" == "" ]
 then
-        IPPOOLINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
-        IPPOOLCOUNT=$(echo ${IPPOOLINFO} | jq .result_count)
-        if [[ ${IPPOOLCOUNT} -gt 0 ]]
-        then
-                EXISTINGIPPOOL=$(echo $IPPOOLINFO| jq -r '.results[].display_name')
-                echo $EXISTINGIPPOOL
-                if [[ "${EXISTINGIPPOOL}" == "blahblah" ]]
-                then
-                        echo "existing ip pool set correctly"
-                else
-                        echo " ${EXISTINGIPPOOL} does not match blahblah"
-                        echo ${IPPOOLINFO}
-                fi
-        else
-                echo "TODO : adding IP POOL"
-
-                #exit
-        fi
-else
-        echo "  error getting IP Pools"
-        echo ${HTTPSTATUS}
-        echo ${RESPONSE}
-        exit
+        echo "  create TEP IP pool"
+        create_ip_pool "TEP-pool"
+else 
+        echo "  TEP-pool exists"
+        #echo $HOST
 fi
-
-check_ip_pool "TEP-pool"
-
 
 
 # ===== transport node profile =====

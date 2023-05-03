@@ -277,7 +277,9 @@ check_ip_pool() {
         #$1 transport zone name string
         #returns json
         IPPOOLNAME=$1
-
+        echo 
+        echo curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/policy/api/v1/infra/ip-pools 
+        echo 
         RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/policy/api/v1/infra/ip-pools)
         HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
 
@@ -301,7 +303,9 @@ check_ip_pool_subnet() {
         #$1 transport zone name string
         #returns json
         IPPOOLID=$1
-
+        echo 
+        echo curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/policy/api/v1/infra/ip-pools/${IPPOOLID}/ip-subnets
+        echo 
         RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/policy/api/v1/infra/ip-pools/${IPPOOLID}/ip-subnets)
         HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
 

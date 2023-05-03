@@ -93,7 +93,7 @@ HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
 if [ $HTTPSTATUS -eq 200 ]
 then
         VERSIONINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
-        PRODUCTVERSION=$(echo $VERSIONINFO |jq .product_version)
+        PRODUCTVERSION=$(echo $VERSIONINFO |jq -r .product_version)
         echo "  Product: ${PRODUCTVERSION}"
         #Check if 3.2 or 4.1 or better. if not stop script.
         MAJORVERSION=$(echo ${PRODUCTVERSION} | head -c1)
@@ -121,6 +121,7 @@ then
 			;;
 		*)
 		        echo "This script is not ready yet for nsx-t version $MAJORVERSION"
+                        exit
 		        ;;
 	esac
 
@@ -131,7 +132,7 @@ else
         exit
 fi
 
-#======== get venter thubprint ========
+#======== get venter thumbprint ========
 
 VCENTERTP=$(echo | openssl s_client -connect vcsa.${CPOD_NAME_LOWER}.${ROOT_DOMAIN}:443 2>/dev/null | openssl x509 -noout -fingerprint -sha256 | cut -d "=" -f2)
 
@@ -281,10 +282,46 @@ else
         exit
 fi
 
+# ===== create IP pools =====
+
+#/policy/api/v1/infra/ip-pools
+#Check if one present
+#Check if subnets present
+
+RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/policy/api/v1/infra/ip-pools)
+HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+
+if [ $HTTPSTATUS -eq 200 ]
+then
+        TZINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+        TZCOUNT=$(echo ${TZINFO} | jq .result_count)
+        if [[ ${TZCOUNT} -gt 0 ]]
+        then
+                EXISTINGTZ=$(echo $TZINFO| jq -r '.results[].display_name')
+                echo $EXISTINGTZ
+                if [[ "${EXISTINGTZ}" == "blahblah" ]]
+                then
+                        echo "existing manager set correctly"
+                else
+                        echo " ${EXISTINGTZ} does not match blahblah"
+                        echo ${TZINFO}
+                fi
+        else
+                echo "TODO : adding IP POOL"
+
+                exit
+        fi
+else
+        echo "  error getting uplink profiles"
+        echo ${HTTPSTATUS}
+        echo ${RESPONSE}
+        exit
+fi
+
 
 # ===== transport node profile =====
 # Check existing transport node profile
-RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/api/v1/transport-node-profiles)
+RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/policy/api/v1/infra/host-transport-node-profiles)
 HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
 
 if [ $HTTPSTATUS -eq 200 ]
@@ -302,7 +339,7 @@ then
                 fi
         else
                 echo "adding TN PROFILES"
-                #add_computer_manager
+                #add_tn_profiles
         fi
 else
         echo "  error getting managers"
@@ -310,6 +347,49 @@ else
         echo ${RESPONSE}
         exit
 fi
+
+# ===== Configure NSX on ESX hosts =====
+
+#/policy/api/v1/infra/sites/{site-id}/enforcement-points/{enforcementpoint-id}/host-transport-nodes
+
+
+RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/policy/api/v1/infra/sites/default/enforcement-points/${EXISTINGEPRP}/host-transport-nodes)
+HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+
+if [ $HTTPSTATUS -eq 200 ]
+then
+        HTNINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+        HTNCOUNT=$(echo ${HTNINFO} | jq .result_count)
+        if [[ ${HTNCOUNT} -gt 0 ]]
+        then
+                EXISTINGHTN=$(echo $HTNINFO| jq -r '.results[].node_deployment_inf.fqdn')
+                echo $EXISTINGHTN
+                if [[ "${EXISTINGHTN}" == "blahblah" ]]
+                then
+                        echo "existing manager set correctly"
+                else
+                        echo " ${EXISTINGHTN} does not match blahblah"
+                        echo ${HTNINFO}
+                fi
+        else
+                echo "TODO : add host transport nodes"
+
+                exit
+        fi
+else
+        echo "  error getting uplink profiles"
+        echo ${HTTPSTATUS}
+        echo ${RESPONSE}
+        exit
+fi
+
+
+# ===== create edge nodes =====
+
+
+# ===== create edge cluster =====
+
+# ===== create T0 =====
 
 
 

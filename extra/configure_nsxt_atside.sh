@@ -279,11 +279,10 @@ check_ip_pool() {
         IPPOOLNAME=$1
         RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/policy/api/v1/infra/ip-pools)
         HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
-
         if [ $HTTPSTATUS -eq 200 ]
         then
                 IPPOOLINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
-                IPPOOLCOUNT=$(echo ${TZINFO} | jq .result_count)                
+                IPPOOLCOUNT=$(echo ${IPPOOLINFO} | jq .result_count)                
                 if [[ ${IPPOOLCOUNT} -gt 0 ]]
                 then
                         echo $IPPOOLINFO |jq '.results[] | select (.display_name =="'$IPPOOLNAME'")'

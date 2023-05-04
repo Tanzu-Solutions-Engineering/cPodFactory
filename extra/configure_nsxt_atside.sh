@@ -124,6 +124,28 @@ check_uplink_profile() {
 
 }
 
+get_uplink_profile_id() {
+        #$1 profile name string
+        #returns json
+        PROFILENAME=$1
+        
+        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/policy/api/v1/infra/host-switch-profiles)
+        HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+
+        if [ $HTTPSTATUS -eq 200 ]
+        then
+                PROFILESINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+
+                echo $PROFILESINFO |jq -r '.results[] | select (.display_name =="'$PROFILENAME'") | .id'
+        else
+                echo "  error getting uplink profiles"
+                echo ${HTTPSTATUS}
+                echo ${RESPONSE}
+                exit
+        fi
+
+}
+
 create_uplink_profile() {
         #$1 profile name string
         #$2 VLAN ID
@@ -473,6 +495,11 @@ create_transport_node_profile() {
         #returns json
         TNPROFILENAME=$1
         VDSUUID=$2
+        HOSTTZID=$3
+        OVERLAYTZID=$4
+        IPPOOLID=$5
+        HOSTPROFILEID=$6
+
         TNPROFILE_JSON='{
         "host_switch_spec": {
         "host_switches": [
@@ -484,39 +511,30 @@ create_transport_node_profile() {
                 "host_switch_profile_ids": [
                 {
                 "key": "UplinkHostSwitchProfile",
-                "value": "/infra/host-switch-profiles/3798ab2b-e2e3-4d4a-959b-0f0017367f75"
+                "value": "/infra/host-switch-profiles/'${HOSTPROFILEID}'"
                 }
                 ],
                 "uplinks": [
                 {
                 "vds_uplink_name": "dvUplink1",
                 "uplink_name": "uplink-1"
+                },
+                {
+                "vds_uplink_name": "dvUplink2",
+                "uplink_name": "uplink-2"
                 }
                 ],
                 "is_migrate_pnics": false,
                 "ip_assignment_spec": {
-                "ip_pool_id": "/infra/manager-ip-pools/7871e8c4-a761-4fa4-91e6-d408e3536e0e",
+                "ip_pool_id": "/infra/manager-ip-pools/'${IPPOOLID}'",
                 "resource_type": "StaticIpPoolSpec"
                 },
-                "cpu_config": [],
                 "transport_zone_endpoints": [
                 {
-                "transport_zone_id": "/infra/sites/default/enforcement-points/default/transport-zones/6bfa7054-cf0a-4b2b-ad27-36c1e89d7d32",
-                "transport_zone_profile_ids": [
-                {
-                        "resource_type": "BfdHealthMonitoringProfile",
-                        "profile_id": "/infra/transport-zone-profiles/52035bb3-ab02-4a08-9884-18631312e50a"
-                }
-                ]
+                "transport_zone_id": "/infra/sites/default/enforcement-points/default/transport-zones/'${HOSTTZID}'"
                 },
                 {
-                "transport_zone_id": "/infra/sites/default/enforcement-points/default/transport-zones/71c6b1fd-4d34-49e9-9921-c30714adb63d",
-                "transport_zone_profile_ids": [
-                {
-                        "resource_type": "BfdHealthMonitoringProfile",
-                        "profile_id": "/infra/transport-zone-profiles/52035bb3-ab02-4a08-9884-18631312e50a"
-                }
-                ]
+                "transport_zone_id": "/infra/sites/default/enforcement-points/default/transport-zones/'${OVERLAYTZID}'"
                 }
                 ],
                 "not_ready": false
@@ -525,8 +543,8 @@ create_transport_node_profile() {
         "resource_type": "StandardHostSwitchSpec"
         },
         "resource_type": "PolicyHostTransportNodeProfile",
-        "id": "2bd751cd-7c43-48ca-8a1d-1abb095642a5",
-        "display_name": "cluster-transport-node-profile"
+        "id": "'${TNPROFILENAME}'",
+        "display_name": "'${TNPROFILENAME}'"
         }'
 
         SCRIPT="/tmp/PROFILE_JSON"
@@ -599,12 +617,12 @@ then
        	case $MAJORVERSION in
 		3)
 		        LOWESTVERSION=$(printf "%s\n" "3.2" ${MINORVERSION} | sort -V | head -n1)
-                        echo "lowestversion: $LOWESTVERSION"
+                        echo "  lowestversion: $LOWESTVERSION"
                         if [[ "${LOWESTVERSION}" == "3.2" ]]
                         then
-                                echo "Version is at lease 3.2"
+                                echo "  Version is at lease 3.2"
                         else
-                                echo "Version is below 3.2. Script uses newer API (>3.2 or >4.1). stopping here."
+                                echo "  Version is below 3.2. Script uses newer API (>3.2 or >4.1). stopping here."
                                 exit
                         fi
 			;;
@@ -827,28 +845,37 @@ fi
 # ===== transport node profile =====
 # Check existing transport node profile
 
+echo
+echo "Processing Transport Node"
+echo
+
 # get vds uuid
-./extra/govc_cpod.sh  ${NAME_LOWER}
+./extra/govc_cpod.sh  ${NAME_LOWER}  2>&1 > /dev/null
 GOVCSCRIPT=/tmp/scripts/govc_${CPOD_NAME_LOWER}
 source ${GOVCSCRIPT}
 VDSUUID=$(govc find / -type DistributedVirtualSwitch | xargs -n1 govc dvs.portgroup.info | grep DvsUuid | uniq | cut -d":" -f2 | awk '{$1=$1;print}')
-echo "VDS UUID : ${VDSUUID}"
+echo "  VDS UUID : ${VDSUUID}"
 if [ "${VDSUUID}" == "" ]
 then
-        echo "problem getting VDS UUID"
+        echo "  problem getting VDS UUID"
         exit
 fi
+#get Host Profile ID
+HOSTPROFILEID=$(get_uplink_profile_id "host-profile")
+echo "  HOST Profile ID: ${HOSTTZID}"
 
 #get transport zones ids
 HOSTTZID=$(get_transport_zone_id "host-vlan-tz")
-echo "HOST TZ ID: ${HOSTTZID}"
+echo "  HOST TZ ID: ${HOSTTZID}"
 OVERLAYTZID=$(get_transport_zone_id "overlay-tz")
-echo "OVERLAY TZ ID: ${OVERLAYTZID}"
+echo "  OVERLAY TZ ID: ${OVERLAYTZID}"
 
 #GET IP POOL ID
 IPPOOLID=$(get_ip_pool_id "TEP-pool")
-echo "IP POOL ID : ${IPPOOLID}"
+echo "  IP POOL ID : ${IPPOOLID}"
 TNPROFILENAME="cluster-transport-node-profile"
+
+echo "  Checking Transport Nodes Profile"
 
 RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/policy/api/v1/infra/host-transport-node-profiles)
 HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
@@ -865,13 +892,16 @@ then
 
                 if [[ "${EXISTINGTNPROFILES}" == "${TNPROFILENAME}" ]]
                 then
-                        echo "existing transport node profile set correctly : ${EXISTINGTNPROFILES}"
+                        echo "  existing transport node profile set correctly : ${EXISTINGTNPROFILES}"
                 else
-                        echo " ${EXISTINGTNPROFILES} does not match ${TNPROFILENAME}"
+                        echo "  ${EXISTINGTNPROFILES} does not match ${TNPROFILENAME}"
+                        echo "  stopping here"
+                        exit
                 fi
         else
-                echo "adding TN PROFILES"
+                echo "  adding TN PROFILES"
                 #add_tn_profiles
+                create_transport_node_profile ${TNPROFILENAME} ${VDSUUID} ${HOSTTZID} ${OVERLAYTZID} ${IPPOOLID} ${HOSTPROFILEID}
         fi
 else
         echo "  error getting transport node profile"

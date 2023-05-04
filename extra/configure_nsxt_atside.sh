@@ -135,7 +135,6 @@ get_uplink_profile_id() {
         if [ $HTTPSTATUS -eq 200 ]
         then
                 PROFILESINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
-
                 echo $PROFILESINFO |jq -r '.results[] | select (.display_name =="'$PROFILENAME'") | .id'
         else
                 echo "  error getting uplink profiles"
@@ -549,8 +548,6 @@ create_transport_node_profile() {
 
         SCRIPT="/tmp/TNPROFILE_JSON"
         echo ${TNPROFILE_JSON} > ${SCRIPT}
-        cat ${SCRIPT} | jq .
-        exit
         RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD}  -H 'Content-Type: application/json' -X PUT -d @${SCRIPT} https://${NSXFQDN}/policy/api/v1/infra/host-transport-node-profiles/${PROFILENAME})
         HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
         #echo $RESPONSE
@@ -864,7 +861,7 @@ then
 fi
 #get Host Profile ID
 HOSTPROFILEID=$(get_uplink_profile_id "host-profile")
-echo "  HOST Profile ID: ${HOSTTZID}"
+echo "  HOST Profile ID: ${HOSTPROFILEID}"
 get_uplink_profile_id "host-profile"
 
 #get transport zones ids

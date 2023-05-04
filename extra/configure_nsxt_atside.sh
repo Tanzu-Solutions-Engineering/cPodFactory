@@ -645,7 +645,7 @@ get_transport_node_collections_state() {
         if [ $HTTPSTATUS -eq 200 ]
         then
                 TNCSTATEINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
-                echo $TNCSTATEINFO |jq .
+                echo $TNCSTATEINFO |jq -r .state
         else
                 echo "  error getting transport_node_collections_state for ${TNCID}"
                 echo ${HTTPSTATUS}
@@ -1104,16 +1104,13 @@ echo "Cluster CCID : ${CLUSTERCCID}"
 
 echo "get_host-transport-nodes"
 echo
-get_host-transport-nodes
-
-# /policy/api/v1/infra/sites/<site-id>/enforcement-points/<enforcementpoint-id>/transport-node-collections
-# /policy/api/v1/infra/sites/<site-id>/enforcement-points/<enforcementpoint-id>/transport-node-collections/<transport-node-collection-id>/state
 
 TNC=$(check_transport_node_collections)
 #echo ${TNC} | jq .
 TNCID=$(echo ${TNC} |jq -r '.results[] | select (.compute_collection_id == "'${CLUSTERCCID}'") | .unique_id ' )
 #echo $TNCID
-get_transport_node_collections_state ${TNCID}
+
+echo "Cluster Collection State :  $(get_transport_node_collections_state ${TNCID})"
 
 get_host-transport-nodes
 get_host-transport-nodes-state

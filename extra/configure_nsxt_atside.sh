@@ -1104,15 +1104,16 @@ echo "Cluster CCID : ${CLUSTERCCID}"
 echo "get_host-transport-nodes"
 echo
 
+get_host-transport-nodes
+get_host-transport-nodes-state
+
 TNC=$(check_transport_node_collections)
-#echo ${TNC} | jq .
+echo ${TNC} | jq .
 TNCID=$(echo ${TNC} |jq -r '.results[] | select (.compute_collection_id == "'${CLUSTERCCID}'") | .unique_id ' )
-#echo $TNCID
+echo $TNCID
 
 echo "Cluster Collection State :  $(get_transport_node_collections_state ${TNCID})"
 
-get_host-transport-nodes
-get_host-transport-nodes-state
 
 # ===== create nsx segments for edge vms =====
 # edge-uplink-trunk-1 - tz = host-vlan-tz - teaming policy : host-uplink-1 - vlan : 0-4094

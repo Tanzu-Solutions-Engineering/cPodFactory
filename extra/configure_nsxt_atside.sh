@@ -569,7 +569,7 @@ create_transport_node_profile() {
 
         SCRIPT="/tmp/TNPROFILE_JSON"
         echo ${TNPROFILE_JSON} > ${SCRIPT}
-        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD}  -H 'Content-Type: application/json' -X PUT -d @${SCRIPT} https://${NSXFQDN}/policy/api/v1/infra/host-transport-node-profiles/${PROFILENAME})
+        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD}  -H 'Content-Type: application/json' -X PUT -d @${SCRIPT} https://${NSXFQDN}/policy/api/v1/infra/host-transport-node-profiles/${TNPROFILENAME})
         HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
         #echo $RESPONSE
         #echo $HTTPSTATUS
@@ -580,7 +580,7 @@ create_transport_node_profile() {
                 echo "${PROFILENAME} created succesfully"
                 #echo ${PROFILESINFO}
         else
-                echo "  error creating transport node profile : ${PROFILENAME}"
+                echo "  error creating transport node profile : ${TNPROFILENAME}"
                 echo ${HTTPSTATUS}
                 echo ${RESPONSE}
                 exit

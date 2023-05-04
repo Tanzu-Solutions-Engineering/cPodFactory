@@ -668,7 +668,7 @@ check_transport_node_collections() {
                 TNCCOUNT=$(echo ${TNCINFO} | jq .result_count)                
                 if [[ ${TNCCOUNT} -gt 0 ]]
                 then
-                        echo $TNCINFO |jq .
+                        echo $TNCINFO
                 fi
         else
                 echo "  error getting transport_node_collections"
@@ -677,6 +677,27 @@ check_transport_node_collections() {
                 exit 1
         fi
 }
+
+get_transport_node_collections_state() {
+        # $1 = transport node collection id
+        #returns json
+        TNCID=$1
+
+        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/policy/api/v1/infra/sites/default/enforcement-points/${EXISTINGEPRP}/transport-node-collections/${TNCID}/state)
+        HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+        if [ $HTTPSTATUS -eq 200 ]
+        then
+                TNCSTATEINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+                echo $TNCSTATEINFO |jq .
+        else
+                echo "  error getting transport_node_collections_state for ${TNCID}"
+                echo ${HTTPSTATUS}
+                echo ${RESPONSE}
+                exit 1
+        fi
+}
+
+
 
 
 ###################
@@ -1030,13 +1051,17 @@ echo Configuring NSX on ESX hosts
 echo
 
 CLUSTERCCID=$(get_compute_collection_id "Cluster")
+echo "Cluster CCID : ${CLUSTERCCID}" 
 
 # check current state
 
 # /policy/api/v1/infra/sites/<site-id>/enforcement-points/<enforcementpoint-id>/transport-node-collections
 # /policy/api/v1/infra/sites/<site-id>/enforcement-points/<enforcementpoint-id>/transport-node-collections/<transport-node-collection-id>/state
 
-check_transport_node_collections
+TNC=$(check_transport_node_collections)
+echo ${TNC | jq .}
+TNCID=$(echo ${TNC} |jq '.results[] | select ("compute_collection_id" == "'${CLUSTERCCID}'") | .unique_id ' )
+get_transport_node_collections_state ${TNCID}
 
 
 # ===== create nsx segments for edge vms =====

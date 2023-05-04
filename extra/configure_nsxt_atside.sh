@@ -1055,8 +1055,7 @@ echo "  OVERLAY TZ ID: ${OVERLAYTZID}"
 IPPOOLID=$(get_ip_pool_id "TEP-pool")
 echo "  IP POOL ID : ${IPPOOLID}"
 TNPROFILENAME="cluster-transport-node-profile"
-
-get_ip_pool_all
+#get_ip_pool_all
 
 echo "  Checking Transport Nodes Profile"
 RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/policy/api/v1/infra/host-transport-node-profiles)
@@ -1068,7 +1067,7 @@ then
         TNPROFILESCOUNT=$(echo $TNPROFILESINFO | jq .result_count)
         if [[ ${TNPROFILESCOUNT} -gt 0 ]]
         then
-                echo ${TNPROFILESINFO} |jq .
+                #echo ${TNPROFILESINFO} |jq .
                 
                 EXISTINGTNPROFILES=$(echo $TNPROFILESINFO| jq -r .results[0].display_name)
 

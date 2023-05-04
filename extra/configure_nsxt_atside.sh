@@ -1060,7 +1060,7 @@ echo "Cluster CCID : ${CLUSTERCCID}"
 
 TNC=$(check_transport_node_collections)
 #echo ${TNC} | jq .
-TNCID=$(echo ${TNC} |jq '.results[] | select (.compute_collection_id == "'${CLUSTERCCID}'") | .unique_id ' )
+TNCID=$(echo ${TNC} |jq -r '.results[] | select (.compute_collection_id == "'${CLUSTERCCID}'") | .unique_id ' )
 #echo $TNCID
 get_transport_node_collections_state ${TNCID}
 

@@ -221,6 +221,28 @@ check_transport_zone() {
 
 }
 
+get_transport_zone_id() {
+        #$1 transport zone name string
+        #returns json
+        TZNAME=$1
+
+        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/policy/api/v1/infra/sites/default/enforcement-points/${EXISTINGEPRP}/transport-zones)
+        HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+
+        if [ $HTTPSTATUS -eq 200 ]
+        then
+                TZINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+                #TZCOUNT=$(echo ${TZINFO} | jq .result_count)                
+                echo $TZINFO |jq '.results[] | select (.display_name =="'$TZNAME'") | .id'
+        else
+                echo "  error getting transport zones"
+                echo ${HTTPSTATUS}
+                echo ${RESPONSE}
+                exit
+        fi
+
+}
+
 create_transport_zone() {
         #$1 transport zone string
         #$2 tz_type (OVERLAY_STANDARD, VLAN_BACKED )
@@ -289,6 +311,29 @@ check_ip_pool() {
                         IPPOOLID=$(echo $IPPOOLINFO |jq -r '.results[] | select (.display_name =="'$IPPOOLNAME'") | .id')
                         echo $IPPOOLID
                         check_ip_pool_subnet ${IPPOOLID}
+                fi
+        else
+                echo "  error getting IP Pools"
+                echo ${HTTPSTATUS}
+                echo ${RESPONSE}
+                exit 1
+        fi
+}
+get_ip_pool_id() {
+        #$1 transport zone name string
+        #returns json
+        IPPOOLNAME=$1
+        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/policy/api/v1/infra/ip-pools)
+        HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+        if [ $HTTPSTATUS -eq 200 ]
+        then
+                IPPOOLINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+                IPPOOLCOUNT=$(echo ${IPPOOLINFO} | jq .result_count)                
+                if [[ ${IPPOOLCOUNT} -gt 0 ]]
+                then
+                        echo $IPPOOLINFO |jq '.results[] | select (.display_name =="'$IPPOOLNAME'")'
+                        IPPOOLID=$(echo $IPPOOLINFO |jq -r '.results[] | select (.display_name =="'$IPPOOLNAME'") | .id')
+                        echo $IPPOOLID
                 fi
         else
                 echo "  error getting IP Pools"
@@ -794,6 +839,15 @@ then
         exit
 fi
 
+#get transport zones ids
+HOSTTZID=$(get_transport_zone_id "host-vlan-tz")
+echo "HOST TZ ID: ${HOSTTZID}"
+OVERLAYTZID=$(get_transport_zone_id "overlay-tz")
+echo "OVERLAY TZ ID: ${OVERLAYTZID}"
+
+#GET IP POOL ID
+IPPOOLID=$(get_ip_pool_id "TEP-pool")
+echo "IP POOL ID : ${IPPOOLID}"
 TNPROFILENAME="cluster-transport-node-profile"
 
 RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/policy/api/v1/infra/host-transport-node-profiles)

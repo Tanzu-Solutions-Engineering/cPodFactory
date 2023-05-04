@@ -569,7 +569,6 @@ create_transport_node_profile() {
 
         SCRIPT="/tmp/TNPROFILE_JSON"
         echo ${TNPROFILE_JSON} > ${SCRIPT}
-        echo "curl -s -k -w '####%{response_code}' -u admin:${PASSWORD}  -H 'Content-Type: application/json' -X PUT -d @${SCRIPT} https://${NSXFQDN}/policy/api/v1/infra/host-transport-node-profiles/${TNPROFILENAME}"
         RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD}  -H 'Content-Type: application/json' -X PUT -d @${SCRIPT} https://${NSXFQDN}/policy/api/v1/infra/host-transport-node-profiles/${TNPROFILENAME})
         HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
         #echo $RESPONSE
@@ -923,7 +922,6 @@ then
                 fi
         else
                 echo "  adding TN PROFILES"
-                #add_tn_profiles
                 create_transport_node_profile "${TNPROFILENAME}" "${VDSUUID}" "${HOSTTZID}" "${OVERLAYTZID}" "${IPPOOLID}" "${HOSTPROFILEID}"
         fi
 else
@@ -939,16 +937,18 @@ exit
 #/policy/api/v1/infra/sites/{site-id}/enforcement-points/{enforcementpoint-id}/host-transport-nodes
 
 
-RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/policy/api/v1/infra/sites/default/enforcement-points/${EXISTINGEPRP}/host-transport-nodes)
+RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/api/v1/fabric/compute-collections)
 HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
 
 if [ $HTTPSTATUS -eq 200 ]
 then
-        HTNINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
-        HTNCOUNT=$(echo ${HTNINFO} | jq .result_count)
-        if [[ ${HTNCOUNT} -gt 0 ]]
+        CCINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+        CCCOUNT=$(echo ${CCINFO} | jq .result_count)
+        if [[ ${CCCOUNT} -gt 0 ]]
         then
-                EXISTINGHTN=$(echo $HTNINFO| jq -r '.results[].node_deployment_inf.fqdn')
+                echo ${CCINFO}
+                exit
+                EXISTINGCC=$(echo $CCINFO| jq -r '.results[].node_deployment_inf.fqdn')
                 echo $EXISTINGHTN
                 if [[ "${EXISTINGHTN}" == "blahblah" ]]
                 then
@@ -963,7 +963,7 @@ then
                 exit
         fi
 else
-        echo "  error getting uplink profiles"
+        echo "  error getting host transport nodes"
         echo ${HTTPSTATUS}
         echo ${RESPONSE}
         exit

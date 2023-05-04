@@ -364,6 +364,27 @@ get_ip_pool_id() {
         fi
 }
 
+get_ip_pool_all() {
+        #$1 transport zone name string
+        #returns json
+        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/policy/api/v1/infra/ip-pools)
+        HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+        if [ $HTTPSTATUS -eq 200 ]
+        then
+                IPPOOLINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+                IPPOOLCOUNT=$(echo ${IPPOOLINFO} | jq .result_count)                
+                if [[ ${IPPOOLCOUNT} -gt 0 ]]
+                then
+                        echo $IPPOOLINFO |jq .
+                fi
+        else
+                echo "  error getting IP Pools"
+                echo ${HTTPSTATUS}
+                echo ${RESPONSE}
+                exit 1
+        fi
+}
+
 check_ip_pool_subnet() {
         #$1 transport zone name string
         #returns json
@@ -867,7 +888,6 @@ get_uplink_profile_id "host-profile"
 #get transport zones ids
 HOSTTZID=$(get_transport_zone_id "host-vlan-tz")
 echo "  HOST TZ ID: ${HOSTTZID}"
-
 OVERLAYTZID=$(get_transport_zone_id "overlay-tz")
 echo "  OVERLAY TZ ID: ${OVERLAYTZID}"
 
@@ -876,8 +896,9 @@ IPPOOLID=$(get_ip_pool_id "TEP-pool")
 echo "  IP POOL ID : ${IPPOOLID}"
 TNPROFILENAME="cluster-transport-node-profile"
 
-echo "  Checking Transport Nodes Profile"
+get_ip_pool_all
 
+echo "  Checking Transport Nodes Profile"
 RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/policy/api/v1/infra/host-transport-node-profiles)
 HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
 

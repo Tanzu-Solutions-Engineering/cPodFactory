@@ -427,58 +427,61 @@ create_transport_node_profile() {
         #$2 VLAN ID
         #returns json
         TNPROFILENAME=$1
-        
+        VDSUUID=$2
         TNPROFILE_JSON='{
-        "resource_type": "PolicyHostTransportNodeProfile",
-        "id": "'${TNPROFILENAME}'",
-        "display_name": "'${TNPROFILENAME}'",
-        
         "host_switch_spec": {
-        "resource_type": "StandardHostSwitchSpec",
         "host_switches": [
         {
+                "host_switch_name": "nsxDefaultHostSwitch",
+                "host_switch_id": "'${VDSUUID}'",
+                "host_switch_type": "VDS",
+                "host_switch_mode": "STANDARD",
                 "host_switch_profile_ids": [
                 {
-                "value": "/infra/host-switch-profiles/e331116d-f59e-4004-8cfd-c577aefe563a",
-                "key": "UplinkHostSwitchProfile"
+                "key": "UplinkHostSwitchProfile",
+                "value": "/infra/host-switch-profiles/3798ab2b-e2e3-4d4a-959b-0f0017367f75"
                 }
                 ],
-                "host_switch_name": "nsxvswitch",
-                "pnics": [
+                "uplinks": [
                 {
-                "device_name": "vmnic1",
-                "uplink_name": "uplink1"
+                "vds_uplink_name": "dvUplink1",
+                "uplink_name": "uplink-1"
                 }
                 ],
+                "is_migrate_pnics": false,
                 "ip_assignment_spec": {
-                "resource_type": "StaticIpPoolSpec",
-                "ip_pool_id": "/infra/manager-ip-pools/f306c78e-6ee7-4475-b06f-724ad431cb9e"
+                "ip_pool_id": "/infra/manager-ip-pools/7871e8c4-a761-4fa4-91e6-d408e3536e0e",
+                "resource_type": "StaticIpPoolSpec"
                 },
-                "vmk_install_migration": [
-                {
-                "device_name": "vmk1",
-                "destination_network": "849e339e-64b7-47cb-9480-33068f70dc5a"
-                },
-                {
-                "device_name": "vmk2",
-                "destination_network": "849e339e-64b7-47cb-9480-33068f70dc5a"
-                }
-                ],
-                "vmk_uninstall_migration": [
-                ],
+                "cpu_config": [],
                 "transport_zone_endpoints": [
                 {
-                "transport_zone_id": "/infra/sites/default/enforcement-points/default/transport-zones/e14c6b8a-9edd-489f-b624-f9ef12afbd8f"
+                "transport_zone_id": "/infra/sites/default/enforcement-points/default/transport-zones/6bfa7054-cf0a-4b2b-ad27-36c1e89d7d32",
+                "transport_zone_profile_ids": [
+                {
+                        "resource_type": "BfdHealthMonitoringProfile",
+                        "profile_id": "/infra/transport-zone-profiles/52035bb3-ab02-4a08-9884-18631312e50a"
                 }
                 ]
+                },
+                {
+                "transport_zone_id": "/infra/sites/default/enforcement-points/default/transport-zones/71c6b1fd-4d34-49e9-9921-c30714adb63d",
+                "transport_zone_profile_ids": [
+                {
+                        "resource_type": "BfdHealthMonitoringProfile",
+                        "profile_id": "/infra/transport-zone-profiles/52035bb3-ab02-4a08-9884-18631312e50a"
+                }
+                ]
+                }
+                ],
+                "not_ready": false
         }
-        ]
+        ],
+        "resource_type": "StandardHostSwitchSpec"
         },
-        "_create_time": 1485299990773,
-        "_last_modified_user": "admin",
-        "_last_modified_time": 1485301913130,
-        "_create_user": "admin",
-        "_revision": 0
+        "resource_type": "PolicyHostTransportNodeProfile",
+        "id": "2bd751cd-7c43-48ca-8a1d-1abb095642a5",
+        "display_name": "cluster-transport-node-profile"
         }'
 
         SCRIPT="/tmp/PROFILE_JSON"
@@ -503,8 +506,11 @@ create_transport_node_profile() {
 }
 ###################
 
+
 CPOD_NAME="cpod-$1"
 NAME_HIGHER=$( echo ${1} | tr '[:lower:]' '[:upper:]' )
+NAME_LOWER=$( echo ${1} | tr '[:upper:]' '[:lower:]' )
+
 CPOD_NAME_LOWER=$( echo ${CPOD_NAME} | tr '[:upper:]' '[:lower:]' )
 CPOD_PORTGROUP="${CPOD_NAME_LOWER}"
 VAPP="cPod-${NAME_HIGHER}"
@@ -776,38 +782,17 @@ fi
 # ===== transport node profile =====
 # Check existing transport node profile
 
-
-#/policy/api/v1/infra/host-switch-profiles
-RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/policy/api/v1/infra/host-switch-profiles)
-HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
-
-if [ $HTTPSTATUS -eq 200 ]
+# get vds uuid
+./extra/govc_cpod.sh  ${NAME_LOWER}
+GOVCSCRIPT=/tmp/scripts/govc_${NAME_LOWER}
+source ${GOVCSCRIPT}
+VDSUUID=$(govc find / -type DistributedVirtualSwitch | xargs -n1 govc dvs.portgroup.info | grep DvsUuid | uniq | cut -d":" -f2 | awk '{$1=$1;print}')
+echo "VDS UUID : ${VDSUUID}"
+if [ "${VDSUUID}" == "" ]
 then
-        HSPROFILESINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
-        HSPROFILESCOUNT=$(echo $HSPROFILESINFO | jq .result_count)
-        if [[ ${HSPROFILESCOUNT} -gt 0 ]]
-        then
-                echo ${HSPROFILESINFO} |jq .
-                
-                EXISTINGTNPROFILES=$(echo $HSPROFILESINFO| jq -r .results[0].display_name)
-
-                if [[ "${EXISTINGTNPROFILES}" == "${TNPROFILENAME}" ]]
-                then
-                        echo "existing host-switch-profiles set correctly : ${EXISTINGTNPROFILES}"
-                else
-                        echo " ${EXISTINGTNPROFILES} does not match ${TNPROFILENAME}"
-                fi
-        else
-                echo "adding host-switch-profiles ?"
-                #add_tn_profiles
-        fi
-else
-        echo "  error getting host-switch-profiles"
-        echo ${HTTPSTATUS}
-        echo ${RESPONSE}
+        echo "problem getting VDS UUID"
         exit
 fi
-
 
 TNPROFILENAME="cluster-transport-node-profile"
 

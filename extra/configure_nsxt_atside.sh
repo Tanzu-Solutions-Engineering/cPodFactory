@@ -587,6 +587,98 @@ create_transport_node_profile() {
         fi
 
 }
+
+get_compute_collection_id() {
+        #$1 transport zone name string
+        #returns json
+        CLUSTERNAME=$1
+
+        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/api/v1/fabric/compute-collections)
+        HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+
+        if [ $HTTPSTATUS -eq 200 ]
+        then
+                CCINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+                CCCOUNT=$(echo ${CCINFO} | jq .result_count)
+                if [[ ${CCCOUNT} -gt 0 ]]
+                then
+                        echo $CCINFO| jq -r '.results[] | select (.display_name =="'$CLUSTERNAME'") | .external_id'
+                fi
+        else
+                echo "  error getting compute-collections"
+                echo ${HTTPSTATUS}
+                echo ${RESPONSE}
+                exit
+        fi
+}
+
+configure_nsx_compute_cluster() {
+        # $1 IP POOL ID
+        # $2 SUBNETNAME
+        # $3 SUBNETSTART
+        # $4 SUBNETEND
+        # $5 SUBNETCIDR
+        # $6 SUBNETGW
+
+        #returns json
+
+        IPPOOLID=$1
+        SUBNETNAME=$2
+        SUBNETSTART=$3
+        SUBNETEND=$4
+        SUBNETCIDR=$5
+        SUBNETGW=$6
+
+        SUBNET_JSON='{
+        "resource_type": "HostTransportNodeCollection",
+        "compute_collection_id": "$collectid",
+        "transport_node_profile_id": "/infra/host-transport-node-profiles/$($NSXTSite)-$($TNPSuffix)"
+        }'
+
+        SCRIPT="/tmp/SUBNET_JSON"
+        echo ${SUBNET_JSON} > ${SCRIPT}
+        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD}  -H 'Content-Type: application/json' -X PATCH -d @${SCRIPT} https://${NSXFQDN}/policy/api/v1/infra/ip-pools/${IPPOOLID}/ip-subnets/${SUBNETNAME})
+        HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+        #echo $RESPONSE
+        #echo $HTTPSTATUS
+
+        if [ $HTTPSTATUS -eq 200 ]
+        then
+                SUBNETINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+                echo "${SUBNETNAME} created succesfully"
+                #echo ${SUBNETINFO} |jq . 
+        else
+                echo "  error creating ip pool subnet : ${SUBNETNAME}"
+                echo ${HTTPSTATUS}
+                echo ${RESPONSE}
+                exit 1
+        fi
+
+}
+
+check_transport_node_collections() {
+
+        #returns json
+        
+        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/policy/api/v1/infra/sites/default/enforcement-points/${EXISTINGEPRP}/transport-node-collections)
+        HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+        if [ $HTTPSTATUS -eq 200 ]
+        then
+                TNCINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+                TNCCOUNT=$(echo ${TNCINFO} | jq .result_count)                
+                if [[ ${TNCCOUNT} -gt 0 ]]
+                then
+                        echo $TNCINFO |jq .
+                fi
+        else
+                echo "  error getting transport_node_collections"
+                echo ${HTTPSTATUS}
+                echo ${RESPONSE}
+                exit 1
+        fi
+}
+
+
 ###################
 
 
@@ -921,7 +1013,7 @@ then
                         exit
                 fi
         else
-                echo "  adding TN PROFILES"
+                echo "  adding transport node profile"
                 create_transport_node_profile "${TNPROFILENAME}" "${VDSUUID}" "${HOSTTZID}" "${OVERLAYTZID}" "${IPPOOLID}" "${HOSTPROFILEID}"
         fi
 else
@@ -933,40 +1025,19 @@ fi
 
 # ===== Configure NSX on ESX hosts =====
 
-#/policy/api/v1/infra/sites/{site-id}/enforcement-points/{enforcementpoint-id}/host-transport-nodes
+echo
+echo Configuring NSX on ESX hosts
+echo
 
+CLUSTERCCID=$(get_compute_collection_id "Cluster")
 
-RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/api/v1/fabric/compute-collections)
-HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+# check current state
 
-if [ $HTTPSTATUS -eq 200 ]
-then
-        CCINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
-        CCCOUNT=$(echo ${CCINFO} | jq .result_count)
-        if [[ ${CCCOUNT} -gt 0 ]]
-        then
-                echo ${CCINFO}
-                exit
-                EXISTINGCC=$(echo $CCINFO| jq -r '.results[].node_deployment_inf.fqdn')
-                echo $EXISTINGHTN
-                if [[ "${EXISTINGHTN}" == "blahblah" ]]
-                then
-                        echo "existing manager set correctly"
-                else
-                        echo " ${EXISTINGHTN} does not match blahblah"
-                        echo ${HTNINFO}
-                fi
-        else
-                echo "TODO : add host transport nodes"
+# /policy/api/v1/infra/sites/<site-id>/enforcement-points/<enforcementpoint-id>/transport-node-collections
+# /policy/api/v1/infra/sites/<site-id>/enforcement-points/<enforcementpoint-id>/transport-node-collections/<transport-node-collection-id>/state
 
-                exit
-        fi
-else
-        echo "  error getting host transport nodes"
-        echo ${HTTPSTATUS}
-        echo ${RESPONSE}
-        exit
-fi
+check_transport_node_collections
+
 
 # ===== create nsx segments for edge vms =====
 # edge-uplink-trunk-1 - tz = host-vlan-tz - teaming policy : host-uplink-1 - vlan : 0-4094

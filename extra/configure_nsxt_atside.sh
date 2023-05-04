@@ -784,7 +784,7 @@ fi
 
 # get vds uuid
 ./extra/govc_cpod.sh  ${NAME_LOWER}
-GOVCSCRIPT=/tmp/scripts/govc_${NAME_LOWER}
+GOVCSCRIPT=/tmp/scripts/govc_${CPOD_NAME_LOWER}
 source ${GOVCSCRIPT}
 VDSUUID=$(govc find / -type DistributedVirtualSwitch | xargs -n1 govc dvs.portgroup.info | grep DvsUuid | uniq | cut -d":" -f2 | awk '{$1=$1;print}')
 echo "VDS UUID : ${VDSUUID}"

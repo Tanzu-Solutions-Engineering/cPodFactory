@@ -233,7 +233,7 @@ get_transport_zone_id() {
         then
                 TZINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
                 #TZCOUNT=$(echo ${TZINFO} | jq .result_count)                
-                echo $TZINFO |jq '.results[] | select (.display_name =="'$TZNAME'") | .id'
+                echo $TZINFO |jq -r '.results[] | select (.display_name =="'$TZNAME'") | .id'
         else
                 echo "  error getting transport zones"
                 echo ${HTTPSTATUS}
@@ -319,6 +319,7 @@ check_ip_pool() {
                 exit 1
         fi
 }
+
 get_ip_pool_id() {
         #$1 transport zone name string
         #returns json
@@ -331,7 +332,6 @@ get_ip_pool_id() {
                 IPPOOLCOUNT=$(echo ${IPPOOLINFO} | jq .result_count)                
                 if [[ ${IPPOOLCOUNT} -gt 0 ]]
                 then
-                        echo $IPPOOLINFO |jq '.results[] | select (.display_name =="'$IPPOOLNAME'")'
                         IPPOOLID=$(echo $IPPOOLINFO |jq -r '.results[] | select (.display_name =="'$IPPOOLNAME'") | .id')
                         echo $IPPOOLID
                 fi

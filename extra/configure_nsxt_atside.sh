@@ -1059,10 +1059,10 @@ echo "Cluster CCID : ${CLUSTERCCID}"
 # /policy/api/v1/infra/sites/<site-id>/enforcement-points/<enforcementpoint-id>/transport-node-collections/<transport-node-collection-id>/state
 
 TNC=$(check_transport_node_collections)
-echo ${TNC} | jq .
+#echo ${TNC} | jq .
 TNCID=$(echo ${TNC} |jq '.results[] | select (.compute_collection_id == "'${CLUSTERCCID}'") | .unique_id ' )
-echo $TNCID
-# get_transport_node_collections_state ${TNCID}
+#echo $TNCID
+get_transport_node_collections_state ${TNCID}
 
 
 # ===== create nsx segments for edge vms =====

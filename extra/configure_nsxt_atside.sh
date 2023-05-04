@@ -931,7 +931,6 @@ else
         exit
 fi
 
-exit
 # ===== Configure NSX on ESX hosts =====
 
 #/policy/api/v1/infra/sites/{site-id}/enforcement-points/{enforcementpoint-id}/host-transport-nodes

@@ -666,7 +666,9 @@ get_host-transport-nodes() {
                 CCCOUNT=$(echo ${CCINFO} | jq .result_count)
                 if [[ ${CCCOUNT} -gt 0 ]]
                 then
-                        echo $CCINFO | jq .
+                        echo
+                        echo $CCINFO > /tmp/json 
+                                               
                 fi
         else
                 echo "  error getting host-transport-nodes"

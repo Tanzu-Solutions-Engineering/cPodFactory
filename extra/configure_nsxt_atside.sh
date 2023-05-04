@@ -668,7 +668,7 @@ get_host-transport-nodes() {
                 then
                         echo
                         echo $CCINFO > /tmp/htn-json 
-                        echo $CCINFO | jq .    
+                        echo $CCINFO |jq -r '.results[] | [.display_name, .id] |@tsv'
                 fi
         else
                 echo "  error getting host-transport-nodes"
@@ -692,7 +692,7 @@ get_host-transport-nodes-state() {
                 then
                         echo
                         echo $CCINFO > /tmp/state-json 
-                        echo $CCINFO | jq '.result[] | .transport_node_id, .host_switch_states.state'
+                        echo $CCINFO | jq -r '.results[] | [.transport_node_id, .node_deployment_state.state] |@tsv'
                 fi
         else
                 echo "  error getting host-transport-nodes"

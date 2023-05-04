@@ -1115,7 +1115,8 @@ TNCID=$(echo ${TNC} |jq -r '.results[] | select (.compute_collection_id == "'${C
 #echo $TNCID
 get_transport_node_collections_state ${TNCID}
 
-
+get_host-transport-nodes
+get_host-transport-nodes-state
 
 # ===== create nsx segments for edge vms =====
 # edge-uplink-trunk-1 - tz = host-vlan-tz - teaming policy : host-uplink-1 - vlan : 0-4094

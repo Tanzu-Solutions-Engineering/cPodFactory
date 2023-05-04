@@ -657,6 +657,30 @@ get_transport_node_collections_state() {
 get_host-transport-nodes() {
         #returns json
  
+        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/policy/api/v1/infra/sites/default/enforcement-points/${EXISTINGEPRP}/host-transport-nodes)
+        HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+
+        if [ $HTTPSTATUS -eq 200 ]
+        then
+                CCINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+                CCCOUNT=$(echo ${CCINFO} | jq .result_count)
+                if [[ ${CCCOUNT} -gt 0 ]]
+                then
+                        echo
+                        echo $CCINFO > /tmp/htn-json 
+                        echo $CCINFO | jq .    
+                fi
+        else
+                echo "  error getting host-transport-nodes"
+                echo ${HTTPSTATUS}
+                echo ${RESPONSE}
+                exit
+        fi
+}
+
+get_host-transport-nodes-state() {
+        #returns json
+ 
         RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/policy/api/v1/infra/sites/default/enforcement-points/${EXISTINGEPRP}/host-transport-nodes/state)
         HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
 
@@ -667,8 +691,8 @@ get_host-transport-nodes() {
                 if [[ ${CCCOUNT} -gt 0 ]]
                 then
                         echo
-                        echo $CCINFO > /tmp/json 
-                        echo $CCINFO | jq .    
+                        echo $CCINFO > /tmp/state-json 
+                        echo $CCINFO | jq '.result[] | .transport_node_id, .host_switch_states.state'
                 fi
         else
                 echo "  error getting host-transport-nodes"
@@ -677,6 +701,7 @@ get_host-transport-nodes() {
                 exit
         fi
 }
+
 
 configure_nsx_compute_cluster() {
         # $1 IP POOL ID

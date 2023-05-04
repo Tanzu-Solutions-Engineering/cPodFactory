@@ -612,6 +612,70 @@ get_compute_collection_id() {
         fi
 }
 
+
+check_transport_node_collections() {
+
+        #returns json
+        
+        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/policy/api/v1/infra/sites/default/enforcement-points/${EXISTINGEPRP}/transport-node-collections)
+        HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+        if [ $HTTPSTATUS -eq 200 ]
+        then
+                TNCINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+                TNCCOUNT=$(echo ${TNCINFO} | jq .result_count)                
+                if [[ ${TNCCOUNT} -gt 0 ]]
+                then
+                        echo $TNCINFO
+                fi
+        else
+                echo "  error getting transport_node_collections"
+                echo ${HTTPSTATUS}
+                echo ${RESPONSE}
+                exit 1
+        fi
+}
+
+get_transport_node_collections_state() {
+        # $1 = transport node collection id
+        #returns json
+        TNCID=$1
+
+        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/policy/api/v1/infra/sites/default/enforcement-points/${EXISTINGEPRP}/transport-node-collections/${TNCID}/state)
+        HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+        if [ $HTTPSTATUS -eq 200 ]
+        then
+                TNCSTATEINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+                echo $TNCSTATEINFO |jq .
+        else
+                echo "  error getting transport_node_collections_state for ${TNCID}"
+                echo ${HTTPSTATUS}
+                echo ${RESPONSE}
+                exit 1
+        fi
+}
+
+get_host-transport-nodes() {
+        #returns json
+ 
+        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/policy/api/v1/infra/sites/default/enforcement-points/${EXISTINGEPRP}/host-transport-nodes)
+        HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+
+        if [ $HTTPSTATUS -eq 200 ]
+        then
+                CCINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+                CCCOUNT=$(echo ${CCINFO} | jq .result_count)
+                if [[ ${CCCOUNT} -gt 0 ]]
+                then
+                        echo $CCINFO | jq .
+                fi
+        else
+                echo "  error getting host-transport-nodes"
+                echo ${HTTPSTATUS}
+                echo ${RESPONSE}
+                exit
+        fi
+}
+
 configure_nsx_compute_cluster() {
         # $1 IP POOL ID
         # $2 SUBNETNAME
@@ -655,50 +719,6 @@ configure_nsx_compute_cluster() {
         fi
 
 }
-
-check_transport_node_collections() {
-
-        #returns json
-        
-        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/policy/api/v1/infra/sites/default/enforcement-points/${EXISTINGEPRP}/transport-node-collections)
-        HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
-        if [ $HTTPSTATUS -eq 200 ]
-        then
-                TNCINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
-                TNCCOUNT=$(echo ${TNCINFO} | jq .result_count)                
-                if [[ ${TNCCOUNT} -gt 0 ]]
-                then
-                        echo $TNCINFO
-                fi
-        else
-                echo "  error getting transport_node_collections"
-                echo ${HTTPSTATUS}
-                echo ${RESPONSE}
-                exit 1
-        fi
-}
-
-get_transport_node_collections_state() {
-        # $1 = transport node collection id
-        #returns json
-        TNCID=$1
-
-        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/policy/api/v1/infra/sites/default/enforcement-points/${EXISTINGEPRP}/transport-node-collections/${TNCID}/state)
-        HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
-        if [ $HTTPSTATUS -eq 200 ]
-        then
-                TNCSTATEINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
-                echo $TNCSTATEINFO |jq .
-        else
-                echo "  error getting transport_node_collections_state for ${TNCID}"
-                echo ${HTTPSTATUS}
-                echo ${RESPONSE}
-                exit 1
-        fi
-}
-
-
-
 
 ###################
 
@@ -1055,6 +1075,10 @@ echo "Cluster CCID : ${CLUSTERCCID}"
 
 # check current state
 
+echo "get_host-transport-nodes"
+echo
+get_host-transport-nodes
+
 # /policy/api/v1/infra/sites/<site-id>/enforcement-points/<enforcementpoint-id>/transport-node-collections
 # /policy/api/v1/infra/sites/<site-id>/enforcement-points/<enforcementpoint-id>/transport-node-collections/<transport-node-collection-id>/state
 
@@ -1063,6 +1087,7 @@ TNC=$(check_transport_node_collections)
 TNCID=$(echo ${TNC} |jq -r '.results[] | select (.compute_collection_id == "'${CLUSTERCCID}'") | .unique_id ' )
 #echo $TNCID
 get_transport_node_collections_state ${TNCID}
+
 
 
 # ===== create nsx segments for edge vms =====

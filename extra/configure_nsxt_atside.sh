@@ -657,7 +657,7 @@ get_transport_node_collections_state() {
 get_host-transport-nodes() {
         #returns json
  
-        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/policy/api/v1/infra/sites/default/enforcement-points/${EXISTINGEPRP}/host-transport-nodes)
+        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/policy/api/v1/infra/sites/default/enforcement-points/${EXISTINGEPRP}/host-transport-nodes/state)
         HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
 
         if [ $HTTPSTATUS -eq 200 ]
@@ -668,7 +668,7 @@ get_host-transport-nodes() {
                 then
                         echo
                         echo $CCINFO > /tmp/json 
-                                               
+                        echo $CCINFO | jq .    
                 fi
         else
                 echo "  error getting host-transport-nodes"

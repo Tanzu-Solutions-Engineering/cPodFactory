@@ -549,6 +549,8 @@ create_transport_node_profile() {
 
         SCRIPT="/tmp/TNPROFILE_JSON"
         echo ${TNPROFILE_JSON} > ${SCRIPT}
+        cat ${SCRIPT} | jq .
+        exit
         RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD}  -H 'Content-Type: application/json' -X PUT -d @${SCRIPT} https://${NSXFQDN}/policy/api/v1/infra/host-transport-node-profiles/${PROFILENAME})
         HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
         #echo $RESPONSE
@@ -668,15 +670,15 @@ then
                 EXISTINGLIC=$(echo ${LICENSESINFO} |jq '.results[] | select (.description =="NSX Data Center Enterprise Plus")')
                 if [[ "${EXISTINGLIC}" == "" ]]
                 then
-                        echo "No NSX datacenter License present."
-                        echo "adding NSX license"
+                        echo "  No NSX datacenter License present."
+                        echo "  adding NSX license"
                         add_nsx_license
                 else
-                        echo "NSX Datacenter license present. proceeding with configuration"
+                        echo "  NSX Datacenter license present. proceeding with configuration"
                 fi
         else
-                echo "No License assigned."
-                echo "add NSX License"
+                echo "  No License assigned."
+                echo "  add NSX License"
                 add_nsx_license                
         fi
 else
@@ -694,7 +696,7 @@ VCENTERTP=$(echo | openssl s_client -connect vcsa.${CPOD_NAME_LOWER}.${ROOT_DOMA
 # ===== add computer manager =====
 # Check existing manager
 echo
-echo "processing computer manager"
+echo "Processing computer manager"
 echo
 RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/api/v1/fabric/compute-managers)
 HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
@@ -708,12 +710,12 @@ then
                 EXISTINGMNGR=$(echo $MANAGERSINFO| jq -r .results[0].server)
                 if [[ "${EXISTINGMNGR}" == "vcsa.${CPOD_NAME_LOWER}.${ROOT_DOMAIN}" ]]
                 then
-                        echo "existing manager set correctly : ${EXISTINGMNGR}"
+                        echo "  existing manager set correctly : ${EXISTINGMNGR}"
                 else
-                        echo " ${EXISTINGMNGR} does not match vcsa.${CPOD_NAME_LOWER}.${ROOT_DOMAIN}"
+                        echo "  ${EXISTINGMNGR} does not match vcsa.${CPOD_NAME_LOWER}.${ROOT_DOMAIN}"
                 fi
         else
-                echo "adding compute manager"
+                echo "  adding compute manager"
                 add_computer_manager
         fi
 else
@@ -863,10 +865,12 @@ fi
 #get Host Profile ID
 HOSTPROFILEID=$(get_uplink_profile_id "host-profile")
 echo "  HOST Profile ID: ${HOSTTZID}"
+get_uplink_profile_id "host-profile"
 
 #get transport zones ids
 HOSTTZID=$(get_transport_zone_id "host-vlan-tz")
 echo "  HOST TZ ID: ${HOSTTZID}"
+
 OVERLAYTZID=$(get_transport_zone_id "overlay-tz")
 echo "  OVERLAY TZ ID: ${OVERLAYTZID}"
 
@@ -901,7 +905,7 @@ then
         else
                 echo "  adding TN PROFILES"
                 #add_tn_profiles
-                create_transport_node_profile ${TNPROFILENAME} ${VDSUUID} ${HOSTTZID} ${OVERLAYTZID} ${IPPOOLID} ${HOSTPROFILEID}
+                create_transport_node_profile "${TNPROFILENAME}" "${VDSUUID}" "${HOSTTZID}" "${OVERLAYTZID}" "${IPPOOLID}" "${HOSTPROFILEID}"
         fi
 else
         echo "  error getting transport node profile"

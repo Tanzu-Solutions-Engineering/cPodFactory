@@ -612,22 +612,20 @@ get_compute_collection_id() {
         fi
 }
 
-
 check_transport_node_collections() {
-
         #returns json
-        
         RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/policy/api/v1/infra/sites/default/enforcement-points/${EXISTINGEPRP}/transport-node-collections)
         HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
         if [ $HTTPSTATUS -eq 200 ]
         then
                 TNCINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
-                TNCCOUNT=$(echo ${TNCINFO} | jq .result_count)                
+                TNCCOUNT=$(echo ${TNCINFO} | jq .result_count)     
+                echo $CCINFO > /tmp/tnc-json 
                 if [[ ${TNCCOUNT} -gt 0 ]]
                 then
                         echo $TNCINFO
                 else
-                        echo "no transport node collection listed via transport_node_collections"
+                        echo ""
                 fi
         else
                 echo "  error getting transport_node_collections"
@@ -704,6 +702,39 @@ get_host-transport-nodes-state() {
         fi
 }
 
+create_transport_node_collections() {
+        #$1 profile name string
+        #$2 VLAN ID
+        #returns json
+        TNCID=$1
+        TNPROFILEID=$2
+        
+        TNC_JSON='{
+        "resource_type": "HostTransportNodeCollection",
+        "compute_collection_id": "'${TNCID}'",
+        "transport_node_profile_id": "/infra/host-transport-node-profiles/'${TNPROFILEID}'"
+        }'
+
+        SCRIPT="/tmp/TNC_JSON"
+        echo ${TNC_JSON} > ${SCRIPT}
+        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD}  -H 'Content-Type: application/json' -X PUT -d @${SCRIPT} https://${NSXFQDN}/policy/api/v1/infra/sites/default/enforcement-points/${EXISTINGEPRP}/transport-node-collections/TNC)
+        HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+        #echo $RESPONSE
+        #echo $HTTPSTATUS
+
+        if [ $HTTPSTATUS -eq 200 ]
+        then
+                TNCINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+                echo "  ${TNCID} created succesfully"
+                #echo ${PROFILESINFO}
+        else
+                echo "  error creating transport node collection : ${TNCID}"
+                echo ${HTTPSTATUS}
+                echo ${RESPONSE}
+                exit
+        fi
+
+}
 
 configure_nsx_compute_cluster() {
         # $1 IP POOL ID
@@ -750,8 +781,6 @@ configure_nsx_compute_cluster() {
 }
 
 ###################
-
-
 CPOD_NAME="cpod-$1"
 NAME_HIGHER=$( echo ${1} | tr '[:lower:]' '[:upper:]' )
 NAME_LOWER=$( echo ${1} | tr '[:upper:]' '[:lower:]' )
@@ -1045,7 +1074,6 @@ fi
 #get Host Profile ID
 HOSTPROFILEID=$(get_uplink_profile_id "host-profile")
 echo "  HOST Profile ID: ${HOSTPROFILEID}"
-get_uplink_profile_id "host-profile"
 
 #get transport zones ids
 HOSTTZID=$(get_transport_zone_id "host-vlan-tz")
@@ -1056,10 +1084,9 @@ echo "  OVERLAY TZ ID: ${OVERLAYTZID}"
 #GET IP POOL ID
 IPPOOLID=$(get_ip_pool_id "TEP-pool")
 echo "  IP POOL ID : ${IPPOOLID}"
-TNPROFILENAME="cluster-transport-node-profile"
-#get_ip_pool_all
 
-echo "  Checking Transport Nodes Profile"
+echo "Checking Transport Nodes Profile"
+TNPROFILENAME="cluster-transport-node-profile"
 RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/policy/api/v1/infra/host-transport-node-profiles)
 HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
 
@@ -1069,10 +1096,7 @@ then
         TNPROFILESCOUNT=$(echo $TNPROFILESINFO | jq .result_count)
         if [[ ${TNPROFILESCOUNT} -gt 0 ]]
         then
-                #echo ${TNPROFILESINFO} |jq .
-                
                 EXISTINGTNPROFILES=$(echo $TNPROFILESINFO| jq -r .results[0].display_name)
-
                 if [[ "${EXISTINGTNPROFILES}" == "${TNPROFILENAME}" ]]
                 then
                         echo "  existing transport node profile set correctly : ${EXISTINGTNPROFILES}"
@@ -1093,29 +1117,28 @@ else
 fi
 
 # ===== Configure NSX on ESX hosts =====
-
 echo
 echo Configuring NSX on ESX hosts
 echo
 
 CLUSTERCCID=$(get_compute_collection_id "Cluster")
-echo "Cluster CCID : ${CLUSTERCCID}" 
+echo "  Cluster CCID : ${CLUSTERCCID}" 
 
 # check current state
-
-echo "get_host-transport-nodes"
+echo "  get_host-transport-nodes"
 echo
-
 get_host-transport-nodes
-
-
 TNC=$(check_transport_node_collections)
 echo ${TNC} | jq .
-TNCID=$(echo ${TNC} |jq -r '.results[] | select (.compute_collection_id == "'${CLUSTERCCID}'") | .unique_id ' )
-echo $TNCID
-echo "Cluster Collection State :  $(get_transport_node_collections_state ${TNCID})"
-
-get_host-transport-nodes-state
+if [ "${TNC}" != ""  ]
+then
+        TNCID=$(echo ${TNC} |jq -r '.results[] | select (.compute_collection_id == "'${CLUSTERCCID}'") | .unique_id ' )
+        echo $TNCID
+        echo "  Cluster Collection State :  $(get_transport_node_collections_state ${TNCID})"
+        get_host-transport-nodes-state
+else
+        echo "  do something"
+fi
 
 
 # ===== create nsx segments for edge vms =====

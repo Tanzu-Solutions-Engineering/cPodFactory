@@ -45,10 +45,48 @@ fi
 
 source ./extra/functions.sh
 
+# ========== NSX functions ===========
+
+get_compute_manager() {
+        # $1 = compute manager name
+        # returns json
+        MGRNAME=$1
+
+        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/api/v1/fabric/compute-managers)
+        HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+
+        if [ $HTTPSTATUS -eq 200 ]
+        then
+                MANAGERSINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+                echo "${MANAGERSINFO}" > /tmp/mgr_json
+                MANAGERSCOUNT=$(echo $MANAGERSINFO | jq .result_count)
+                if [[ ${MANAGERSCOUNT} -gt 0 ]]
+                then
+                        EXISTINGMNGR=$(echo $MANAGERSINFO| jq -r .results[0].server)
+                        if [[ "${EXISTINGMNGR}" == "${MGRNAME}" ]]
+                        then
+                                echo "  existing manager set correctly : ${EXISTINGMNGR}"
+                                MGRID=$(echo $MANAGERSINFO| jq -r .results[0].id)
+                        else
+                                echo "  ${EXISTINGMNGR} does not match vcsa.${CPOD_NAME_LOWER}.${ROOT_DOMAIN}"
+                        fi
+                else
+                        echo ""
+                fi
+        else
+                echo "  error getting managers"
+                echo ${HTTPSTATUS}
+                echo ${RESPONSE}
+                exit
+        fi
+}
+
 add_computer_manager() {
+        #$1 Compute Manager fqdn
+        MGRFQDN=$1
         CM_JSON='{
-        "server": "'vcsa.${CPOD_NAME_LOWER}.${ROOT_DOMAIN}'",
-        "display_name": "'vcsa.${CPOD_NAME_LOWER}.${ROOT_DOMAIN}'",
+        "server": "'"${MGRFQDN}"'",
+        "display_name": "'"${MGRFQDN}"'",
         "origin_type": "vCenter",
         "credential" : {
         "credential_type" : "UsernamePasswordLoginCredential",
@@ -66,7 +104,7 @@ add_computer_manager() {
         if [ $HTTPSTATUS -eq 201 ]
         then
                 MANAGERSINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
-                #echo ${MANAGERSINFO}
+                echo "${MANAGERSINFO}" > /tmp/mgradd_json
                 MANAGERSRV=$(echo $MANAGERSINFO | jq -r .server)
                 echo "  Compute Manager added succesfully = ${MANAGERSRV}"
         else
@@ -75,6 +113,50 @@ add_computer_manager() {
                 echo ${RESPONSE}
                 exit
         fi
+}
+
+get_compute_manager_status() {
+        #$1 Compute Mgr ID
+        #returns json
+
+        MGRID=$1
+ 
+        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/api/v1/fabric/compute-managers/${MGRID}/status)
+        HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+
+        if [ $HTTPSTATUS -eq 200 ]
+        then
+                MGRINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+                echo $MGRINFO > /tmp/state-json 
+                if [[ "${MGRINFO}" != "" ]]
+                then
+                        echo "${MGRINFO}" | jq -r '[.registration_status, .connection_status] |@tsv'
+                fi
+        else
+                echo "  error getting host-transport-nodes"
+                echo ${HTTPSTATUS}
+                echo ${RESPONSE}
+                exit
+        fi
+}
+
+loop_wait_compute_manager_status(){
+        #$1 = Compute Mgr ID
+        MGRID=$1
+        echo "  Checking compute manager status"
+        echo
+        MGRSTATUS=$(get_compute_manager_status "${MGRID}")
+        echo "${MGRSTATUS}"
+        INPROGRESS=$(echo "${MGRSTATUS}" | jq .connection_status)
+        while [[ "$INPROGRESS" != "UP" ]]
+        do
+                echo "${MGRSTATUS}"
+                echo 
+                sleep 10
+                MGRSTATUS=$(get_compute_manager_status "${MGRID}")
+                INPROGRESS=$(echo "${MGRSTATUS}" | jq .connection_status)
+        done
+
 }
 
 add_nsx_license() {
@@ -983,31 +1065,18 @@ VCENTERTP=$(echo | openssl s_client -connect vcsa.${CPOD_NAME_LOWER}.${ROOT_DOMA
 echo
 echo "Processing computer manager"
 echo
-RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/api/v1/fabric/compute-managers)
-HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
 
-if [ $HTTPSTATUS -eq 200 ]
+MGRNAME="vcsa.${CPOD_NAME_LOWER}.${ROOT_DOMAIN}"
+MGRTEST=$(get_compute_manager "${MGRNAME}")
+
+if [ "${MGRTEST}" != "" ]
 then
-        MANAGERSINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
-        MANAGERSCOUNT=$(echo $MANAGERSINFO | jq .result_count)
-        if [[ ${MANAGERSCOUNT} -gt 0 ]]
-        then
-                EXISTINGMNGR=$(echo $MANAGERSINFO| jq -r .results[0].server)
-                if [[ "${EXISTINGMNGR}" == "vcsa.${CPOD_NAME_LOWER}.${ROOT_DOMAIN}" ]]
-                then
-                        echo "  existing manager set correctly : ${EXISTINGMNGR}"
-                else
-                        echo "  ${EXISTINGMNGR} does not match vcsa.${CPOD_NAME_LOWER}.${ROOT_DOMAIN}"
-                fi
-        else
-                echo "  adding compute manager"
-                add_computer_manager
-        fi
+        echo "  ${MGRTEST}"
 else
-        echo "  error getting managers"
-        echo ${HTTPSTATUS}
-        echo ${RESPONSE}
-        exit
+        echo "  Adding Compute Manager"
+        add_computer_manager "${MGRNAME}"
+        MGRTEST=$(get_compute_manager "${MGRNAME}")
+        loop_wait_compute_manager_status "${MGRID}"
 fi
 
 
@@ -1164,6 +1233,8 @@ echo "  IP POOL ID : ${IPPOOLID}"
 echo "Checking Transport Nodes Profile"
 HTNPROFILENAME="cluster-transport-node-profile"
 
+## need to add check that vcenter inventory completed in NSX Manager
+
 get_host_transport_node_profile_id "${HTNPROFILENAME}" "${VDSUUID}" "${HOSTTZID}" "${OVERLAYTZID}" "${IPPOOLID}" "${HOSTPROFILEID}"
 
 # ===== Configure NSX on ESX hosts =====
@@ -1272,6 +1343,12 @@ fi
 # name: default - set route redistribution:
 # T1 subnets : LB vip - nat ip - static routes - connected interfaces and segments
 
+
+#
+# ===== NSX cleanup =====
+# accept eula
+# reject CEIP
+# skip welcome tour
 
 
 # ===== Script finished =====

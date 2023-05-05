@@ -632,26 +632,12 @@ create_transport_node_profile() {
                 "resource_type": "StaticIpPoolSpec"
                 },
                 "transport_zone_endpoints": [
-                {
-                "transport_zone_id": "/infra/sites/default/enforcement-points/default/transport-zones/'${HOSTTZID}'",
-                        "transport_zone_profile_ids": [
                         {
-                        "resource_type": "BfdHealthMonitoringProfile",
-                        "profile_id": "52035bb3-ab02-4a08-9884-18631312e50a"
-                        }
-                        ]
-                },
-                },
-                {
-                "transport_zone_id": "/infra/sites/default/enforcement-points/default/transport-zones/'${OVERLAYTZID}'",
-                        "transport_zone_profile_ids": [
+                        "transport_zone_id": "/infra/sites/default/enforcement-points/default/transport-zones/'${HOSTTZID}'"
+                        },
                         {
-                        "resource_type": "BfdHealthMonitoringProfile",
-                        "profile_id": "52035bb3-ab02-4a08-9884-18631312e50a"
+                        "transport_zone_id": "/infra/sites/default/enforcement-points/default/transport-zones/'${OVERLAYTZID}'"
                         }
-                        ]
-                    },
-                }
                 ],
                 "not_ready": false
         }
@@ -1032,10 +1018,22 @@ create_edge_node() {
                         "cpu_config": [],
                         "transport_zone_endpoints": [
                         {
-                                "transport_zone_id": "'${OVLYTZID}'"
+                                "transport_zone_id": "'${OVLYTZID}'",
+                                "transport_zone_profile_ids": [
+                                {
+                                "resource_type": "BfdHealthMonitoringProfile",
+                                "profile_id": "52035bb3-ab02-4a08-9884-18631312e50a"
+                                }
+                                ]
                         },
                         {
-                                "transport_zone_id": "'${VLANTZID}'"
+                                "transport_zone_id": "'${VLANTZID}'",
+                                "transport_zone_profile_ids": [
+                                {
+                                "resource_type": "BfdHealthMonitoringProfile",
+                                "profile_id": "52035bb3-ab02-4a08-9884-18631312e50a"
+                                }
+                                ]
                         }
                         ],
                         "not_ready": false

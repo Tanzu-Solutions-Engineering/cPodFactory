@@ -358,7 +358,7 @@ get_transport_zone_id() {
         then
                 TZINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
                 #TZCOUNT=$(echo ${TZINFO} | jq .result_count)                
-                echo $TZINFO |jq -r '.results[] | select (.display_name =="'$TZNAME'") | .unique_id'
+                echo $TZINFO |jq -r '.results[] | select (.display_name =="'$TZNAME'") | .id'
         else
                 echo "  error getting transport zones"
                 echo ${HTTPSTATUS}

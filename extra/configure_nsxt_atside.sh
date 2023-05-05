@@ -127,13 +127,13 @@ get_compute_manager_status() {
         if [ $HTTPSTATUS -eq 200 ]
         then
                 MGRINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
-                echo $MGRINFO > /tmp/state-json 
+                echo $MGRINFO > /tmp/mgrstatus-json 
                 if [[ "${MGRINFO}" != "" ]]
                 then
                         echo "${MGRINFO}" | jq -r '[.registration_status, .connection_status] |@tsv'
                 fi
         else
-                echo "  error getting host-transport-nodes"
+                echo "  error getting compute manager status"
                 echo ${HTTPSTATUS}
                 echo ${RESPONSE}
                 exit

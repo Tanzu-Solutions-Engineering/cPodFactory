@@ -983,7 +983,7 @@ create_edge_node() {
         COMPUTE_ID=$7
         STORAGE_ID=$8
         MANAGEMENT_NETWORK_ID=$9
-        EDGE_IP=$10
+        EDGE_IP=${10}
 
 
         EDGE_JSON='{

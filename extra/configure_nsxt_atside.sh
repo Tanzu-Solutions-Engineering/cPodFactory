@@ -603,7 +603,7 @@ get_host_transport_node_profile_id() {
                 if [[ ${HTNPROFILESCOUNT} -gt 0 ]]
                 then
                         EXISTINGTNPROFILES=$(echo $HTNPROFILESINFO| jq -r .results[0].display_name)
-                        if [[ "${EXISTINGTNPROFILES}" == "${TNPROFILENAME}" ]]
+                        if [[ "${EXISTINGTNPROFILES}" == "${HTNPROFILENAME}" ]]
                         then
                                 echo "  host transport node profile set correctly : ${EXISTINGTNPROFILES}"
                                 HTNPROFILEID=$(echo $HTNPROFILESINFO| jq -r .results[0].id)

@@ -1328,12 +1328,11 @@ fi
 
 
 # deploy edge code here
+echo "edge-1"
+get_transport_node "edge-1"
+echo "edge-2"
+get_transport_node "edge-2"
 
-EDGE1="edge-1.${CPOD_NAME_LOWER}.${ROOT_DOMAIN}"
-get_transport_node "${EDGE1}"
-
-EDGE2="edge-2.${CPOD_NAME_LOWER}.${ROOT_DOMAIN}"
-get_transport_node "${EDGE2}"
 
 # check edge node status - Not Available -> ready  in "configuration state" - "Registration Pending" - Success
 

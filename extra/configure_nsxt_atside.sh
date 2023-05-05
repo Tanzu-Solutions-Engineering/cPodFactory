@@ -1105,7 +1105,7 @@ then
         get_host-transport-nodes-state
 else
         echo "  do something"
-        create_transport_node_collections "${TNCID}" "${HTNPROFILEID}"
+        create_transport_node_collections "${TNCID}" "${HTNPROFILENAME}"
 fi
 
 

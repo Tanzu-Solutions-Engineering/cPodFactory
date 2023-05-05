@@ -808,7 +808,7 @@ get_segment(){
                         then
                                 echo $SEGMENTSINFO |jq -r '.results[] | [.display_name, .id] |@tsv'
                         else
-                                echo $SEGMENTSINFO |jq -r '.results[]  select (.display_name =="'$SEGMENTNAME'") | .id'
+                                echo $SEGMENTSINFO |jq -r '.results[] | select (.display_name =="'$SEGMENTNAME'") | .id'
                         fi
                 else
                         echo "  No segments listed via segments"

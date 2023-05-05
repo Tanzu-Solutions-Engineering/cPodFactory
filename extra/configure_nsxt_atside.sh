@@ -1540,6 +1540,7 @@ OVLYTZID=$(get_transport_zone_id "overlay-tz")
 VLANTZID=$(get_transport_zone_id "edge-vlan-tz")
 
 UPLINKPROFILEID=$(get_uplink_profile_id "edge-profile")
+IPPOOLID=$(get_ip_pool_id "TEP-pool")
 
 # deploy edge code here
 echo "edge-1"

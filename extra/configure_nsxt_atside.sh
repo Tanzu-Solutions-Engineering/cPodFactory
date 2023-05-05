@@ -490,6 +490,29 @@ get_ip_pool_id() {
         fi
 }
 
+get_ip_pool_path() {
+        #$1 transport zone name string
+        #returns json
+        IPPOOLNAME=$1
+        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/policy/api/v1/infra/ip-pools)
+        HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+        if [ $HTTPSTATUS -eq 200 ]
+        then
+                IPPOOLINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+                IPPOOLCOUNT=$(echo ${IPPOOLINFO} | jq .result_count)                
+                if [[ ${IPPOOLCOUNT} -gt 0 ]]
+                then
+                        IPPOOLID=$(echo $IPPOOLINFO |jq -r '.results[] | select (.display_name =="'$IPPOOLNAME'") | .path')
+                        echo $IPPOOLID
+                fi
+        else
+                echo "  error getting IP Pools"
+                echo ${HTTPSTATUS}
+                echo ${RESPONSE}
+                exit 1
+        fi
+}
+
 get_ip_pool_all() {
         #$1 transport zone name string
         #returns json
@@ -1587,8 +1610,8 @@ VLANTZID=$(get_transport_zone_path "edge-vlan-tz")
 #UPLINKPROFILEID=$(get_uplink_profile_id "edge-profile")
 UPLINKPROFILEID=$(get_uplink_profile_path "edge-profile")
 
-get_ip_pool_all
-IPPOOLID=$(get_ip_pool_id "TEP-pool")
+#get_ip_pool_all
+IPPOOLID=$(get_ip_pool_path "TEP-pool")
 
 # deploy edge code here
 echo "edge-1"

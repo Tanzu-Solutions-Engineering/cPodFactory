@@ -1524,7 +1524,8 @@ then
         MANAGEMENT_NETWORK_ID=$(govc ls -json=true network |jq -r '.elements[].Object.Summary | select (.Name =="VM Network") | .Network.Value')
 fi
 
-
+OVLYTZID=$(get_transport_zone_id "overlay-tz")
+VLANTZID=$(get_transport_zone_id "edge-vlan-tz")
 
 # deploy edge code here
 echo "edge-1"

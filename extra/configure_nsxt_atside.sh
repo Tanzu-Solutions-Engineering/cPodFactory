@@ -626,6 +626,8 @@ check_transport_node_collections() {
                 if [[ ${TNCCOUNT} -gt 0 ]]
                 then
                         echo $TNCINFO
+                else
+                        echo "no transport node collection listed via transport_node_collections"
                 fi
         else
                 echo "  error getting transport_node_collections"
@@ -664,11 +666,12 @@ get_host-transport-nodes() {
         then
                 CCINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
                 CCCOUNT=$(echo ${CCINFO} | jq .result_count)
+                echo $CCINFO > /tmp/htn-json 
                 if [[ ${CCCOUNT} -gt 0 ]]
                 then
-                        echo
-                        echo $CCINFO > /tmp/htn-json 
                         echo $CCINFO |jq -r '.results[] | [.display_name, .id] |@tsv'
+                else
+                        echo "No host transport nodes listed via host-transport-nodes"
                 fi
         else
                 echo "  error getting host-transport-nodes"
@@ -688,10 +691,9 @@ get_host-transport-nodes-state() {
         then
                 CCINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
                 CCCOUNT=$(echo ${CCINFO} | jq .result_count)
+                echo $CCINFO > /tmp/state-json 
                 if [[ ${CCCOUNT} -gt 0 ]]
                 then
-                        echo
-                        echo $CCINFO > /tmp/state-json 
                         echo $CCINFO | jq -r '.results[] | [.transport_node_id, .node_deployment_state.state] |@tsv'
                 fi
         else
@@ -1105,14 +1107,15 @@ echo "get_host-transport-nodes"
 echo
 
 get_host-transport-nodes
-get_host-transport-nodes-state
+
 
 TNC=$(check_transport_node_collections)
 echo ${TNC} | jq .
 TNCID=$(echo ${TNC} |jq -r '.results[] | select (.compute_collection_id == "'${CLUSTERCCID}'") | .unique_id ' )
 echo $TNCID
-
 echo "Cluster Collection State :  $(get_transport_node_collections_state ${TNCID})"
+
+get_host-transport-nodes-state
 
 
 # ===== create nsx segments for edge vms =====

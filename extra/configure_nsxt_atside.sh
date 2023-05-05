@@ -116,7 +116,7 @@ add_computer_manager() {
 }
 
 get_compute_manager_status() {
-        #$1 Compute Mgr ID
+        #$1 Compute Mgr ID      
         #returns json
 
         MGRID=$1
@@ -970,6 +970,180 @@ get_transport_node(){
         fi
 }
 
+create_edge_node() {
+        #$1 profile name string
+        #$2 VLAN ID
+        #returns json
+        EDGENAME=$1
+        UPLINKPROFILEID=$2
+        IPPOOLID=$3
+        OVLYTZID=$4
+        VLANTZID=$5
+        CLUSTERCCID=$6
+        COMPUTE_ID=$7
+        STORAGE_ID=$8
+        MANAGEMENT_NETWORK_ID=$9
+        EDGE_IP=$10
+
+
+        EDGE_JSON='{
+        "display_name": "'${EDGENAME}'",
+        "host_switch_spec": {
+                "host_switches": [
+                {
+                        "host_switch_name": "nsxHostSwitch",
+                        "host_switch_type": "NVDS",
+                        "host_switch_mode": "STANDARD",
+                        "host_switch_profile_ids": [
+                        {
+                                "key": "UplinkHostSwitchProfile",
+                                "value": "'${UPLINKPROFILEID}'"
+                        }
+                        ],
+                        "pnics": [
+                        {
+                                "device_name": "fp-eth0",
+                                "uplink_name": "uplink-1"
+                        },
+                        {
+                                "device_name": "fp-eth1",
+                                "uplink_name": "uplink-2"
+                        }
+                        ],
+                        "is_migrate_pnics": false,
+                        "ip_assignment_spec": {
+                        "ip_pool_id": "'${IPPOOLID}'",
+                        "resource_type": "StaticIpPoolSpec"
+                        },
+                        "cpu_config": [],
+                        "transport_zone_endpoints": [
+                        {
+                                "transport_zone_id": "'${OVLYTZID}'"
+                        },
+                        {
+                                "transport_zone_id": "'${VLANTZID}'"
+                        }
+                        ],
+                        "not_ready": false
+                }
+                ],
+                "resource_type": "StandardHostSwitchSpec"
+        },
+        "maintenance_mode": "DISABLED",
+        "node_deployment_info": {
+                "deployment_type": "VIRTUAL_MACHINE",
+                "deployment_config": {
+                "vm_deployment_config": {
+                        "vc_id": "'${CLUSTERCCID}'",
+                        "compute_id": "'${COMPUTE_ID}'",
+                        "storage_id": "'${STORAGE_ID}'",
+                        "management_network_id": "'${MANAGEMENT_NETWORK_ID}'",
+                        "management_port_subnets": [
+                        {
+                                "ip_addresses": [
+                                "'${EDGE_IP}'"
+                                ],
+                                "prefix_length": "24"
+                        }
+                        ],
+                        "default_gateway_addresses": [
+                        "'${CPODROUTERIP}'"
+                        ],
+                        "data_network_ids": [
+                        "/infra/segments/edge-uplink-trunk-1",
+                        "/infra/segments/edge-uplink-trunk-2"
+                        ],
+                        "reservation_info": {
+                        "memory_reservation": {
+                                "reservation_percentage": 0
+                        },
+                        "cpu_reservation": {
+                                "reservation_in_shares": "NORMAL_PRIORITY",
+                                "reservation_in_mhz": 0
+                        }
+                        },
+                        "placement_type": "VsphereDeploymentConfig"
+                },
+                "form_factor": "LARGE",
+                "node_user_settings": {
+                        "cli_username": "admin",
+                                        "root_password":"'${PASSWORD}'",
+                                        "cli_password":"'${PASSWORD}'"
+                }
+                },
+                "node_settings": {
+                "hostname": "esg-site-b.lab",
+                "search_domains": [
+                        "'${DOMAIN}'"
+                ],
+                "ntp_servers": [
+                        "'${CPODROUTERIP}'"
+                ],
+                "dns_servers": [
+                        "'${CPODROUTERIP}'"
+                ],
+                "enable_ssh": true,
+                "allow_ssh_root_login": true
+                },
+                "resource_type": "EdgeNode",
+                "ip_addresses": [
+                "'${EDGE_IP}'"
+                ]
+        }
+        }'
+
+        SCRIPT="/tmp/EDGE_JSON"
+        echo ${EDGE_JSON} > ${SCRIPT}
+        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD}  -H 'Content-Type: application/json' -X POST -d @${SCRIPT} https://${NSXFQDN}/api/v1/transport-nodes)
+        HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+        #echo $RESPONSE
+        #echo $HTTPSTATUS
+
+        if [ $HTTPSTATUS -eq 200 ]
+        then
+                EDGEINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+                echo "  ${EDGENAME} created succesfully"
+                echo "${EDGEINFO}" > /tmp/${EDGENAME}-json
+        else
+                echo "  error creating edge node  : ${EDGENAME}"
+                echo ${HTTPSTATUS}
+                echo ${RESPONSE}
+                exit
+        fi
+
+}
+
+get_transport_node_state(){
+        #$1 segments name to look for
+        #returns json
+        EDGENODENAME=$1
+
+        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/api/v1/transport-nodes/state)
+        HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+
+        if [ $HTTPSTATUS -eq 200 ]
+        then
+                TNINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+                TNCOUNT=$(echo ${TNINFO} | jq .result_count)
+                echo $TNINFO > /tmp/edgenodes-state-json 
+                if [[ ${TNCOUNT} -gt 0 ]]
+                then
+                        if [ "$EDGENODENAME" == "" ]
+                        then
+                                echo "${TNINFO}" |jq -r '.results[] | [.display_name, .id] |@tsv'
+                        else
+                                echo "${TNINFO}" |jq -r '.results[] | select (.display_name =="'$EDGENODENAME'") | .id'
+                        fi
+                else
+                        echo ""
+                fi
+        else
+                echo "  error getting transport-nodes"
+                echo ${HTTPSTATUS}
+                echo ${RESPONSE}
+                exit
+        fi
+}
 ###################
 CPOD_NAME="cpod-$1"
 NAME_HIGHER=$( echo ${1} | tr '[:lower:]' '[:upper:]' )
@@ -979,6 +1153,7 @@ CPOD_NAME_LOWER=$( echo ${CPOD_NAME} | tr '[:upper:]' '[:lower:]' )
 CPOD_PORTGROUP="${CPOD_NAME_LOWER}"
 VAPP="cPod-${NAME_HIGHER}"
 VMNAME="${VAPP}-${HOSTNAME}"
+CPODROUTERIP=$(ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=error ${CPOD_NAME} "ip add | grep inet | grep eth0" | awk '{print $2}' | cut -d "/" -f 1)
 
 VLAN=$( grep -m 1 "${CPOD_NAME_LOWER}\s" /etc/hosts | awk '{print $1}' | cut -d "." -f 4 )
 
@@ -1241,7 +1416,11 @@ echo
 ./extra/govc_cpod.sh  ${NAME_LOWER}  2>&1 > /dev/null
 GOVCSCRIPT=/tmp/scripts/govc_${CPOD_NAME_LOWER}
 source ${GOVCSCRIPT}
-VDSUUID=$(govc find / -type DistributedVirtualSwitch | xargs -n1 govc dvs.portgroup.info | grep DvsUuid | uniq | cut -d":" -f2 | awk '{$1=$1;print}')
+# VDS UUID
+# govc ls -json=true network |jq -r '.elements[] | select ( .Object.Summary.ProductInfo.Name == "DVS") |  .Object.Summary.Uuid'
+
+#VDSUUID=$(govc find / -type DistributedVirtualSwitch | xargs -n1 govc dvs.portgroup.info | grep DvsUuid | uniq | cut -d":" -f2 | awk '{$1=$1;print}')
+VDSUUID=$(govc ls -json=true network |jq -r '.elements[] | select ( .Object.Summary.ProductInfo.Name == "DVS") |  .Object.Summary.Uuid')
 echo "  VDS UUID : ${VDSUUID}"
 if [ "${VDSUUID}" == "" ]
 then
@@ -1326,16 +1505,52 @@ fi
 # "configure nsx" - "new node switch" - switch name nsxHostSwitch - TZ : edge-vlan-tz + overlay-tz - uplink : edge-profile - ip assignment : ip pool - ip pool : TEP-pool - /
 #    teaming policy uplink mapping : type "vlan segment" : "edge-uplink-trunk-1" / 2
 
+#get vCenter objects details
+
+# Cluster ID
+# govc ls -json=true host |jq -r '.elements[].Object.Self.Value'
+COMPUTE_ID=$(govc ls -json=true host |jq -r '.elements[].Object.Self.Value')
+
+# Datastore ID
+# govc datastore.info -json=true vsanDatastore |jq -r .Datastores[].Self.Value
+STORAGE_ID=$(govc datastore.info -json=true vsanDatastore |jq -r .Datastores[].Self.Value)
+
+# Portgroup ID
+# govc ls -json=true network |jq -r '.elements[].Object.Summary | select (.Name =="vlan-0-mgmt") | .Network.Value'
+# 
+MANAGEMENT_NETWORK_ID=$(govc ls -json=true network |jq -r '.elements[].Object.Summary | select (.Name =="vlan-0-mgmt") | .Network.Value')
+if [ "${MANAGEMENT_NETWORK_ID}" == "" ]
+then
+        MANAGEMENT_NETWORK_ID=$(govc ls -json=true network |jq -r '.elements[].Object.Summary | select (.Name =="VM Network") | .Network.Value')
+fi
+
+
 
 # deploy edge code here
 echo "edge-1"
-get_transport_node "edge-1"
-echo "edge-2"
-get_transport_node "edge-2"
+EDGEID=$(get_transport_node "edge-1")
+if [ "${EDGEID}" == "" ]
+then
+        EDGE_IP="${SUBNET}.54"
+        create_edge_node "edge-1" "${UPLINKPROFILEID}" "${IPPOOLID}" "${OVLYTZID}" "${VLANTZID}" "${CLUSTERCCID}" "${COMPUTE_ID}" "${STORAGE_ID}" "${MANAGEMENT_NETWORK_ID}" "${EDGE_IP}"
+else
+        echo "  edge-1 is present"
+fi
 
+echo "edge-2"
+
+EDGEID=$(get_transport_node "edge-2")
+if [ "${EDGEID}" == "" ]
+then
+        EDGE_IP="${SUBNET}.55"
+        create_edge_node "edge-1" "${UPLINKPROFILEID}" "${IPPOOLID}" "${OVLYTZID}" "${VLANTZID}" "${CLUSTERCCID}" "${COMPUTE_ID}" "${STORAGE_ID}" "${MANAGEMENT_NETWORK_ID}" "${EDGE_IP}"
+else
+        echo "  edge-2 is present"
+fi
 
 # check edge node status - Not Available -> ready  in "configuration state" - "Registration Pending" - Success
 
+get_transport_node_state
 
 
 # ===== create edge cluster =====

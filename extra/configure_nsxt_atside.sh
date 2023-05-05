@@ -588,6 +588,43 @@ create_transport_node_profile() {
 
 }
 
+get_host_transport_node_profile_id() {
+        #$1 transport zone name string
+        #returns json and profile id
+        HTNPROFILENAME=$1
+        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/policy/api/v1/infra/host-transport-node-profiles)
+        HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+
+        if [ $HTTPSTATUS -eq 200 ]
+        then
+                HTNPROFILESINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+                HTNPROFILESCOUNT=$(echo $HTNPROFILESINFO | jq .result_count)
+                echo $HTNPROFILESINFO > /tmp/htnp-json 
+                if [[ ${HTNPROFILESCOUNT} -gt 0 ]]
+                then
+                        EXISTINGTNPROFILES=$(echo $HTNPROFILESINFO| jq -r .results[0].display_name)
+                        if [[ "${EXISTINGTNPROFILES}" == "${TNPROFILENAME}" ]]
+                        then
+                                echo "  host transport node profile set correctly : ${EXISTINGTNPROFILES}"
+                                HTNPROFILEID=$(echo $HTNPROFILESINFO| jq -r .results[0].id)
+                                echo "  host transport node profile ID : ${HTNPROFILEID}"
+                        else
+                                echo "  ${EXISTINGTNPROFILES} does not match ${TNPROFILENAME}"
+                                echo "  stopping here"
+                                exit
+                        fi
+                else
+                        echo "  adding transport node profile"
+                        create_transport_node_profile "${HTNPROFILENAME}" "${VDSUUID}" "${HOSTTZID}" "${OVERLAYTZID}" "${IPPOOLID}" "${HOSTPROFILEID}"
+                fi
+        else
+                echo "  error getting transport node profile"
+                echo ${HTTPSTATUS}
+                echo ${RESPONSE}
+                exit
+        fi
+}
+
 get_compute_collection_id() {
         #$1 transport zone name string
         #returns json
@@ -669,7 +706,7 @@ get_host-transport-nodes() {
                 then
                         echo $CCINFO |jq -r '.results[] | [.display_name, .id] |@tsv'
                 else
-                        echo "No host transport nodes listed via host-transport-nodes"
+                        echo "  No host transport nodes listed via host-transport-nodes"
                 fi
         else
                 echo "  error getting host-transport-nodes"
@@ -736,49 +773,6 @@ create_transport_node_collections() {
 
 }
 
-configure_nsx_compute_cluster() {
-        # $1 IP POOL ID
-        # $2 SUBNETNAME
-        # $3 SUBNETSTART
-        # $4 SUBNETEND
-        # $5 SUBNETCIDR
-        # $6 SUBNETGW
-
-        #returns json
-
-        IPPOOLID=$1
-        SUBNETNAME=$2
-        SUBNETSTART=$3
-        SUBNETEND=$4
-        SUBNETCIDR=$5
-        SUBNETGW=$6
-
-        SUBNET_JSON='{
-        "resource_type": "HostTransportNodeCollection",
-        "compute_collection_id": "$collectid",
-        "transport_node_profile_id": "/infra/host-transport-node-profiles/$($NSXTSite)-$($TNPSuffix)"
-        }'
-
-        SCRIPT="/tmp/SUBNET_JSON"
-        echo ${SUBNET_JSON} > ${SCRIPT}
-        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD}  -H 'Content-Type: application/json' -X PATCH -d @${SCRIPT} https://${NSXFQDN}/policy/api/v1/infra/ip-pools/${IPPOOLID}/ip-subnets/${SUBNETNAME})
-        HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
-        #echo $RESPONSE
-        #echo $HTTPSTATUS
-
-        if [ $HTTPSTATUS -eq 200 ]
-        then
-                SUBNETINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
-                echo "${SUBNETNAME} created succesfully"
-                #echo ${SUBNETINFO} |jq . 
-        else
-                echo "  error creating ip pool subnet : ${SUBNETNAME}"
-                echo ${HTTPSTATUS}
-                echo ${RESPONSE}
-                exit 1
-        fi
-
-}
 
 ###################
 CPOD_NAME="cpod-$1"
@@ -1086,35 +1080,9 @@ IPPOOLID=$(get_ip_pool_id "TEP-pool")
 echo "  IP POOL ID : ${IPPOOLID}"
 
 echo "Checking Transport Nodes Profile"
-TNPROFILENAME="cluster-transport-node-profile"
-RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/policy/api/v1/infra/host-transport-node-profiles)
-HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+HTNPROFILENAME="cluster-transport-node-profile"
 
-if [ $HTTPSTATUS -eq 200 ]
-then
-        TNPROFILESINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
-        TNPROFILESCOUNT=$(echo $TNPROFILESINFO | jq .result_count)
-        if [[ ${TNPROFILESCOUNT} -gt 0 ]]
-        then
-                EXISTINGTNPROFILES=$(echo $TNPROFILESINFO| jq -r .results[0].display_name)
-                if [[ "${EXISTINGTNPROFILES}" == "${TNPROFILENAME}" ]]
-                then
-                        echo "  existing transport node profile set correctly : ${EXISTINGTNPROFILES}"
-                else
-                        echo "  ${EXISTINGTNPROFILES} does not match ${TNPROFILENAME}"
-                        echo "  stopping here"
-                        exit
-                fi
-        else
-                echo "  adding transport node profile"
-                create_transport_node_profile "${TNPROFILENAME}" "${VDSUUID}" "${HOSTTZID}" "${OVERLAYTZID}" "${IPPOOLID}" "${HOSTPROFILEID}"
-        fi
-else
-        echo "  error getting transport node profile"
-        echo ${HTTPSTATUS}
-        echo ${RESPONSE}
-        exit
-fi
+get_host_transport_node_profile_id "${HTNPROFILENAME}" "${VDSUUID}" "${HOSTTZID}" "${OVERLAYTZID}" "${IPPOOLID}" "${HOSTPROFILEID}"
 
 # ===== Configure NSX on ESX hosts =====
 echo
@@ -1129,7 +1097,6 @@ echo "  get_host-transport-nodes"
 echo
 get_host-transport-nodes
 TNC=$(check_transport_node_collections)
-echo ${TNC} | jq .
 if [ "${TNC}" != ""  ]
 then
         TNCID=$(echo ${TNC} |jq -r '.results[] | select (.compute_collection_id == "'${CLUSTERCCID}'") | .unique_id ' )
@@ -1138,6 +1105,7 @@ then
         get_host-transport-nodes-state
 else
         echo "  do something"
+        create_transport_node_collections "${TNCID}" "${HTNPROFILEID}"
 fi
 
 

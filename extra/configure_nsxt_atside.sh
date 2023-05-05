@@ -893,18 +893,18 @@ create_transport_node_collections() {
         #$1 profile name string
         #$2 VLAN ID
         #returns json
-        TNCID=$1
-        TNPROFILEID=$2
+        CLUSTERCCID=$1
+        HTNPROFILENAME=$2
         
         TNC_JSON='{
         "resource_type": "HostTransportNodeCollection",
-        "compute_collection_id": "'${TNCID}'",
-        "transport_node_profile_id": "/infra/host-transport-node-profiles/'${TNPROFILEID}'"
+        "compute_collection_id": "'${CLUSTERCCID}'",
+        "transport_node_profile_id": "/infra/host-transport-node-profiles/'${HTNPROFILENAME}'"
         }'
 
         SCRIPT="/tmp/TNC_JSON"
         echo ${TNC_JSON} > ${SCRIPT}
-        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD}  -H 'Content-Type: application/json' -X PUT -d @${SCRIPT} https://${NSXFQDN}/policy/api/v1/infra/sites/default/enforcement-points/${EXISTINGEPRP}/transport-node-collections/${TNPROFILEID})
+        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD}  -H 'Content-Type: application/json' -X PUT -d @${SCRIPT} https://${NSXFQDN}/policy/api/v1/infra/sites/default/enforcement-points/${EXISTINGEPRP}/transport-node-collections/${HTNPROFILENAME})
         HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
         #echo $RESPONSE
         #echo $HTTPSTATUS
@@ -913,7 +913,7 @@ create_transport_node_collections() {
         then
                 TNCINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
                 echo "  ${TNCID} created succesfully"
-                #echo ${PROFILESINFO}
+                echo ${TNCINFO} > /tmp/tnc-creation-response-json
         else
                 echo "  error creating transport node collection : ${TNCID}"
                 echo ${HTTPSTATUS}

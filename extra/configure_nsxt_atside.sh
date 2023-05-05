@@ -456,6 +456,7 @@ get_ip_pool_all() {
                 IPPOOLCOUNT=$(echo ${IPPOOLINFO} | jq .result_count)                
                 if [[ ${IPPOOLCOUNT} -gt 0 ]]
                 then
+                        echo "${IPPOOLINFO}" > /tmp/ippoolall-json
                         echo $IPPOOLINFO |jq .
                 fi
         else
@@ -1539,6 +1540,7 @@ OVLYTZID=$(get_transport_zone_id "overlay-tz")
 VLANTZID=$(get_transport_zone_id "edge-vlan-tz")
 
 UPLINKPROFILEID=$(get_uplink_profile_id "edge-profile")
+get_ip_pool_all
 IPPOOLID=$(get_ip_pool_id "TEP-pool")
 
 # deploy edge code here

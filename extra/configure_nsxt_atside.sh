@@ -231,7 +231,7 @@ check_transport_zone() {
         then
                 TZINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
                 #TZCOUNT=$(echo ${TZINFO} | jq .result_count)           
-                echo "${TZINFO} > /tmp/tz-json"
+                echo "${TZINFO}" > /tmp/tz-json
                 echo $TZINFO |jq '.results[] | select (.display_name =="'$TZNAME'")'
                 
         else

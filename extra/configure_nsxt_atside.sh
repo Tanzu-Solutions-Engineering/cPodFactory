@@ -774,17 +774,46 @@ create_transport_node_collections() {
 }
 
 loop_wait_host_state(){
+        echo "  Checking hosts state"
+        echo
         HOSTSTATE=$(get_host-transport-nodes-state)
         echo "$HOSTSTATE"
         INPROGRESS=$(echo "$HOSTSTATE" | grep -c "in_progress")
         while [[ $INPROGRESS -gt 0 ]]
         do
                 echo "$HOSTSTATE"
+                echo 
                 sleep 10
                 HOSTSTATE=$(get_host-transport-nodes-state)
                 INPROGRESS=$(echo "$HOSTSTATE" | grep -c "in_progress")
         done
 
+}
+
+get_segment(){
+        #$1 segments name to look for
+        #returns json
+ 
+        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/policy/api/v1/infra/segments)
+        HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+
+        if [ $HTTPSTATUS -eq 200 ]
+        then
+                SEGMENTSINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+                SEGMENTSCOUNT=$(echo ${SEGMENTSINFO} | jq .result_count)
+                echo $SEGMENTSINFO > /tmp/segment-json 
+                if [[ ${SEGMENTSCOUNT} -gt 0 ]]
+                then
+                        echo $SEGMENTSINFO |jq -r '.results[] | [.display_name, .id] |@tsv'
+                else
+                        echo "  No segments listed via segments"
+                fi
+        else
+                echo "  error getting segments"
+                echo ${HTTPSTATUS}
+                echo ${RESPONSE}
+                exit
+        fi
 }
 
 ###################
@@ -1126,6 +1155,7 @@ fi
 # ===== create nsx segments for edge vms =====
 # edge-uplink-trunk-1 - tz = host-vlan-tz - teaming policy : host-uplink-1 - vlan : 0-4094
 # edge-uplink-trunk-2 - tz = host-vlan-tz - teaming policy : host-uplink-2 - vlan : 0-4094
+get_segment
 
 
 

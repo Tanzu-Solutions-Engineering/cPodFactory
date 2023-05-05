@@ -1539,6 +1539,8 @@ fi
 OVLYTZID=$(get_transport_zone_id "overlay-tz")
 VLANTZID=$(get_transport_zone_id "edge-vlan-tz")
 
+UPLINKPROFILEID=$(get_uplink_profile_id "edge-profile")
+
 # deploy edge code here
 echo "edge-1"
 EDGEID=$(get_transport_node "edge-1")

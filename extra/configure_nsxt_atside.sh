@@ -984,14 +984,14 @@ create_edge_node() {
         STORAGE_ID=$8
         MANAGEMENT_NETWORK_ID=$9
         EDGE_IP=${10}
-
+        FQDN=${11}
 
         EDGE_JSON='{
         "display_name": "'${EDGENAME}'",
         "host_switch_spec": {
                 "host_switches": [
                 {
-                        "host_switch_name": "nsxHostSwitch",
+                        "host_switch_name": "N-DVS-01",
                         "host_switch_type": "NVDS",
                         "host_switch_mode": "STANDARD",
                         "host_switch_profile_ids": [
@@ -1021,8 +1021,8 @@ create_edge_node() {
                                 "transport_zone_id": "'${OVLYTZID}'",
                                 "transport_zone_profile_ids": [
                                 {
-                                "resource_type": "BfdHealthMonitoringProfile",
-                                "profile_id": "52035bb3-ab02-4a08-9884-18631312e50a"
+                                        "resource_type": "BfdHealthMonitoringProfile",
+                                        "profile_id": "52035bb3-ab02-4a08-9884-18631312e50a"
                                 }
                                 ]
                         },
@@ -1030,8 +1030,8 @@ create_edge_node() {
                                 "transport_zone_id": "'${VLANTZID}'",
                                 "transport_zone_profile_ids": [
                                 {
-                                "resource_type": "BfdHealthMonitoringProfile",
-                                "profile_id": "52035bb3-ab02-4a08-9884-18631312e50a"
+                                        "resource_type": "BfdHealthMonitoringProfile",
+                                        "profile_id": "52035bb3-ab02-4a08-9884-18631312e50a"
                                 }
                                 ]
                         }
@@ -1076,7 +1076,7 @@ create_edge_node() {
                         },
                         "placement_type": "VsphereDeploymentConfig"
                 },
-                "form_factor": "LARGE",
+                "form_factor": "SMALL",
                 "node_user_settings": {
                         "cli_username": "admin",
                                         "root_password":"'${PASSWORD}'",
@@ -1084,7 +1084,7 @@ create_edge_node() {
                 }
                 },
                 "node_settings": {
-                "hostname": "esg-site-b.lab",
+                "hostname": "'${FQDN}'",
                 "search_domains": [
                         "'${DOMAIN}'"
                 ],
@@ -1545,7 +1545,8 @@ EDGEID=$(get_transport_node "edge-1")
 if [ "${EDGEID}" == "" ]
 then
         EDGE_IP="${SUBNET}.54"
-        create_edge_node "edge-1" "${UPLINKPROFILEID}" "${IPPOOLID}" "${OVLYTZID}" "${VLANTZID}" "${CLUSTERCCID}" "${COMPUTE_ID}" "${STORAGE_ID}" "${MANAGEMENT_NETWORK_ID}" "${EDGE_IP}"
+        FQDN="edge-1.${CPOD_NAME_LOWER}.${ROOT_DOMAIN}"
+        create_edge_node "edge-1" "${UPLINKPROFILEID}" "${IPPOOLID}" "${OVLYTZID}" "${VLANTZID}" "${CLUSTERCCID}" "${COMPUTE_ID}" "${STORAGE_ID}" "${MANAGEMENT_NETWORK_ID}" "${EDGE_IP}" "${FQDN}"
 else
         echo "  edge-1 is present"
 fi
@@ -1556,7 +1557,8 @@ EDGEID=$(get_transport_node "edge-2")
 if [ "${EDGEID}" == "" ]
 then
         EDGE_IP="${SUBNET}.55"
-        create_edge_node "edge-2" "${UPLINKPROFILEID}" "${IPPOOLID}" "${OVLYTZID}" "${VLANTZID}" "${CLUSTERCCID}" "${COMPUTE_ID}" "${STORAGE_ID}" "${MANAGEMENT_NETWORK_ID}" "${EDGE_IP}"
+        FQDN="edge-2.${CPOD_NAME_LOWER}.${ROOT_DOMAIN}"
+        create_edge_node "edge-2" "${UPLINKPROFILEID}" "${IPPOOLID}" "${OVLYTZID}" "${VLANTZID}" "${CLUSTERCCID}" "${COMPUTE_ID}" "${STORAGE_ID}" "${MANAGEMENT_NETWORK_ID}" "${EDGE_IP}" "${FQDN}"
 else
         echo "  edge-2 is present"
 fi

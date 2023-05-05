@@ -233,7 +233,6 @@ check_transport_zone() {
                 #TZCOUNT=$(echo ${TZINFO} | jq .result_count)           
                 echo "${TZINFO}" > /tmp/tz-json
                 echo $TZINFO |jq '.results[] | select (.display_name =="'$TZNAME'")'
-                
         else
                 echo "  error getting transport zones"
                 echo ${HTTPSTATUS}
@@ -847,7 +846,7 @@ create_segment() {
         then
                 SEGMENTINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
                 echo "  ${SEGMENTNAME} created succesfully"
-                echo ${SEGMENTINFO}
+                # echo ${SEGMENTINFO} |jq .
         else
                 echo "  error creating segment : ${TNCID}"
                 echo ${HTTPSTATUS}
@@ -1213,8 +1212,6 @@ then
 else
         echo "  edge-uplink-trunk-2 - present"
 fi
-
-
 
 
 # ===== create edge nodes =====

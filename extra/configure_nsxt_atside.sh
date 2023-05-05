@@ -811,7 +811,7 @@ get_segment(){
                                 echo $SEGMENTSINFO |jq -r '.results[] | select (.display_name =="'$SEGMENTNAME'") | .id'
                         fi
                 else
-                        echo "  No segments listed via segments"
+                        echo ""
                 fi
         else
                 echo "  error getting segments"

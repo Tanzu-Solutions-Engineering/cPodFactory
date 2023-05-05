@@ -793,7 +793,7 @@ loop_wait_host_state(){
 get_segment(){
         #$1 segments name to look for
         #returns json
- 
+        SEGMENTNAME=$1
         RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/policy/api/v1/infra/segments)
         HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
 
@@ -804,7 +804,12 @@ get_segment(){
                 echo $SEGMENTSINFO > /tmp/segment-json 
                 if [[ ${SEGMENTSCOUNT} -gt 0 ]]
                 then
-                        echo $SEGMENTSINFO |jq -r '.results[] | [.display_name, .id] |@tsv'
+                        if [ "$SEGMENTNAME" == "" ]
+                        then
+                                echo $SEGMENTSINFO |jq -r '.results[] | [.display_name, .id] |@tsv'
+                        else
+                                echo $SEGMENTSINFO |jq -r '.results[]  select (.display_name =="'$SEGMENTNAME'") | .id'
+                        fi
                 else
                         echo "  No segments listed via segments"
                 fi
@@ -814,6 +819,41 @@ get_segment(){
                 echo ${RESPONSE}
                 exit
         fi
+}
+
+create_segment() {
+        #$1 profile name string
+        #$2 VLAN ID
+        #returns json
+        SEGMENTNAME=$1
+        TZID=$2
+        TEAMINGPOLICY=$3
+
+        SEGMENT_JSON='{
+        "display_name": "'${SEGMENTNAME}'",
+        "vlan_ids": ["0-4094"],
+        "transport_zone_path": "/infra/sites/default/enforcement-points/default/transport-zones/'${TZID}'",
+        "advanced_config": {
+        "uplink_teaming_policy_name": "'${TEAMINGPOLICY}'"
+        }
+        }'
+
+        SCRIPT="/tmp/SEGMENT_JSON"
+        echo ${SEGMENT_JSON} > ${SCRIPT}
+        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD}  -H 'Content-Type: application/json' -X PUT -d @${SCRIPT} https://${NSXFQDN}/policy/api/v1/infra/segments/${SEGMENTNAME})
+        HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+        if [ $HTTPSTATUS -eq 200 ]
+        then
+                SEGMENTINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+                echo "  ${SEGMENTNAME} created succesfully"
+                echo ${SEGMENTINFO}
+        else
+                echo "  error creating segment : ${TNCID}"
+                echo ${HTTPSTATUS}
+                echo ${RESPONSE}
+                exit
+        fi
+
 }
 
 ###################
@@ -1155,7 +1195,24 @@ fi
 # ===== create nsx segments for edge vms =====
 # edge-uplink-trunk-1 - tz = host-vlan-tz - teaming policy : host-uplink-1 - vlan : 0-4094
 # edge-uplink-trunk-2 - tz = host-vlan-tz - teaming policy : host-uplink-2 - vlan : 0-4094
-get_segment
+echo "Processing segments"
+echo
+if [ "$(get_segment "edge-uplink-trunk-1")" == "" ]
+then
+        TZID=$(get_transport_zone_id "host-vlan-tz")
+        create_segment "edge-uplink-trunk-1" "$TZID" "host-uplink-1"
+else
+        echo "  edge-uplink-trunk-1 - present"
+fi
+echo
+if [ "$(get_segment "edge-uplink-trunk-2")" == "" ]
+then
+        TZID=$(get_transport_zone_id "host-vlan-tz")
+        create_segment "edge-uplink-trunk-2" "$TZID" "host-uplink-2"
+else
+        echo "  edge-uplink-trunk-2 - present"
+fi
+
 
 
 

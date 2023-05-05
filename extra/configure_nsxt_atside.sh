@@ -773,6 +773,19 @@ create_transport_node_collections() {
 
 }
 
+loop_wait_host_state(){
+        HOSTSTATE=$(get_host-transport-nodes-state)
+        echo "$HOSTSTATE"
+        INPROGRESS=$(echo "$HOSTSTATE" | grep -c "in_progress")
+        while [[ $INPROGRESS -gt 0 ]]
+        do
+                echo "$HOSTSTATE"
+                sleep 10
+                HOSTSTATE=$(get_host-transport-nodes-state)
+                INPROGRESS=$(echo "$HOSTSTATE" | grep -c "in_progress")
+        done
+
+}
 
 ###################
 CPOD_NAME="cpod-$1"
@@ -1102,10 +1115,11 @@ then
         TNCID=$(echo ${TNC} |jq -r '.results[] | select (.compute_collection_id == "'${CLUSTERCCID}'") | .unique_id ' )
         echo $TNCID
         echo "  Cluster Collection State :  $(get_transport_node_collections_state ${TNCID})"
-        get_host-transport-nodes-state
+        loop_wait_host_state
 else
-        echo "  do something"
+        echo "  Configuring NSX on hosts"
         create_transport_node_collections "${CLUSTERCCID}" "${HTNPROFILENAME}"
+        loop_wait_host_state
 fi
 
 

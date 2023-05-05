@@ -788,7 +788,7 @@ get_host-transport-nodes() {
                 then
                         echo $CCINFO |jq -r '.results[] | [.display_name, .id] |@tsv'
                 else
-                        echo "  No host transport nodes listed via host-transport-nodes"
+                        echo ""
                 fi
         else
                 echo "  error getting host-transport-nodes"
@@ -936,6 +936,38 @@ create_segment() {
                 exit
         fi
 
+}
+
+get_transport_node(){
+        #$1 segments name to look for
+        #returns json
+        EDGENODENAME=$1
+
+        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/api/v1/transport-nodes)
+        HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+
+        if [ $HTTPSTATUS -eq 200 ]
+        then
+                TNINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+                TNCOUNT=$(echo ${TNINFO} | jq .result_count)
+                echo $TNINFO > /tmp/edgenodes-json 
+                if [[ ${TNCOUNT} -gt 0 ]]
+                then
+                        if [ "$EDGENODENAME" == "" ]
+                        then
+                                echo "${TNINFO}" |jq -r '.results[] | [.display_name, .id] |@tsv'
+                        else
+                                echo "${TNINFO}" |jq -r '.results[] | select (.display_name =="'$EDGENODENAME'") | .id'
+                        fi
+                else
+                        echo ""
+                fi
+        else
+                echo "  error getting transport-nodes"
+                echo ${HTTPSTATUS}
+                echo ${RESPONSE}
+                exit
+        fi
 }
 
 ###################
@@ -1297,6 +1329,11 @@ fi
 
 # deploy edge code here
 
+EDGE1="edge-1.${CPOD_NAME_LOWER}.${ROOT_DOMAIN}"
+get_transport_node "${EDGE1}"
+
+EDGE2="edge-2.${CPOD_NAME_LOWER}.${ROOT_DOMAIN}"
+get_transport_node "${EDGE2}"
 
 # check edge node status - Not Available -> ready  in "configuration state" - "Registration Pending" - Success
 

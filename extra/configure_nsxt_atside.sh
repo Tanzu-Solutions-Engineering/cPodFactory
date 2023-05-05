@@ -479,7 +479,7 @@ get_ip_pool_id() {
                 IPPOOLCOUNT=$(echo ${IPPOOLINFO} | jq .result_count)                
                 if [[ ${IPPOOLCOUNT} -gt 0 ]]
                 then
-                        IPPOOLID=$(echo $IPPOOLINFO |jq -r '.results[] | select (.display_name =="'$IPPOOLNAME'") | .id')
+                        IPPOOLID=$(echo $IPPOOLINFO |jq -r '.results[] | select (.display_name =="'$IPPOOLNAME'") | .unique_id')
                         echo $IPPOOLID
                 fi
         else
@@ -1611,7 +1611,7 @@ VLANTZID=$(get_transport_zone_path "edge-vlan-tz")
 UPLINKPROFILEID=$(get_uplink_profile_path "edge-profile")
 
 #get_ip_pool_all
-IPPOOLID=$(get_ip_pool_path "TEP-pool")
+IPPOOLID=$(get_ip_pool_id "TEP-pool")
 
 # deploy edge code here
 echo "edge-1"

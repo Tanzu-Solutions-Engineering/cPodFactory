@@ -217,6 +217,7 @@ get_uplink_profile_id() {
         if [ $HTTPSTATUS -eq 200 ]
         then
                 PROFILESINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+                echo "${PROFILESINFO}" > /tmp/profile-json
                 echo $PROFILESINFO |jq -r '.results[] | select (.display_name =="'$PROFILENAME'") | .id'
         else
                 echo "  error getting uplink profiles"

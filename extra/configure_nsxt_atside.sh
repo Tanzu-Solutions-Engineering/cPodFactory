@@ -276,7 +276,6 @@ create_uplink_profile() {
         "transport_vlan": '$VLANID',
         "overlay_encap": "GENEVE",
         "resource_type": "PolicyUplinkHostSwitchProfile",
-        "id": "'$PROFILENAME'",
         "display_name": "'$PROFILENAME'"
         }'
 

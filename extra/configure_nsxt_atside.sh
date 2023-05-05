@@ -228,6 +228,28 @@ get_uplink_profile_id() {
 
 }
 
+get_uplink_profile_path() {
+        #$1 profile name string
+        #returns json
+        PROFILENAME=$1
+        
+        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/policy/api/v1/infra/host-switch-profiles)
+        HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+
+        if [ $HTTPSTATUS -eq 200 ]
+        then
+                PROFILESINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+                echo "${PROFILESINFO}" > /tmp/profile-json
+                echo $PROFILESINFO |jq -r '.results[] | select (.display_name =="'$PROFILENAME'") | .path'
+        else
+                echo "  error getting uplink profiles"
+                echo ${HTTPSTATUS}
+                echo ${RESPONSE}
+                exit
+        fi
+
+}
+
 create_uplink_profile() {
         #$1 profile name string
         #$2 VLAN ID
@@ -1540,7 +1562,9 @@ fi
 OVLYTZID=$(get_transport_zone_id "overlay-tz")
 VLANTZID=$(get_transport_zone_id "edge-vlan-tz")
 
-UPLINKPROFILEID=$(get_uplink_profile_id "edge-profile")
+#UPLINKPROFILEID=$(get_uplink_profile_id "edge-profile")
+UPLINKPROFILEID=$(get_uplink_profile_path "edge-profile")
+
 get_ip_pool_all
 IPPOOLID=$(get_ip_pool_id "TEP-pool")
 

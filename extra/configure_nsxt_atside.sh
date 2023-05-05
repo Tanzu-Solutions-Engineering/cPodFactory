@@ -754,7 +754,7 @@ create_transport_node_collections() {
 
         SCRIPT="/tmp/TNC_JSON"
         echo ${TNC_JSON} > ${SCRIPT}
-        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD}  -H 'Content-Type: application/json' -X PUT -d @${SCRIPT} https://${NSXFQDN}/policy/api/v1/infra/sites/default/enforcement-points/${EXISTINGEPRP}/transport-node-collections/TNC)
+        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD}  -H 'Content-Type: application/json' -X PUT -d @${SCRIPT} https://${NSXFQDN}/policy/api/v1/infra/sites/default/enforcement-points/${EXISTINGEPRP}/transport-node-collections/${TNPROFILEID})
         HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
         #echo $RESPONSE
         #echo $HTTPSTATUS

@@ -368,6 +368,28 @@ get_transport_zone_id() {
 
 }
 
+get_transport_zone_path() {
+        #$1 transport zone name string
+        #returns json
+        TZNAME=$1
+
+        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/policy/api/v1/infra/sites/default/enforcement-points/${EXISTINGEPRP}/transport-zones)
+        HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+
+        if [ $HTTPSTATUS -eq 200 ]
+        then
+                TZINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+                #TZCOUNT=$(echo ${TZINFO} | jq .result_count)                
+                echo $TZINFO |jq -r '.results[] | select (.display_name =="'$TZNAME'") | .path'
+        else
+                echo "  error getting transport zones"
+                echo ${HTTPSTATUS}
+                echo ${RESPONSE}
+                exit
+        fi
+
+}
+
 create_transport_zone() {
         #$1 transport zone string
         #$2 tz_type (OVERLAY_STANDARD, VLAN_BACKED )
@@ -1559,8 +1581,8 @@ then
         MANAGEMENT_NETWORK_ID=$(govc ls -json=true network |jq -r '.elements[].Object.Summary | select (.Name =="VM Network") | .Network.Value')
 fi
 
-OVLYTZID=$(get_transport_zone_id "overlay-tz")
-VLANTZID=$(get_transport_zone_id "edge-vlan-tz")
+OVLYTZID=$(get_transport_zone_path "overlay-tz")
+VLANTZID=$(get_transport_zone_path "edge-vlan-tz")
 
 #UPLINKPROFILEID=$(get_uplink_profile_id "edge-profile")
 UPLINKPROFILEID=$(get_uplink_profile_path "edge-profile")

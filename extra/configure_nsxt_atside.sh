@@ -1562,7 +1562,7 @@ echo
 if [ "$(get_segment "edge-uplink-trunk-1")" == "" ]
 then
         TZID=$(get_transport_zone_id "host-vlan-tz")
-        create_segment "edge-uplink-trunk-1" "$TZID" "host-profile-uplink-1"
+        create_segment "edge-uplink-trunk-1" "$TZID" "edge-uplink-1"
 else
         echo "  edge-uplink-trunk-1 - present"
 fi
@@ -1570,7 +1570,7 @@ echo
 if [ "$(get_segment "edge-uplink-trunk-2")" == "" ]
 then
         TZID=$(get_transport_zone_id "host-vlan-tz")
-        create_segment "edge-uplink-trunk-2" "$TZID" "host-profile-uplink-2"
+        create_segment "edge-uplink-trunk-2" "$TZID" "edge-uplink-2"
 else
         echo "  edge-uplink-trunk-2 - present"
 fi

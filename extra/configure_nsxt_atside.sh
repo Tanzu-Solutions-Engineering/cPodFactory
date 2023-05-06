@@ -1608,7 +1608,7 @@ OVLYTZID=$(get_transport_zone_path "overlay-tz")
 VLANTZID=$(get_transport_zone_path "edge-vlan-tz")
 
 #UPLINKPROFILEID=$(get_uplink_profile_id "edge-profile")
-UPLINKPROFILEID=$(get_uplink_profile_path "edge-profile")
+UPLINKPROFILEID=$(get_uplink_profile_id "edge-profile")
 
 #get_ip_pool_all
 IPPOOLID=$(get_ip_pool_id "TEP-pool")

@@ -1059,7 +1059,7 @@ create_edge_node() {
         "host_switch_spec": {
                 "host_switches": [
                 {
-                        "host_switch_name": "N-DVS-01",
+                        "host_switch_name": "nsxHostSwitch",
                         "host_switch_type": "NVDS",
                         "host_switch_mode": "STANDARD",
                         "host_switch_profile_ids": [
@@ -1583,7 +1583,7 @@ fi
 # set computer manager: vcenter - cluster - datastore : vsandatastore
 # node settings : ip : mgmt.54/24 - GW - Portgroup (vm network / vds pg : mgmt - search domain - dns - ntp )
 # "configure nsx" - "new node switch" - switch name nsxHostSwitch - TZ : edge-vlan-tz + overlay-tz - uplink : edge-profile - ip assignment : ip pool - ip pool : TEP-pool - /
-#    teaming policy uplink mapping : type "vlan segment" : "edge-uplink-trunk-1" / 2
+# teaming policy uplink mapping : type "vlan segment" : "edge-uplink-trunk-1" / 2
 
 #get vCenter objects details
 

@@ -111,22 +111,48 @@ ssh -o LogLevel=error ${NAME_LOWER} "systemctl restart dnsmasq"
 ssh -o LogLevel=error ${NAME_LOWER} "systemctl restart bgpd"
 
 echo "JSON is genereated: ${SCRIPT}"
+echo
 
-echo ""
-echo "Hit enter or ctrl-c to launch prereqs validation:"
-read answer
-curl -i -k -u admin:${PASSWORD} -H 'Content-Type: application/json' -H 'Accept: application/json' -d @${SCRIPT} -X POST https://cloudbuilder.${NAME_LOWER}.${ROOT_DOMAIN}/v1/sddcs/validations
-echo ""
-echo ""
-echo "Check prereqs in CloudBuilder:"
-echo "check url : https://cloudbuilder.${NAME_LOWER}.${ROOT_DOMAIN}"
-echo "using pwd : ${PASSWORD}"
-echo 
-echo "when validation confirmed,"
-echo "Hit enter or ctrl-c to launch deployment:"
-read answer
+read -n1 -s -r -p $'Hit enter to launch prereqs validation or ctrl-c to stop.\n' key
+
+curl -s -i -k -u admin:${PASSWORD} -H 'Content-Type: application/json' -H 'Accept: application/json' -d @${SCRIPT} -X POST https://cloudbuilder.${NAME_LOWER}.${ROOT_DOMAIN}/v1/sddcs/validations
+
+
+echo "Submitting SDDC validation"
+VALIDATIONJSON=$(curl -s -i -k -u admin:${PASSWORD} -H 'Content-Type: application/json' -H 'Accept: application/json' -d @${SCRIPT} -X POST https://cloudbuilder.${NAME_LOWER}.${ROOT_DOMAIN}/v1/sddcs/validations)
+VALIDATIONID=$(echo ${VALIDATIONJSON} | jq .id | sed 's/"//g')
+echo ${VALIDATIONID}
+
+echo "Querying validation result"
+VALIDATIONRESULT=$(curl -s -i -k -u admin:${PASSWORD} -H 'Content-Type: application/json' -H 'Accept: application/json' -X GET https://cloudbuilder.${NAME_LOWER}.${ROOT_DOMAIN}/v1/sddcs/validations/${VALIDATIONID}/report)
+EXECUTIONSTATUS=$(echo ${VALIDATIONRESULT} | jq .executionStatus | sed 's/"//g')
+
+while [[ "${EXECUTIONSTATUS}" != "COMPLETED" ]]
+do
+	case  ${EXECUTIONSTATUS} in 
+		IN_PROGRESS)
+			echo "IN_PROGRESS"
+			;;
+		FAILED)
+			echo "FAILED"
+			echo ${VALIDATIONRESULT} | jq .
+			echo "stopping script"
+			exit 1
+			;;
+		*)
+			echo ${EXECUTIONSTATUS}
+			;;
+	esac
+	sleep 10
+	VALIDATIONRESULT=$(curl -s -i -k -u admin:${PASSWORD} -H 'Content-Type: application/json' -H 'Accept: application/json' -X GET https://cloudbuilder.${NAME_LOWER}.${ROOT_DOMAIN}/v1/sddcs/validations/${VALIDATIONID}/report)
+	EXECUTIONSTATUS=$(echo ${VALIDATIONRESULT} | jq .executionStatus | sed 's/"//g')
+done
+
+
+read -n1 -s -r -p $'Hit enter to launch deployment or ctrl-c to stop.\n' key
+
 curl -i -k -u admin:${PASSWORD} -H 'Content-Type: application/json' -H 'Accept: application/json' -d @${SCRIPT} -X POST https://cloudbuilder.${NAME_LOWER}.${ROOT_DOMAIN}/v1/sddcs
-echo ""
+echo
 echo "Check deployment in CloudBuilder:"
 echo "check url : https://cloudbuilder.${NAME_LOWER}.${ROOT_DOMAIN}"
 echo "using pwd : ${PASSWORD}"

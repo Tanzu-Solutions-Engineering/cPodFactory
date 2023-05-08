@@ -38,7 +38,8 @@ echo "=== Select CPOD version to deploy ==="
 echo "====================================="
 echo
 
-options=$(ls vcf*.sh)
+
+options=$(ls vsphere*.sh)
 options=${options}" Quit"
 
 select VERSION in ${options}; do 
@@ -59,24 +60,22 @@ echo
 test_params_file ${VERSION}
 
 echo
-echo "============================================"
-echo "=== creating cpod / Cloudbuilder / WLD01 ==="
-echo "============================================"
+echo "======================================="
+echo "=== creating cpod / vsan / NSXT v4  ==="
+echo "======================================="
 echo
 
 cpodctl create $1 $2 $3
-cpodctl cloudbuilder $1 $3
-./compute/generate_cloudbuilder.sh $1 $3
-
-read -n1 -s -r -p $'press enter to create first wld.\n' key
-
-cpodctl create $1-wld01 $2 $3
-./compute/generate_sddc_vi.sh $1 $1-wld01
+cpodctl vcsa $1 $3
+./extra/create_vds_nsxt.sh $1 $3
+./extra/enable_drs_vsan.sh $1 $3
+./extra/deploy_nsxt_mgr_v4.sh $1 $3
 
 #get data
 CPOD_NAME=$( echo ${1} | tr '[:lower:]' '[:upper:]' )
 NAME_LOWER=$( echo ${HEADER}-${CPOD_NAME} | tr '[:upper:]' '[:lower:]' )
 PASSWORD=$( ${EXTRA_DIR}/passwd_for_cpod.sh ${CPOD_NAME} ) 
+
 
 END=$( date +%s )
 TIME=$( expr ${END} - ${START} )
@@ -87,10 +86,7 @@ echo "===  creation is finished ==="
 echo "=== In ${TIME} Seconds ==="
 echo "============================="
 
-echo "=== connect to cpod vcsa ==="
-echo "=== url: https://vcsa.${NAME_LOWER}.${ROOT_DOMAIN}/ui"
-echo "== user : administrator@${NAME_LOWER}.${ROOT_DOMAIN}"
-echo "=== pwd : ${PASSWORD}"
-echo "============================="
+echo
+./info_cpod.sh ${NAME_LOWER}
 
 export LOGGING=""

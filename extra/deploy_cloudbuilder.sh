@@ -6,17 +6,18 @@
 [ "${1}" == "" ] && echo "usage: ${0} <cPod Name> <owner email>" && exit 1
 
 if [ -f "${1}" ]; then
-        . ./${COMPUTE_DIR}/"${1}"
+	. ./${COMPUTE_DIR}/"${1}"
 else
-        SUBNET=$( ./${COMPUTE_DIR}/cpod_ip.sh ${1} )
-
-        [ $? -ne 0 ] && echo "error: file or env '${1}' does not exist" && exit 1
-
-        CPOD=${1}
+	SUBNET=$( ./${COMPUTE_DIR}/cpod_ip.sh ${1} )
+	[ $? -ne 0 ] && echo "error: file or env '${1}' does not exist" && exit 1
+	CPOD=${1}
 	unset DATASTORE
-        . ./${COMPUTE_DIR}/cpod-xxx_env
-	. ./${EXTRA_DIR}/functions.sh
+	. ./${COMPUTE_DIR}/cpod-xxx_env
 fi
+
+### functions ####
+
+source ./extra/functions.sh
 
 ### Local vars ####
 
@@ -27,8 +28,6 @@ OVA=${OVA_CLOUDBUILDER}
 
 ###################
 
-TEMP=/tmp/$$
-
 CPOD_NAME="cpod-$1"
 NAME_HIGHER=$( echo ${1} | tr '[:lower:]' '[:upper:]' )
 CPOD_NAME_LOWER=$( echo ${CPOD_NAME} | tr '[:upper:]' '[:lower:]' )
@@ -37,6 +36,10 @@ if [ "${LINE}" != "" ] && [ "${LINE}" != "${2}" ]; then
         echo "Error: You're not allowed to deploy"
         exit 1
 fi
+
+VAPP="cPod-${NAME_HIGHER}"
+NAME="${VAPP}-${HOSTNAME_CLOUDBUILDER}"
+CPOD_PORTGROUP="${CPOD_NAME_LOWER}"
 
 echo "Testing if something is already on the same @IP..."
 STATUS=$( ping -c 1 ${IP} 2>&1 > /dev/null ; echo $? )
@@ -51,52 +54,30 @@ PASSWORD=$( ./${EXTRA_DIR}/passwd_for_cpod.sh ${1} )
 
 export MYSCRIPT=/tmp/$$
 
-if [ "${CLOUDBUILDER_PLACEMENT}" == "ATSIDE" ]; then
+cat << EOF > ${MYSCRIPT}
+export LANG=en_US.UTF-8
+cd /root/cPodFactory/ovftool
+./ovftool --acceptAllEulas --X:injectOvfEnv --allowExtraConfig --powerOn  --sourceType=OVA  \
+--X:logFile=/tmp/ovftool.log --X:logLevel=verbose --X:logTransferHeaderData \
+--name=${NAME} --datastore=${VCENTER_DATASTORE} --noSSLVerify \
+--diskMode=thin \
+--net:"Network 1"="${CPOD_PORTGROUP}" \
+--prop:"FIPS_ENABLE"= \
+--prop:"guestinfo.ADMIN_USERNAME"=admin \
+--prop:"guestinfo.ADMIN_PASSWORD"="${PASSWORD}" \
+--prop:"guestinfo.ROOT_PASSWORD"="${PASSWORD}" \
+--prop:"guestinfo.hostname"=${HOSTNAME}.${DOMAIN} \
+--prop:"guestinfo.ip0"=${IP} \
+--prop:"guestinfo.netmask0"=255.255.255.0 \
+--prop:"guestinfo.gateway"=${GATEWAY} \
+--prop:"guestinfo.DNS"=${DNS} \
+--prop:"guestinfo.domain"=${DOMAIN} \
+--prop:"guestinfo.searchpath"=${DOMAIN} \
+--prop:"guestinfo.ntp"=${GATEWAY} \
+${OVA} \
+'vi://${VCENTER_ADMIN}:${VCENTER_PASSWD}@${VCENTER}/${VCENTER_DATACENTER}/host/${VCENTER_CLUSTER}/Resources/cPod-Workload/${VAPP}'
+EOF
+sh ${MYSCRIPT}
 
-	VAPP="cPod-${NAME_HIGHER}"
-	NAME="${VAPP}-${HOSTNAME_CLOUDBUILDER}"
-	DATASTORE=${VCENTER_DATASTORE}
-
-	case "${BACKEND_NETWORK}" in
-		NSX-V)
-			PORTGROUP=$( ${NETWORK_DIR}/list_logicalswitch.sh ${NSX_TRANSPORTZONE} | jq 'select(.name == "'${CPOD_NAME_LOWER}'") | .portgroup' | sed 's/"//g' )
-			CPOD_PORTGROUP=$( ${COMPUTE_DIR}/list_portgroup.sh | jq 'select(.network == "'${PORTGROUP}'") | .name' | sed 's/"//g' )
-			;;
-		NSX-T)
-			CPOD_PORTGROUP="${CPOD_NAME_LOWER}"
-                        ;;
-		VLAN)
-			CPOD_PORTGROUP="${CPOD_NAME_LOWER}"
-			;;
-	esac
-
-	govc import.spec ${OVA_CLOUDBUILDER} > ${TEMP}
-
-	cat ${TEMP} | jq '.IPAllocationPolicy="fixedPolicy"' > ${TEMP}-tmp
-        cp ${TEMP}-tmp ${TEMP} ; rm ${TEMP}-tmp
-	
-	replace_json ${TEMP} "PropertyMapping" "Key" "guestinfo.ADMIN_PASSWORD" "Value" "${PASSWORD}"
-	replace_json ${TEMP} "PropertyMapping" "Key" "guestinfo.ROOT_PASSWORD" "Value" "${PASSWORD}"
-	replace_json ${TEMP} "PropertyMapping" "Key" "guestinfo.hostname" "Value" "${HOSTNAME}"
-	replace_json ${TEMP} "PropertyMapping" "Key" "guestinfo.ip0" "Value" "${IP}"
-	replace_json ${TEMP} "PropertyMapping" "Key" "guestinfo.netmask0" "Value" "${NETMASK}"
-	replace_json ${TEMP} "PropertyMapping" "Key" "guestinfo.gateway" "Value" "${GATEWAY}"
-	replace_json ${TEMP} "PropertyMapping" "Key" "guestinfo.DNS" "Value" "${DNS}"
-	replace_json ${TEMP} "PropertyMapping" "Key" "guestinfo.domain" "Value" "${DOMAIN}"
-	replace_json ${TEMP} "PropertyMapping" "Key" "guestinfo.searchpath" "Value" "${DOMAIN}"
-	replace_json ${TEMP} "PropertyMapping" "Key" "guestinfo.ntp" "Value" "${GATEWAY}"
-	replace_json ${TEMP} "NetworkMapping" "Name" "Network 1" "Network" "${CPOD_PORTGROUP}"
-
-	export GOVC_NETWORK="${CPOD_PORTGROUP}"
-	export GOVC_RESOURCE_POOL="/${GOVC_DATACENTER}/host/${VCENTER_CLUSTER}/Resources/cPod-Workload/${VAPP}"
-
-	govc import.ova -options=${TEMP} -name="${NAME}" ${OVA}
-	govc vm.power -on ${NAME}
-
-else
-
-	echo "rien!"
-
-fi
-
-rm ${TEMP}
+echo "Adding entries into hosts of ${CPOD_NAME_LOWER}."
+add_to_cpodrouter_hosts ${IP} ${HOSTNAME} ${CPOD_NAME_LOWER}

@@ -184,7 +184,7 @@ loop_wait_compute_manager_status(){
         echo
         MGRSTATUS=$(get_compute_manager_status "${MGRID}")
         echo "${MGRSTATUS}"
-        INPROGRESS=$(echo "${MGRSTATUS}" | jq .connection_status)
+        INPROGRESS=$(echo "${MGRSTATUS}" | jq -r .connection_status)
         while [[ "$INPROGRESS" != "UP" ]]
         do
                 echo "${MGRSTATUS}"

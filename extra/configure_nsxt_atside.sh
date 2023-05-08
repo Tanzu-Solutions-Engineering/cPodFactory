@@ -1543,16 +1543,16 @@ get_host-transport-nodes
 TNC=$(check_transport_node_collections)
 if [ "${TNC}" != ""  ]
 then
-        #TNCID=$(echo ${TNC} |jq -r '.results[] | select (.compute_collection_id == "'${CLUSTERCCID}'") | .unique_id ' )
-        #echo "TNCID: $TNCID"
-        #echo "  Cluster Collection State :  $(get_transport_node_collections_state ${TNCID})"
+        TNCID=$(echo ${TNC} |jq -r '.results[] | select (.compute_collection_id == "'${CLUSTERCCID}'") | .unique_id ' )
+        echo "TNCID: $TNCID"
+        echo "  Cluster Collection State :  $(get_transport_node_collections_state ${TNCID})"
         loop_wait_host_state
 else
         echo "  Configuring NSX on hosts"
         create_transport_node_collections "${CLUSTERCCID}" "${HTNPROFILENAME}"
         loop_wait_host_state
 fi
-
+exit
 
 # ===== create nsx segments for edge vms =====
 # edge-uplink-trunk-1 - tz = host-vlan-tz - teaming policy : host-uplink-1 - vlan : 0-4094

@@ -82,6 +82,42 @@ get_compute_manager() {
         fi
 }
 
+get_compute_manager_id() {
+        # $1 = compute manager name
+        # returns json
+        MGRNAME=$1
+
+        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/api/v1/fabric/compute-managers)
+        HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+
+        if [ $HTTPSTATUS -eq 200 ]
+        then
+                MANAGERSINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+                echo "${MANAGERSINFO}" > /tmp/mgrid_json
+                MANAGERSCOUNT=$(echo $MANAGERSINFO | jq .result_count)
+                if [[ ${MANAGERSCOUNT} -gt 0 ]]
+                then
+                        EXISTINGMNGR=$(echo "${MANAGERSINFO}" | jq -r '.results[] | select (.server == "'${MGRNAME}'") | .server')
+                        if [[ "${EXISTINGMNGR}" == "${MGRNAME}" ]]
+                        then
+                                MGRID=$(echo "${MANAGERSINFO}" | jq -r '.results[] | select (.server == "'${MGRNAME}'") | .id')
+                                echo "${MGRID}"
+                        else
+                                echo ""
+                        fi
+                else
+                        echo ""
+                fi
+        else
+                echo "  error getting managers id"
+                echo ${HTTPSTATUS}
+                echo ${RESPONSE}
+                exit
+        fi
+}
+
+
+
 add_computer_manager() {
         #$1 Compute Manager fqdn
         MGRFQDN=$1
@@ -1360,8 +1396,8 @@ MGRTEST=$(get_compute_manager "${MGRNAME}")
 if [ "${MGRTEST}" != "" ]
 then
         echo "  ${MGRTEST}"
-        MGRTEST=$(get_compute_manager "${MGRNAME}")
-        get_compute_manager_status "${MGRTEST}"
+        MGRID=$(get_compute_manager_id "${MGRNAME}")
+        get_compute_manager_status "${MGRID}"
 else
         echo "  Adding Compute Manager"
         add_computer_manager "${MGRNAME}"

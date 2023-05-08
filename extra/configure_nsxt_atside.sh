@@ -1648,8 +1648,11 @@ then
         MANAGEMENT_NETWORK_ID=$(govc ls -json=true network |jq -r '.elements[].Object.Summary | select (.Name =="VM Network") | .Network.Value')
 fi
 
-OVLYTZID=$(get_transport_zone_id "overlay-tz")
-VLANTZID=$(get_transport_zone_id "edge-vlan-tz")
+#OVLYTZID=$(get_transport_zone_id "overlay-tz")
+#VLANTZID=$(get_transport_zone_id "edge-vlan-tz")
+
+OVLYTZID=$(get_transport_zone_path "overlay-tz")
+VLANTZID=$(get_transport_zone_path "edge-vlan-tz")
 
 #UPLINKPROFILEID=$(get_uplink_profile_id "edge-profile")
 UPLINKPROFILEID=$(get_uplink_profile_path "edge-profile")

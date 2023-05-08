@@ -130,7 +130,7 @@ get_compute_manager_status() {
                 echo $MGRINFO > /tmp/mgrstatus-json 
                 if [[ "${MGRINFO}" != "" ]]
                 then
-                        echo "${MGRINFO}" | jq -r '[.registration_status, .connection_status] |@tsv'
+                        echo "${MGRINFO}" #| jq -r '[.registration_status, .connection_status] |@tsv'
                 fi
         else
                 echo "  error getting compute manager status"
@@ -1359,6 +1359,8 @@ MGRTEST=$(get_compute_manager "${MGRNAME}")
 if [ "${MGRTEST}" != "" ]
 then
         echo "  ${MGRTEST}"
+        MGRTEST=$(get_compute_manager "${MGRNAME}")
+        get_compute_manager_status "${MGRTEST}"
 else
         echo "  Adding Compute Manager"
         add_computer_manager "${MGRNAME}"

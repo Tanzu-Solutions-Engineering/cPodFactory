@@ -62,11 +62,11 @@ get_compute_manager() {
                 MANAGERSCOUNT=$(echo $MANAGERSINFO | jq .result_count)
                 if [[ ${MANAGERSCOUNT} -gt 0 ]]
                 then
-                        EXISTINGMNGR=$(echo "${MANAGERSINFO}" | jq '.results[] | select (.server == "'${MGRNAME}'") | .server')
+                        EXISTINGMNGR=$(echo "${MANAGERSINFO}" | jq -r '.results[] | select (.server == "'${MGRNAME}'") | .server')
                         if [[ "${EXISTINGMNGR}" == "${MGRNAME}" ]]
                         then
                                 echo "  existing manager set to : ${EXISTINGMNGR}"
-                                MGRID=$(echo "${MANAGERSINFO}" | jq '.results[] | select (.server == "'${MGRNAME}'") | .id')
+                                MGRID=$(echo "${MANAGERSINFO}" | jq -r '.results[] | select (.server == "'${MGRNAME}'") | .id')
                                 echo "  Manager id : ${MGRID}"
                         else
                                 echo "  ${EXISTINGMNGR} does not match ${MGRNAME}"

@@ -62,13 +62,14 @@ get_compute_manager() {
                 MANAGERSCOUNT=$(echo $MANAGERSINFO | jq .result_count)
                 if [[ ${MANAGERSCOUNT} -gt 0 ]]
                 then
-                        EXISTINGMNGR=$(echo $MANAGERSINFO| jq -r .results[0].server)
+                        EXISTINGMNGR=$(echo $MANAGERSINFO| jq -r | jq '.results[] | select (.server == "'${MGRNAME}'")')
                         if [[ "${EXISTINGMNGR}" == "${MGRNAME}" ]]
                         then
-                                echo "  existing manager set correctly : ${EXISTINGMNGR}"
-                                MGRID=$(echo $MANAGERSINFO| jq -r .results[0].id)
+                                echo "  existing manager set to : ${EXISTINGMNGR}"
+                                MGRID=$(echo ${MANAGERSINFO} | jq '.results[] | select (.server == "'${MGRNAME}'") | .id')
+                                echo "  Manager id : ${MGRID}"
                         else
-                                echo "  ${EXISTINGMNGR} does not match vcsa.${CPOD_NAME_LOWER}.${ROOT_DOMAIN}"
+                                echo "  ${EXISTINGMNGR} does not match ${MGRNAME}"
                         fi
                 else
                         echo ""

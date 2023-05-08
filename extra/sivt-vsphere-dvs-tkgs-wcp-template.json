@@ -1,0 +1,101 @@
+{
+	"envSpec": {
+		"envType": "tkgs-wcp",
+		"vcenterDetails": {
+			"vcenterAddress": "vcsa.###CPOD###.###DOMAIN###",
+			"vcenterSsoUser": "administrator@###CPOD###.###DOMAIN###",
+			"vcenterSsoPasswordBase64": "###PASSWORD64###",
+			"vcenterDatacenter": "###DATACENTER###",
+			"vcenterCluster": "Cluster",
+			"vcenterDatastore": "vsanDatastore",
+			"contentLibraryName": "",
+			"aviOvaName": ""
+		},
+		"marketplaceSpec": {
+			"refreshToken": "###TOKEN###"
+		},
+		"saasEndpoints": {
+			"tmcDetails": {
+				"tmcAvailability": "false",
+				"tmcRefreshToken": "",
+				"tmcInstanceURL": "",
+				"tmcSupervisorClusterName": "",
+				"tmcSupervisorClusterGroupName": ""
+			}
+		},
+		"infraComponents": {
+			"dnsServersIp": "###SUBNET###.1",
+			"searchDomains": "###CPOD###.###DOMAIN###",
+			"ntpServers": "###SUBNET###.1"
+		}
+	},
+	"tkgsComponentSpec": {
+		"controlPlaneSize": "SMALL",
+		"aviMgmtNetwork": {
+			"aviMgmtNetworkName": "vlan-###VLAN01###-NSXALB-Mgmt",
+			"aviMgmtNetworkGatewayCidr": "10.###VLAN###.1.1/24",
+			"aviMgmtServiceIpStartRange": "10.###VLAN###.1.5",
+			"aviMgmtServiceIpEndRange": "10.###VLAN###.1.254"
+		},
+		"aviComponents": {
+			"aviPasswordBase64": "###PASSWORD64###",
+			"aviBackupPassphraseBase64": "###PASSWORD64###",
+			"enableAviHa": "false",
+			"aviController01Ip": "10.###VLAN###.1.2",
+			"aviController01Fqdn": "nsxalb01.###CPOD###.###DOMAIN###",
+			"aviController02Ip": "",
+			"aviController02Fqdn": "",
+			"aviController03Ip": "",
+			"aviController03Fqdn": "",
+			"aviClusterIp": "",
+			"aviClusterFqdn": "",
+			"aviSize": "small",
+			"aviCertPath": "",
+			"aviCertKeyPath": ""
+		},
+		"tkgsVipNetwork": {
+			"tkgsVipNetworkName": "vlan-###VLAN03###-TKG-Mgmt-VIP",
+			"tkgsVipNetworkGatewayCidr": "10.###VLAN###.3.1/24",
+			"tkgsVipIpStartRange": "10.###VLAN###.3.2",
+			"tkgsVipIpEndRange": "10.###VLAN###.3.254"
+		},
+		"tkgsMgmtNetworkSpec": {
+			"tkgsMgmtNetworkName": "vlan-###VLAN02###-TKG-Mgmt-SharedSVC",
+			"tkgsMgmtNetworkGatewayCidr": "10.###VLAN###.2.1/24",
+			"tkgsMgmtNetworkStartingIp": "10.###VLAN###.2.5",
+			"tkgsMgmtNetworkDnsServers": "###SUBNET###.1",
+			"tkgsMgmtNetworkSearchDomains": "###CPOD###.###DOMAIN###",
+			"tkgsMgmtNetworkNtpServers": "###SUBNET###.1",
+			"subscribedContentLibraryName": ""
+		},
+		"tkgsStoragePolicySpec": {
+			"masterStoragePolicy": "vSAN Default Storage Policy",
+			"ephemeralStoragePolicy": "vSAN Default Storage Policy",
+			"imageStoragePolicy": "vSAN Default Storage Policy"
+		},
+		"tkgsPrimaryWorkloadNetwork": {
+			"tkgsPrimaryWorkloadPortgroupName": "vlan-###VLAN06###-TKG-Workload-Cluster-01",
+			"tkgsPrimaryWorkloadNetworkName": "workload-network",
+			"tkgsPrimaryWorkloadNetworkGatewayCidr": "10.###VLAN###.6.1/24",
+			"tkgsPrimaryWorkloadNetworkStartRange": "10.###VLAN###.6.50",
+			"tkgsPrimaryWorkloadNetworkEndRange": "10.###VLAN###.6.150",
+			"tkgsWorkloadDnsServers": "###SUBNET###.1",
+			"tkgsWorkloadNtpServers": "###SUBNET###.1",
+			"tkgsWorkloadServiceCidr": "10.96.0.0/22"
+		},
+		"tkgServiceConfig": {
+			"proxySpec": {
+				"enableProxy": "false",
+				"httpProxy": "",
+				"httpsProxy": "",
+				"noProxy": "",
+				"proxyCert": ""
+			},
+			"defaultCNI": "antrea",
+			"additionalTrustedCAs": {
+				"paths": [],
+				"endpointUrls": []
+			}
+		}
+	}
+}

@@ -56,25 +56,6 @@ else
         exit 1
 fi
 
-
-###################
-# create DHCP segments
-
-if [ ${VLAN} -gt 40 ]; then
-
-        #add dhcp segments
-        add_to_cpodrouter_dnsmasq "dhcp-range=eth2.${VLAN}2:eth2,10.${VLAN}.2.2,10.${VLAN}.2.254,255.255.255.0,12h" ${CPOD_NAME_LOWER}
-        add_to_cpodrouter_dnsmasq "dhcp-range=eth2.${VLAN}6:eth2,10.${VLAN}.6.2,10.${VLAN}.6.254,255.255.255.0,12h" ${CPOD_NAME_LOWER}  
-        add_to_cpodrouter_dnsmasq "dhcp-range=eth2.${VLAN}7:eth2,10.${VLAN}.7.2,10.${VLAN}.7.254,255.255.255.0,12h" ${CPOD_NAME_LOWER}  
-else
-        #add dhcp segments
-        add_to_cpodrouter_dnsmasq "dhcp-range=eth2.${VLAN}02:eth2,10.${VLAN}.2.2,10.${VLAN}.2.254,255.255.255.0,12h" ${CPOD_NAME_LOWER}
-        add_to_cpodrouter_dnsmasq "dhcp-range=eth2.${VLAN}06:eth2,10.${VLAN}.6.2,10.${VLAN}.6.254,255.255.255.0,12h" ${CPOD_NAME_LOWER}  
-        add_to_cpodrouter_dnsmasq "dhcp-range=eth2.${VLAN}07:eth2,10.${VLAN}.7.2,10.${VLAN}.7.254,255.255.255.0,12h" ${CPOD_NAME_LOWER}
-fi
-
-###################
-
 # generating powercli script to create template
 
 echo
@@ -98,7 +79,29 @@ sed -i -e "s/###VLAN###/${VLAN}/" ${SCRIPT}
 docker run --interactive --tty --dns=${DNS} --entrypoint="/usr/bin/pwsh" -v /tmp/scripts:/tmp/scripts vmware/powerclicore:12.4 ${SCRIPT}
 #rm -fr ${SCRIPT}
 
+###################
+# create DHCP segments
+
 # add_to_cpodrouter_dnsmasq 
+enable_dhcp_cpod_vlanx 2 ${CPOD_NAME_LOWER}
+enable_dhcp_cpod_vlanx 6 ${CPOD_NAME_LOWER}
+enable_dhcp_cpod_vlanx 7 ${CPOD_NAME_LOWER}
+restart_cpodrouter_dnsmasq ${CPOD_NAME_LOWER}
+
+#if [ ${VLAN} -gt 40 ]; then
+#
+#        #add dhcp segments
+#        add_to_cpodrouter_dnsmasq "dhcp-range=eth2.${VLAN}2:eth2,10.${VLAN}.2.2,10.${VLAN}.2.254,255.255.255.0,12h" ${CPOD_NAME_LOWER}
+#        add_to_cpodrouter_dnsmasq "dhcp-range=eth2.${VLAN}6:eth2,10.${VLAN}.6.2,10.${VLAN}.6.254,255.255.255.0,12h" ${CPOD_NAME_LOWER}  
+#        add_to_cpodrouter_dnsmasq "dhcp-range=eth2.${VLAN}7:eth2,10.${VLAN}.7.2,10.${VLAN}.7.254,255.255.255.0,12h" ${CPOD_NAME_LOWER}  
+#else
+#        #add dhcp segments
+#        add_to_cpodrouter_dnsmasq "dhcp-range=eth2.${VLAN}02:eth2,10.${VLAN}.2.2,10.${VLAN}.2.254,255.255.255.0,12h" ${CPOD_NAME_LOWER}
+#        add_to_cpodrouter_dnsmasq "dhcp-range=eth2.${VLAN}06:eth2,10.${VLAN}.6.2,10.${VLAN}.6.254,255.255.255.0,12h" ${CPOD_NAME_LOWER}  
+#        add_to_cpodrouter_dnsmasq "dhcp-range=eth2.${VLAN}07:eth2,10.${VLAN}.7.2,10.${VLAN}.7.254,255.255.255.0,12h" ${CPOD_NAME_LOWER}
+#fi
+
+###################
 
 END=$( date +%s )
 TIME=$( expr ${END} - ${START} )

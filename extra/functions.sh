@@ -102,7 +102,7 @@ enable_dhcp_cpod_vlanx() {
 	CPODVLAN=$( grep -m 1 "${2}\s" /etc/hosts | awk '{print $1}' | cut -d "." -f 4 )
 	declare -a VLANS
 	for VLAN in $( ssh ${2} "ip add |grep inet | grep eth2." | awk '{print $5}' ) ; do
-			VLANS+=( ${VLAN} )
+	        VLANS+=( ${VLAN} )
 	done
 	#${VLANS[$((${1}-1))]}
 	#exmaple: dhcp-range=eth2.1047:eth2,10.104.7.2,10.104.7.254,255.255.255.0,12h

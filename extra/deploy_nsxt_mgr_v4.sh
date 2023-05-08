@@ -19,11 +19,7 @@ fi
 
 ### functions ####
 
-add_to_cpodrouter_hosts() {
-	echo "add ${1} -> ${2}"
-	ssh -o LogLevel=error -o StrictHostKeyChecking=no ${CPOD_NAME_LOWER} "sed "/${1}/d" -i /etc/hosts ; printf \"${1}\\t${2}\\n\" >> /etc/hosts"
-	ssh -o LogLevel=error -o StrictHostKeyChecking=no ${CPOD_NAME_LOWER} "systemctl restart dnsmasq.service"
-}
+source ./extra/functions.sh
 
 ### Local vars ####
 
@@ -88,7 +84,7 @@ EOF
 
 sh ${MYSCRIPT}
 
-echo "Adding entries into hosts of ${CPOD_NAME_LOWER}."
-add_to_cpodrouter_hosts ${IP} ${HOSTNAME}
+add_entry_cpodrouter_hosts ${IP} ${HOSTNAME} ${CPOD_NAME_LOWER}
+restart_cpodrouter_dnsmasq ${CPOD_NAME_LOWER}
 
 #rm ${MYSCRIPT}

@@ -1363,7 +1363,7 @@ else
         echo "  Adding Compute Manager"
         add_computer_manager "${MGRNAME}"
         MGRTEST=$(get_compute_manager "${MGRNAME}")
-        loop_wait_compute_manager_status "${MGRID}"
+        loop_wait_compute_manager_status "${MGRTEST}"
 fi
 
 
@@ -1544,8 +1544,10 @@ TNC=$(check_transport_node_collections)
 if [ "${TNC}" != ""  ]
 then
         TNCID=$(echo ${TNC} |jq -r '.results[] | select (.compute_collection_id == "'${CLUSTERCCID}'") | .unique_id ' )
-        echo "TNCID: $TNCID"
+        echo
+        echo "  TNCID: $TNCID"
         echo "  Cluster Collection State :  $(get_transport_node_collections_state ${TNCID})"
+        echo
         loop_wait_host_state
 else
         echo "  Configuring NSX on hosts"

@@ -116,6 +116,68 @@ get_compute_manager_id() {
         fi
 }
 
+nsx_accept_eula() {
+        #
+        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} -H 'Content-Type: application/json' -X POST https://${NSXFQDN}/policy/api/v1/eula/accept)
+        HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+
+        if [ $HTTPSTATUS -eq 200 ]
+        then
+                echo "  EULA accepted succesfully "
+        else
+                echo "  error accepting eula"
+                echo ${HTTPSTATUS}
+                echo ${RESPONSE}
+                exit
+        fi
+}
+
+nsx_ceip_agreement() {
+        #
+        CEIP_JSON='{
+        "_revision": 1,
+        "id": "TelemetryAgreementIdentifier",
+        "resource_type": "TelemetryAgreement",
+        "telemetry_agreement_displayed": true
+        }'
+        SCRIPT="/tmp/CEIP_JSON"
+        echo ${CEIP_JSON} > ${SCRIPT}
+
+        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} -H 'Content-Type: application/json' -X PUT -d @${SCRIPT} https://${NSXFQDN}/api/v1/telemetry/agreement)
+        HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+
+        if [ $HTTPSTATUS -eq 200 ]
+        then
+                echo "  ceip agreement set "
+        else
+                echo "  error setting ceip agreement"
+                echo ${HTTPSTATUS}
+                echo ${RESPONSE}
+                exit
+        fi
+}
+
+nsx_ceip_telemetry() {
+        #
+
+        CEIP_JSON='{"ceip_acceptance" : false, "schedule_enabled": true, "_revision" : 1}'
+        SCRIPT="/tmp/CEIP_JSON"
+        echo ${CEIP_JSON} > ${SCRIPT}
+
+        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} -H 'Content-Type: application/json' -X PUT -d @${SCRIPT} https://${NSXFQDN}/api/v1/telemetry/config)
+        HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+
+        if [ $HTTPSTATUS -eq 200 ]
+        then
+                echo "  ceip telemetry set "
+        else
+                echo "  error setting ceip telemetry"
+                echo ${HTTPSTATUS}
+                echo ${RESPONSE}
+                exit
+        fi
+}
+
 
 
 add_computer_manager() {
@@ -1155,6 +1217,7 @@ create_edge_node() {
                         "compute_id": "'${COMPUTE_ID}'",
                         "storage_id": "'${STORAGE_ID}'",
                         "management_network_id": "'${MANAGEMENT_NETWORK_ID}'",
+                        "ipv4_assignment_enabled": true,
                         "management_port_subnets": [
                         {
                                 "ip_addresses": [
@@ -1342,6 +1405,17 @@ else
         echo ${RESPONSE}
         exit
 fi
+
+
+#======== Accept Eula ========
+echo
+echo "Accepting EULA ans settting CEIP"
+echo
+
+#nsx_accept_eula
+#nsx_ceip_agreement
+#nsx_ceip_telemetry
+
 
 #======== License NSX-T ========
 
@@ -1654,7 +1728,7 @@ VLANTZID=$(get_transport_zone_id "edge-vlan-tz")
 #OVLYTZID=$(get_transport_zone_path "overlay-tz")
 #VLANTZID=$(get_transport_zone_path "edge-vlan-tz")
 
-UPLINKPROFILEID=$(get_uplink_profile_id "edge-profile")
+UPLINKPROFILEID=$(get_uplink_profile_id "host-profile")
 #UPLINKPROFILEID=$(get_uplink_profile_path "edge-profile")
 
 #get_ip_pool_all

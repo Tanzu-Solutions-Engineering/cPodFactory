@@ -255,7 +255,7 @@ get_uplink_profile_id() {
         then
                 PROFILESINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
                 echo "${PROFILESINFO}" > /tmp/profile-json
-                echo $PROFILESINFO |jq -r '.results[] | select (.display_name =="'$PROFILENAME'") | .id'
+                echo $PROFILESINFO |jq -r '.results[] | select (.display_name =="'$PROFILENAME'") | .unique_id'
         else
                 echo "  error getting uplink profiles"
                 echo ${HTTPSTATUS}
@@ -395,7 +395,7 @@ get_transport_zone_id() {
         then
                 TZINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
                 #TZCOUNT=$(echo ${TZINFO} | jq .result_count)                
-                echo $TZINFO |jq -r '.results[] | select (.display_name =="'$TZNAME'") | .id'
+                echo $TZINFO |jq -r '.results[] | select (.display_name =="'$TZNAME'") | .unique_id'
         else
                 echo "  error getting transport zones"
                 echo ${HTTPSTATUS}
@@ -1160,7 +1160,7 @@ create_edge_node() {
                                 "ip_addresses": [
                                 "'${EDGE_IP}'"
                                 ],
-                                "prefix_length": "24"
+                                "prefix_length": 24
                         }
                         ],
                         "default_gateway_addresses": [
@@ -1181,7 +1181,7 @@ create_edge_node() {
                         },
                         "placement_type": "VsphereDeploymentConfig"
                 },
-                "form_factor": "SMALL",
+                "form_factor": "LARGE",
                 "node_user_settings": {
                         "cli_username": "admin",
                                         "root_password":"'${PASSWORD}'",
@@ -1648,14 +1648,14 @@ then
         MANAGEMENT_NETWORK_ID=$(govc ls -json=true network |jq -r '.elements[].Object.Summary | select (.Name =="VM Network") | .Network.Value')
 fi
 
-#OVLYTZID=$(get_transport_zone_id "overlay-tz")
-#VLANTZID=$(get_transport_zone_id "edge-vlan-tz")
+OVLYTZID=$(get_transport_zone_id "overlay-tz")
+VLANTZID=$(get_transport_zone_id "edge-vlan-tz")
 
-OVLYTZID=$(get_transport_zone_path "overlay-tz")
-VLANTZID=$(get_transport_zone_path "edge-vlan-tz")
+#OVLYTZID=$(get_transport_zone_path "overlay-tz")
+#VLANTZID=$(get_transport_zone_path "edge-vlan-tz")
 
-#UPLINKPROFILEID=$(get_uplink_profile_id "edge-profile")
-UPLINKPROFILEID=$(get_uplink_profile_path "edge-profile")
+UPLINKPROFILEID=$(get_uplink_profile_id "edge-profile")
+#UPLINKPROFILEID=$(get_uplink_profile_path "edge-profile")
 
 #get_ip_pool_all
 IPPOOLID=$(get_ip_pool_id "TEP-pool")

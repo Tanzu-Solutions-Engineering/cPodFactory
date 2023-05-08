@@ -1397,13 +1397,14 @@ if [ "${MGRTEST}" != "" ]
 then
         echo "  ${MGRTEST}"
         MGRID=$(get_compute_manager_id "${MGRNAME}")
-        get_compute_manager_status "${MGRID}"
+        #get_compute_manager_status "${MGRID}"
+        loop_wait_compute_manager_status "${MGRID}"
 else
         echo "  Adding Compute Manager"
         add_computer_manager "${MGRNAME}"
         sleep 30
-        MGRTEST=$(get_compute_manager "${MGRNAME}")
-        loop_wait_compute_manager_status "${MGRTEST}"
+        MGRID=$(get_compute_manager_id "${MGRNAME}")
+        loop_wait_compute_manager_status "${MGRID}"
 fi
 
 

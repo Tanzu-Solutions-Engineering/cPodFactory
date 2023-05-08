@@ -183,7 +183,7 @@ loop_wait_compute_manager_status(){
         echo "  Checking compute manager status"
         echo
         MGRSTATUS=$(get_compute_manager_status "${MGRID}")
-        echo "${MGRSTATUS}"
+        #echo "${MGRSTATUS}"
         INPROGRESS=$(echo "${MGRSTATUS}" | jq -r .connection_status)
         while [[ "$INPROGRESS" != "UP" ]]
         do
@@ -1596,7 +1596,7 @@ else
         sleep 30
         loop_wait_host_state
 fi
-exit
+
 
 # ===== create nsx segments for edge vms =====
 # edge-uplink-trunk-1 - tz = host-vlan-tz - teaming policy : host-uplink-1 - vlan : 0-4094

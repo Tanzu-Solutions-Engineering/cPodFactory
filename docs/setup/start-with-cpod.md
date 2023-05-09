@@ -4,7 +4,7 @@ Welcome to the cPodFactory!
 
 This is the starting point of understanding how to use cPods in your nested environment. Here you will get overview of the components that are essential. As next you see a basic diagram of the solution. 
 
-![new transport zone](file:///images/basic-cpod-diagram.png)
+![cpodfactory diagram](images/basic-cpod-diagram.png)
 
 ----
 ## The cPodFactory components

@@ -1282,7 +1282,6 @@ create_edge_node() {
                         "compute_id": "'${COMPUTE_ID}'",
                         "storage_id": "'${STORAGE_ID}'",
                         "management_network_id": "'${MANAGEMENT_NETWORK_ID}'",
-                        "ipv4_assignment_enabled": true,
                         "management_port_subnets": [
                         {
                                 "ip_addresses": [

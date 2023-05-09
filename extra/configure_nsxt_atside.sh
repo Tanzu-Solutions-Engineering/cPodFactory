@@ -315,7 +315,7 @@ get_uplink_profile_id() {
         then
                 PROFILESINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
                 echo "${PROFILESINFO}" > /tmp/profile-json
-                echo $PROFILESINFO |jq -r '.results[] | select (.display_name =="'$PROFILENAME'") | .unique_id'
+                echo $PROFILESINFO |jq -r '.results[] | select (.display_name =="'$PROFILENAME'") | .id'
         else
                 echo "  error getting uplink profiles"
                 echo ${HTTPSTATUS}
@@ -325,6 +325,27 @@ get_uplink_profile_id() {
 
 }
 
+get_uplink_profile_uniqueid() {
+        #$1 profile name string
+        #returns json
+        PROFILENAME=$1
+        
+        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/policy/api/v1/infra/host-switch-profiles)
+        HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+
+        if [ $HTTPSTATUS -eq 200 ]
+        then
+                PROFILESINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+                echo "${PROFILESINFO}" > /tmp/profile-json
+                echo $PROFILESINFO |jq -r '.results[] | select (.display_name =="'$PROFILENAME'") | .unique_id'
+        else
+                echo "  error getting uplink profiles"
+                echo ${HTTPSTATUS}
+                echo ${RESPONSE}
+                exit
+        fi
+
+}
 get_uplink_profile_path() {
         #$1 profile name string
         #returns json

@@ -1466,12 +1466,10 @@ create_edge_cluster() {
         "deployment_type": "VIRTUAL_MACHINE",
         "members":  [
         {
-                "transport_node_id": "'${EDGEID1}'",
-                "member_index": 0
+                "transport_node_id": "'${EDGEID1}'"
         },
         {
-                "transport_node_id": "'${EDGEID2}'",
-                "member_index": 1
+                "transport_node_id": "'${EDGEID2}'"
         }
         ],
         "cluster_profile_bindings": [

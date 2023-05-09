@@ -929,7 +929,7 @@ get_compute_collection_id() {
                 CCCOUNT=$(echo ${CCINFO} | jq .result_count)
                 if [[ ${CCCOUNT} -gt 0 ]]
                 then
-                        echo $CCINFO| jq -r '.results[] | select (.display_name =="'$CLUSTERNAME'") | .id'
+                        echo $CCINFO| jq -r '.results[] | select (.display_name =="'$CLUSTERNAME'") | .origin_id'
                 fi
         else
                 echo "  error getting compute-collections"
@@ -954,7 +954,7 @@ get_compute_collection_externalid() {
                 CCCOUNT=$(echo ${CCINFO} | jq .result_count)
                 if [[ ${CCCOUNT} -gt 0 ]]
                 then
-                        echo $CCINFO| jq -r '.results[] | select (.display_name =="'$CLUSTERNAME'") | .external_id'
+                        echo $CCINFO| jq -r '.results[] | select (.display_name =="'$CLUSTERNAME'") | .origin_id'
                 fi
         else
                 echo "  error getting compute-collections"

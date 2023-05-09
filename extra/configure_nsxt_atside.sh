@@ -346,6 +346,7 @@ get_uplink_profile_uniqueid() {
         fi
 
 }
+
 get_uplink_profile_path() {
         #$1 profile name string
         #returns json
@@ -507,6 +508,7 @@ get_transport_zone_uniqueid() {
         fi
 
 }
+
 get_transport_zone_path() {
         #$1 transport zone name string
         #returns json
@@ -963,6 +965,7 @@ get_compute_collection_origin_id() {
                 exit
         fi
 }
+
 check_transport_node_collections() {
         #returns json
         RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/policy/api/v1/infra/sites/default/enforcement-points/${EXISTINGEPRP}/transport-node-collections)
@@ -1385,7 +1388,7 @@ loop_get_edge_nodes_state(){
                                         EDGENODESTATE=$( echo "${EDGESTATEINFO}" |jq -r .state)
                                         EDGENODEDEPLOYMENTSTATE=$(echo "${EDGESTATEINFO}" |jq -r .node_deployment_state.state )
                                         echo "  ${EDGENODEID} - ${EDGENODESTATE} - ${EDGENODEDEPLOYMENTSTATE}" 
-                                        if [ "${EDGENODEDEPLOYMENTSTATE}" == "NODE_READY" ];
+                                        if [ "${EDGENODESTATE}" == "success" ];
                                         then
                                                 EDGESTATUSREADYCOUNT=$((EDGESTATUSREADYCOUNT+1))
                                         fi
@@ -1421,6 +1424,85 @@ get_edge_node_state(){
                 exit
         fi
 }
+
+get_edge_clusters(){
+        #$1 segments name to look for
+        #returns json
+  
+        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/api/v1/edge-clusters)
+        HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+
+        if [ $HTTPSTATUS -eq 200 ]
+        then
+                EDGECLUSTERSINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+                EDGECLUSTERSCOUNT=$(echo ${EDGECLUSTERSINFO} | jq .result_count)
+                echo $EDGECLUSTERSINFO > /tmp/edge-clusters-json 
+                if [[ ${EDGECLUSTERSCOUNT} -gt 0 ]]
+                then
+                        echo "${EDGECLUSTERSINFO}" |jq -r '.results[]'
+                else
+                        echo ""
+                fi
+        else
+                echo "  error getting edge-clusters"
+                echo ${HTTPSTATUS}
+                echo ${RESPONSE}
+                exit
+        fi
+}
+
+
+create_edge_cluster() {
+        #$1 profile name string
+        #$2 VLAN ID
+        #returns json
+        EDGEID1=$1
+        EDGEID2=$2
+
+        EDGECLUSTER_JSON='{
+        "member_node_type": "EDGE_NODE",
+        "resource_type": "EdgeCluster",
+        "display_name": "edge-cluster",
+        "deployment_type": "VIRTUAL_MACHINE",
+        "members":  [
+        {
+                "transport_node_id": "'${EDGEID1}'",
+                "member_index": 0
+        },
+        {
+                "transport_node_id": "'${EDGEID2}'",
+                "member_index": 1
+        }
+        ],
+        "cluster_profile_bindings": [
+                {
+                "resource_type": "EdgeHighAvailabilityProfile",
+                "profile_id": "91bcaa06-47a1-11e4-8316-17ffc770799b"
+                }
+        ]
+        }'
+
+        SCRIPT="/tmp/EDGECLUSTER_JSON"
+        echo ${EDGECLUSTER_JSON} > ${SCRIPT}
+        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD}  -H 'Content-Type: application/json' -X POST -d @${SCRIPT} https://${NSXFQDN}/api/v1/edge-clusters)
+        HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+        #echo $RESPONSE
+        #echo $HTTPSTATUS
+
+        if [ $HTTPSTATUS -eq 201 ]
+        then
+                EDGECLUSTERINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+                echo "  Edge-cluster created succesfully"
+                echo "${EDGECLUSTERINFO}" > /tmp/edge-cluster-created-json
+        else
+                echo "  error creating edge cluster  : ${EDGENAME}"
+                echo ${HTTPSTATUS}
+                echo ${RESPONSE}
+                exit
+        fi
+
+}
+
 
 ###################
 CPOD_NAME="cpod-$1"
@@ -1868,6 +1950,21 @@ loop_get_edge_nodes_state
 
 # ===== create edge cluster =====
 # create edge cluster and add nodes to it
+
+echo
+echo "Checking Edge Clusters"
+echo
+
+EDGECLUSTERS=$(get_edge_clusters)
+if [ "${EDGECLUSTERS}" != "" ];
+then
+        echo "  Edge Clusters exist"
+else
+        EDGEID1=$(get_transport_node "edge-1")
+        EDGEID2=$(get_transport_node "edge-2")
+        create_edge_cluster $EDGEID1 $EDGEID2
+fi
+
 
 
 # ===== create nsx segments for T0 =====

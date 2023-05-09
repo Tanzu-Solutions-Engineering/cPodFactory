@@ -914,7 +914,7 @@ get_host_transport_node_profile_id() {
         fi
 }
 
-get_compute_collection_id() {
+get_compute_collection_external_id() {
         #$1 transport zone name string
         #returns json
         CLUSTERNAME=$1
@@ -929,7 +929,7 @@ get_compute_collection_id() {
                 CCCOUNT=$(echo ${CCINFO} | jq .result_count)
                 if [[ ${CCCOUNT} -gt 0 ]]
                 then
-                        echo $CCINFO| jq -r '.results[] | select (.display_name =="'$CLUSTERNAME'") | .origin_id'
+                        echo $CCINFO| jq -r '.results[] | select (.display_name =="'$CLUSTERNAME'") | .external_id'
                 fi
         else
                 echo "  error getting compute-collections"
@@ -939,7 +939,7 @@ get_compute_collection_id() {
         fi
 }
 
-get_compute_collection_externalid() {
+get_compute_collection_origin_id() {
         #$1 transport zone name string
         #returns json
         CLUSTERNAME=$1
@@ -1713,7 +1713,7 @@ echo
 echo Configuring NSX on ESX hosts
 echo
 
-CLUSTERCCID=$(get_compute_collection_id "Cluster")
+CLUSTERCCID=$(get_compute_collection_external_id "Cluster")
 echo "  Cluster CCID : ${CLUSTERCCID}" 
 
 # check current state
@@ -1772,7 +1772,7 @@ fi
 #get vCenter objects details
 
 # Cluster ID
-CLUSTERCCID=$(get_compute_collection_externalid "Cluster")
+CLUSTERCCID=$(get_compute_collection_origin_id "Cluster")
 
 # govc ls -json=true host |jq -r '.elements[].Object.Self.Value'
 COMPUTE_ID=$(govc ls -json=true host |jq -r '.elements[].Object.Self.Value')

@@ -1749,6 +1749,7 @@ fi
 # Cluster ID
 # govc ls -json=true host |jq -r '.elements[].Object.Self.Value'
 #COMPUTE_ID=$(govc ls -json=true host |jq -r '.elements[].Object.Self.Value')
+
 COMPUTE_ID=$(get_compute_manager_id "${MGRNAME}")
 
 # Datastore ID

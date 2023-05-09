@@ -949,6 +949,7 @@ get_compute_collection_externalid() {
         if [ $HTTPSTATUS -eq 200 ]
         then
                 CCINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+                echo ${CCINFO} </tmp/ccinfo_json
                 CCCOUNT=$(echo ${CCINFO} | jq .result_count)
                 if [[ ${CCCOUNT} -gt 0 ]]
                 then
@@ -1209,7 +1210,7 @@ create_edge_node() {
         IPPOOLID=$3
         OVLYTZID=$4
         VLANTZID=$5
-        VCENTERID=$6
+        CLUSTERCCID=$6
         COMPUTE_ID=$7
         STORAGE_ID=$8
         MANAGEMENT_NETWORK_ID=$9
@@ -1276,7 +1277,7 @@ create_edge_node() {
                 "deployment_type": "VIRTUAL_MACHINE",
                 "deployment_config": {
                 "vm_deployment_config": {
-                        "vc_id": "'${VCENTERID}'",
+                        "vc_id": "'${CLUSTERCCID}'",
                         "compute_id": "'${COMPUTE_ID}'",
                         "storage_id": "'${STORAGE_ID}'",
                         "management_network_id": "'${MANAGEMENT_NETWORK_ID}'",

@@ -1391,7 +1391,7 @@ loop_get_edge_nodes_state(){
                                                 EDGESTATUSREADYCOUNT=$((EDGESTATUSREADYCOUNT+1))
                                         fi
                                 done
-                                sleep 30
+                                [ ${EDGESTATUSREADYCOUNT} -lt  ${EDGENODESCOUNT} ] && sleep 30
                         done
                 fi
         else

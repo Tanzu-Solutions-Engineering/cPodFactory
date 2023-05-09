@@ -1358,37 +1358,65 @@ create_edge_node() {
 
 }
 
-get_transport_node_state(){
-        #$1 segments name to look for
-        #returns json
-        EDGENODENAME=$1
+loop_get_edge_nodes_state(){
 
-        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/api/v1/transport-nodes/state)
+        #returns json
+
+        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/api/v1/transport-nodes)
         HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
 
         if [ $HTTPSTATUS -eq 200 ]
         then
-                TNINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
-                TNCOUNT=$(echo ${TNINFO} | jq .result_count)
-                echo $TNINFO > /tmp/edgenodes-state-json 
-                if [[ ${TNCOUNT} -gt 0 ]]
+                NODESINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+                EDGENODESIDS=$(echo "${NODESINFO}" | jq -r '.results[] | select (.node_deployment_info.resource_type =="EdgeNode") | .id')
+                EDGENODESCOUNT=$(echo "${EDGENODESIDS}" | wc -l)
+                echo $NODESINFO > /tmp/edgenodes-list-json 
+                if [[ ${EDGENODESCOUNT} -gt 0 ]]
                 then
-                        if [ "$EDGENODENAME" == "" ]
-                        then
-                                echo "${TNINFO}" |jq -r '.results[] | [.display_name, .id] |@tsv'
-                        else
-                                echo "${TNINFO}" |jq -r '.results[] | select (.display_name =="'$EDGENODENAME'") | .id'
-                        fi
-                else
-                        echo ""
+                        EDGESTATUSREADYCOUNT=0
+                        while [ ${EDGESTATUSREADYCOUNT} -lt  ${EDGENODESCOUNT} ]
+                        do
+                                EDGESTATUSREADYCOUNT=0
+                                for EDGENODEID in ${EDGENODESIDS}; do
+                                        EDGESTATEINFO=$(get_edge_node_state $EDGENODEID)
+                                        EDGENODESTATE=$( echo "${EDGESTATEINFO}" |jq -r .state)
+                                        EDGENODEDEPLOYMENTSTATE=$(echo "${EDGESTATEINFO}" |jq -r .node_deployment_state.state )
+                                        echo "  ${EDGENODEID} - ${EDGENODESTATE} - ${EDGENODEDEPLOYMENTSTATE}" 
+                                        if [ "${EDGENODEDEPLOYMENTSTATE}" == "NODE_READY" ];
+                                        then
+                                                EDGESTATUSREADYCOUNT++                                                
+                                        fi
+                                done
+                        done
                 fi
         else
-                echo "  error getting transport-nodes"
+                echo "  error getting transport-nodes info"
                 echo ${HTTPSTATUS}
                 echo ${RESPONSE}
                 exit
         fi
 }
+
+get_edge_node_state(){
+        #$1 edge node id to look for
+        #returns json
+
+        EDGENODEID=$1
+        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/api/v1/transport-nodes/${EDGENODEID}/state)
+        HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+
+        if [ $HTTPSTATUS -eq 200 ]
+        then
+                EDGENODEINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+                echo "${EDGENODESTATUS}"
+        else
+                echo "  error getting edge nodes state"
+                echo ${HTTPSTATUS}
+                echo ${RESPONSE}
+                exit
+        fi
+}
+
 ###################
 CPOD_NAME="cpod-$1"
 NAME_HIGHER=$( echo ${1} | tr '[:lower:]' '[:upper:]' )
@@ -1829,7 +1857,7 @@ fi
 
 # check edge node status - Not Available -> ready  in "configuration state" - "Registration Pending" - Success
 
-get_transport_node_state
+loop_get_edge_nodes_state
 
 
 # ===== create edge cluster =====

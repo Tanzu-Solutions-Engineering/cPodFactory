@@ -1723,7 +1723,7 @@ get_host-transport-nodes
 TNC=$(check_transport_node_collections)
 if [ "${TNC}" != ""  ]
 then
-        TNCID=$(echo ${TNC} |jq -r '.results[] | select (.compute_collection_id == "'${CLUSTERCCID}'") | .id ' )
+        TNCID=$(echo ${TNC} |jq -r '.results[] | select (.compute_collection_id == "'${CLUSTERCCID}'") | .origin_id ' )
         echo
         echo "  TNCID: $TNCID"
         echo "  Cluster Collection State :  $(get_transport_node_collections_state ${TNCID})"

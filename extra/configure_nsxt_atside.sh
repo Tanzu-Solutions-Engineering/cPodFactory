@@ -1367,6 +1367,10 @@ loop_get_edge_nodes_state(){
 
         if [ $HTTPSTATUS -eq 200 ]
         then
+                echo
+                echo "Checking Edge Nodes deployment status"
+                echo
+
                 NODESINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
                 EDGENODESIDS=$(echo "${NODESINFO}" | jq -r '.results[] | select (.node_deployment_info.resource_type =="EdgeNode") | .id')
                 EDGENODESCOUNT=$(echo "${EDGENODESIDS}" | wc -l)
@@ -1387,6 +1391,7 @@ loop_get_edge_nodes_state(){
                                                 EDGESTATUSREADYCOUNT++                                                
                                         fi
                                 done
+                                sleep 30
                         done
                 fi
         else
@@ -1408,7 +1413,7 @@ get_edge_node_state(){
         if [ $HTTPSTATUS -eq 200 ]
         then
                 EDGENODEINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
-                echo "${EDGENODESTATUS}"
+                echo "${EDGENODEINFO}"
         else
                 echo "  error getting edge nodes state"
                 echo ${HTTPSTATUS}

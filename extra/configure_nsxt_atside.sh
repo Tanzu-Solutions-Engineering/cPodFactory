@@ -928,7 +928,7 @@ get_compute_collection_id() {
                 CCCOUNT=$(echo ${CCINFO} | jq .result_count)
                 if [[ ${CCCOUNT} -gt 0 ]]
                 then
-                        echo $CCINFO| jq -r '.results[] | select (.display_name =="'$CLUSTERNAME'") | .external_id'
+                        echo $CCINFO| jq -r '.results[] | select (.display_name =="'$CLUSTERNAME'") | .id'
                 fi
         else
                 echo "  error getting compute-collections"
@@ -938,6 +938,29 @@ get_compute_collection_id() {
         fi
 }
 
+get_compute_collection_externalid() {
+        #$1 transport zone name string
+        #returns json
+        CLUSTERNAME=$1
+
+        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/api/v1/fabric/compute-collections)
+        HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+
+        if [ $HTTPSTATUS -eq 200 ]
+        then
+                CCINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+                CCCOUNT=$(echo ${CCINFO} | jq .result_count)
+                if [[ ${CCCOUNT} -gt 0 ]]
+                then
+                        echo $CCINFO| jq -r '.results[] | select (.display_name =="'$CLUSTERNAME'") | .external_id'
+                fi
+        else
+                echo "  error getting compute-collections"
+                echo ${HTTPSTATUS}
+                echo ${RESPONSE}
+                exit
+        fi
+}
 check_transport_node_collections() {
         #returns json
         RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/policy/api/v1/infra/sites/default/enforcement-points/${EXISTINGEPRP}/transport-node-collections)
@@ -1186,7 +1209,7 @@ create_edge_node() {
         IPPOOLID=$3
         OVLYTZID=$4
         VLANTZID=$5
-        CLUSTERCCID=$6
+        VCENTERID=$6
         COMPUTE_ID=$7
         STORAGE_ID=$8
         MANAGEMENT_NETWORK_ID=$9
@@ -1253,7 +1276,7 @@ create_edge_node() {
                 "deployment_type": "VIRTUAL_MACHINE",
                 "deployment_config": {
                 "vm_deployment_config": {
-                        "vc_id": "'${CLUSTERCCID}'",
+                        "vc_id": "'${VCENTERID}'",
                         "compute_id": "'${COMPUTE_ID}'",
                         "storage_id": "'${STORAGE_ID}'",
                         "management_network_id": "'${MANAGEMENT_NETWORK_ID}'",
@@ -1319,7 +1342,7 @@ create_edge_node() {
         #echo $RESPONSE
         #echo $HTTPSTATUS
 
-        if [ $HTTPSTATUS -eq 200 ]
+        if [ $HTTPSTATUS -eq 201 ]
         then
                 EDGEINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
                 echo "  ${EDGENAME} created succesfully"
@@ -1747,10 +1770,11 @@ fi
 #get vCenter objects details
 
 # Cluster ID
-# govc ls -json=true host |jq -r '.elements[].Object.Self.Value'
-#COMPUTE_ID=$(govc ls -json=true host |jq -r '.elements[].Object.Self.Value')
+CLUSTERCCID=$(get_compute_collection_externalid "Cluster")
 
-COMPUTE_ID=$(get_compute_manager_id "${MGRNAME}")
+# govc ls -json=true host |jq -r '.elements[].Object.Self.Value'
+COMPUTE_ID=$(govc ls -json=true host |jq -r '.elements[].Object.Self.Value')
+#COMPUTE_ID=$(get_compute_manager_id "${MGRNAME}")
 
 # Datastore ID
 # govc datastore.info -json=true vsanDatastore |jq -r .Datastores[].Self.Value

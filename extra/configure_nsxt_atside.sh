@@ -1388,7 +1388,7 @@ loop_get_edge_nodes_state(){
                                         echo "  ${EDGENODEID} - ${EDGENODESTATE} - ${EDGENODEDEPLOYMENTSTATE}" 
                                         if [ "${EDGENODEDEPLOYMENTSTATE}" == "NODE_READY" ];
                                         then
-                                                EDGESTATUSREADYCOUNT++                                                
+                                                EDGESTATUSREADYCOUNT=$((EDGESTATUSREADYCOUNT+1))
                                         fi
                                 done
                                 sleep 30

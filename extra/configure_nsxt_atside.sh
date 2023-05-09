@@ -1511,7 +1511,7 @@ create_t0_segment() {
 
         SEGMENT_JSON='{
         "display_name": "'${SEGMENTNAME}'",
-        "vlan_ids": '${UPLINKSVLANID}',
+        "vlan_ids": ['${UPLINKSVLANID}'],
         "transport_zone_path": "/infra/sites/default/enforcement-points/default/transport-zones/'${TZID}'",
         "advanced_config": {
         "uplink_teaming_policy_name": "'${TEAMINGPOLICY}'"

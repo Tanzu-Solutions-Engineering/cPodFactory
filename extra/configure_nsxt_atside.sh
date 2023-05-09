@@ -1138,7 +1138,7 @@ get_segment(){
         fi
 }
 
-create_segment() {
+create_edge_segment() {
         #$1 profile name string
         #$2 VLAN ID
         #returns json
@@ -1451,7 +1451,6 @@ get_edge_clusters(){
         fi
 }
 
-
 create_edge_cluster() {
         #$1 profile name string
         #$2 VLAN ID
@@ -1501,6 +1500,65 @@ create_edge_cluster() {
 
 }
 
+create_t0_segment() {
+        #$1 profile name string
+        #$2 VLAN ID
+        #returns json
+        SEGMENTNAME=$1
+        TZID=$2
+        TEAMINGPOLICY=$3
+        UPLINKSVLANID=$4
+
+        SEGMENT_JSON='{
+        "display_name": "'${SEGMENTNAME}'",
+        "vlan_ids": '${UPLINKSVLANID}',
+        "transport_zone_path": "/infra/sites/default/enforcement-points/default/transport-zones/'${TZID}'",
+        "advanced_config": {
+        "uplink_teaming_policy_name": "'${TEAMINGPOLICY}'"
+        }
+        }'
+
+        SCRIPT="/tmp/SEGMENT_JSON"
+        echo ${SEGMENT_JSON} > ${SCRIPT}
+        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD}  -H 'Content-Type: application/json' -X PUT -d @${SCRIPT} https://${NSXFQDN}/policy/api/v1/infra/segments/${SEGMENTNAME})
+        HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+        if [ $HTTPSTATUS -eq 200 ]
+        then
+                SEGMENTINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+                echo "  ${SEGMENTNAME} created succesfully"
+                echo ${SEGMENTINFO} > /tmp/t0-segment-create.json
+        else
+                echo "  error creating t0 segment : ${SEGMENTNAME}"
+                echo ${HTTPSTATUS}
+                echo ${RESPONSE}
+                exit
+        fi
+
+}
+
+get_tier-0s(){
+        
+        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/policy/api/v1/infra/tier-0s)
+        HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+
+        if [ $HTTPSTATUS -eq 200 ]
+        then
+                T0INFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+                T0COUNT=$(echo ${T0INFO} | jq .result_count)
+                echo $T0INFO > /tmp/t0-json 
+                if [[ ${T0COUNT} -gt 0 ]]
+                then
+                        echo "${T0INFO}" |jq -r '.results[]'
+                else
+                        echo ""
+                fi
+        else
+                echo "  error getting Tier-0s"
+                echo ${HTTPSTATUS}
+                echo ${RESPONSE}
+                exit
+        fi
+}
 
 ###################
 CPOD_NAME="cpod-$1"
@@ -1519,10 +1577,12 @@ if [ ${VLAN} -gt 40 ]; then
 	VMOTIONVLANID=${VLAN}1
 	VSANVLANID=${VLAN}2
 	TEPVLANID=${VLAN}3
+        UPLINKSVLANID=${VLAN}4
 else
 	VMOTIONVLANID=${VLAN}01
 	VSANVLANID=${VLAN}02
 	TEPVLANID=${VLAN}03
+        UPLINKSVLANID=${VLAN}04
 fi
 
 PASSWORD=$( ./${EXTRA_DIR}/passwd_for_cpod.sh ${1} )
@@ -1860,7 +1920,7 @@ echo
 if [ "$(get_segment "edge-uplink-trunk-1")" == "" ]
 then
         TZID=$(get_transport_zone_id "host-vlan-tz")
-        create_segment "edge-uplink-trunk-1" "$TZID" "host-profile-uplink-1"
+        create_edge_segment "edge-uplink-trunk-1" "$TZID" "host-profile-uplink-1"
 else
         echo "  edge-uplink-trunk-1 - present"
 fi
@@ -1868,7 +1928,7 @@ echo
 if [ "$(get_segment "edge-uplink-trunk-2")" == "" ]
 then
         TZID=$(get_transport_zone_id "host-vlan-tz")
-        create_segment "edge-uplink-trunk-2" "$TZID" "host-profile-uplink-2"
+        create_edge_segment "edge-uplink-trunk-2" "$TZID" "host-profile-uplink-2"
 else
         echo "  edge-uplink-trunk-2 - present"
 fi
@@ -1963,11 +2023,20 @@ else
         create_edge_cluster $EDGEID1 $EDGEID2
 fi
 
-
-
 # ===== create nsx segments for T0 =====
 # name: t0-uplink-1 - no gw - tz : edge-vlan-tz - teaming : edge-uplink-1 - vlan id : VLAN#4 (uplinks)
+echo "Processing T0 segment"
+echo
 
+T0SEGMENTNAME="t0-uplink-1"
+
+if [ "$(get_segment "${T0SEGMENTNAME}")" == "" ]
+then
+        TZID=$(get_transport_zone_id "edge-vlan-tz")
+        create_t0_segment "${T0SEGMENTNAME}" "$TZID" "edge-profile-uplink-1" "${UPLINKSVLANID}"
+else
+        echo "  ${T0SEGMENTNAME} - present"
+fi
 
 # ===== create T0 =====
 # create TO in network - T0 gateways

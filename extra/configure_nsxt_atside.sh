@@ -1706,6 +1706,7 @@ then
         loop_wait_host_state
 else
         echo "  Configuring NSX on hosts"
+        echo
         create_transport_node_collections "${CLUSTERCCID}" "${HTNPROFILENAME}"
         sleep 30
         loop_wait_host_state
@@ -1747,7 +1748,8 @@ fi
 
 # Cluster ID
 # govc ls -json=true host |jq -r '.elements[].Object.Self.Value'
-COMPUTE_ID=$(govc ls -json=true host |jq -r '.elements[].Object.Self.Value')
+#COMPUTE_ID=$(govc ls -json=true host |jq -r '.elements[].Object.Self.Value')
+COMPUTE_ID=$(get_compute_manager_id "${MGRNAME}")
 
 # Datastore ID
 # govc datastore.info -json=true vsanDatastore |jq -r .Datastores[].Self.Value

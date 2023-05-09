@@ -1389,6 +1389,7 @@ loop_get_edge_nodes_state(){
                                         if [ "${EDGENODEDEPLOYMENTSTATE}" == "NODE_READY" ];
                                         then
                                                 EDGESTATUSREADYCOUNT=$((EDGESTATUSREADYCOUNT+1))
+                                                echo "  EDGE READY COUNT : ${EDGESTATUSREADYCOUNT} / ${EDGENODESCOUNT} "
                                         fi
                                 done
                                 [ ${EDGESTATUSREADYCOUNT} -lt  ${EDGENODESCOUNT} ] && sleep 30
@@ -1734,6 +1735,7 @@ echo "  OVERLAY TZ ID: ${OVERLAYTZID}"
 IPPOOLID=$(get_ip_pool_id "TEP-pool")
 echo "  IP POOL ID : ${IPPOOLID}"
 
+echo
 echo "Checking Transport Nodes Profile"
 HTNPROFILENAME="cluster-transport-node-profile"
 

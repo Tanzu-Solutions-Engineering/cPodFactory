@@ -925,6 +925,7 @@ get_compute_collection_id() {
         if [ $HTTPSTATUS -eq 200 ]
         then
                 CCINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+                echo ${CCINFO} > /tmp/ccinfo_id_json
                 CCCOUNT=$(echo ${CCINFO} | jq .result_count)
                 if [[ ${CCCOUNT} -gt 0 ]]
                 then
@@ -949,7 +950,7 @@ get_compute_collection_externalid() {
         if [ $HTTPSTATUS -eq 200 ]
         then
                 CCINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
-                echo ${CCINFO} </tmp/ccinfo_json
+                echo ${CCINFO} > /tmp/ccinfo_eid_json
                 CCCOUNT=$(echo ${CCINFO} | jq .result_count)
                 if [[ ${CCCOUNT} -gt 0 ]]
                 then

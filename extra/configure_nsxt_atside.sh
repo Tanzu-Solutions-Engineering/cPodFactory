@@ -178,8 +178,6 @@ nsx_ceip_telemetry() {
         fi
 }
 
-
-
 add_computer_manager() {
         #$1 Compute Manager fqdn
         MGRFQDN=$1
@@ -457,7 +455,7 @@ get_transport_zone_id() {
         then
                 TZINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
                 #TZCOUNT=$(echo ${TZINFO} | jq .result_count)                
-                echo $TZINFO |jq -r '.results[] | select (.display_name =="'$TZNAME'") | .unique_id'
+                echo $TZINFO |jq -r '.results[] | select (.display_name =="'$TZNAME'") | .id'
         else
                 echo "  error getting transport zones"
                 echo ${HTTPSTATUS}
@@ -467,6 +465,27 @@ get_transport_zone_id() {
 
 }
 
+get_transport_zone_uniqueid() {
+        #$1 transport zone name string
+        #returns json
+        TZNAME=$1
+
+        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/policy/api/v1/infra/sites/default/enforcement-points/${EXISTINGEPRP}/transport-zones)
+        HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+
+        if [ $HTTPSTATUS -eq 200 ]
+        then
+                TZINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+                #TZCOUNT=$(echo ${TZINFO} | jq .result_count)                
+                echo $TZINFO |jq -r '.results[] | select (.display_name =="'$TZNAME'") | .unique_id'
+        else
+                echo "  error getting transport zones"
+                echo ${HTTPSTATUS}
+                echo ${RESPONSE}
+                exit
+        fi
+
+}
 get_transport_zone_path() {
         #$1 transport zone name string
         #returns json
@@ -1409,7 +1428,7 @@ fi
 
 #======== Accept Eula ========
 echo
-echo "Accepting EULA ans settting CEIP"
+echo "Accepting EULA and settting CEIP"
 echo
 
 #nsx_accept_eula
@@ -1722,13 +1741,13 @@ then
         MANAGEMENT_NETWORK_ID=$(govc ls -json=true network |jq -r '.elements[].Object.Summary | select (.Name =="VM Network") | .Network.Value')
 fi
 
-OVLYTZID=$(get_transport_zone_id "overlay-tz")
-VLANTZID=$(get_transport_zone_id "edge-vlan-tz")
+OVLYTZID=$(get_transport_zone_uniqueid "overlay-tz")
+VLANTZID=$(get_transport_zone_uniqueid "edge-vlan-tz")
 
 #OVLYTZID=$(get_transport_zone_path "overlay-tz")
 #VLANTZID=$(get_transport_zone_path "edge-vlan-tz")
 
-UPLINKPROFILEID=$(get_uplink_profile_id "host-profile")
+UPLINKPROFILEID=$(get_uplink_profile_id "edge-profile")
 #UPLINKPROFILEID=$(get_uplink_profile_path "edge-profile")
 
 #get_ip_pool_all

@@ -2738,9 +2738,8 @@ fi
 # skip welcome tour
 
 nsx_accept_eula
-nsx_ceip_agreement
 nsx_ceip_telemetry
-
+nsx_ceip_agreement
 
 # ===== Script finished =====
 echo "Configuration done"

@@ -1650,7 +1650,7 @@ create_t0_locale_service() {
         EDGECLUSTERPATH="/infra/sites/default/enforcement-points/default/edge-clusters/${EDGECLUSTERID}"
 
         T0_LS_JSON='{
-        "edge_cluster_path": "'${EDGEPATH}'",
+        "edge_cluster_path": "'${EDGECLUSTERPATH}'",
         "_revision": 0
         }'
         SCRIPT="/tmp/T0_LS_JSON"

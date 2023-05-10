@@ -156,18 +156,18 @@ add_cpodrouter_bgp_neighbor() {
 	# ${1} : Neighbor IP address to add
 	# ${2} : Neighbor ASN to add
 	# ${3} : cpod_name_lower
-
         [ "$1" == "" -o "$2" == "" ] && echo "usage: $0 <peer_ip> <peer_asn>" && exit 1 
 
 	echo "add bgp neighbor ${1} -> ${2} in ${3}"
 
         CPODROUTERASN=$(get_cpod_asn ${3})
         CMD="vtysh -e \"configure terminal\" -e \"router bgp ${CPODROUTERASN}\" -e \"neighbor ${1} remote-as ${2}\" -e \"neighbor ${1} default-originate\" -e \"exit\" -e \"exit\" -e \"write\""
+	ssh -o LogLevel=error ${3} "${CMD}"
 
-        echo "${CMD}"
-
-	#ssh -o LogLevel=error ${3} "${CMD}"
-
+        echo
+        echo "getting result"
+        echo
+        get_cpodrouter_bgp_neighbors_table ${3}
 }
 
 get_cpodrouter_bgp_neighbors_table(){

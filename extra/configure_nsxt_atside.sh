@@ -1683,8 +1683,8 @@ get_tier-0s_interfaces(){
         then
                 T0INTINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
                 T0INTCOUNT=$(echo ${T0INTINFO} | jq .result_count)
-                echo $T0INFO > /tmp/t0-interfeces-json 
-                if [[ ${T0COUNT} -gt 0 ]]
+                echo $T0INTINFO > /tmp/t0-interfaces-json 
+                if [[ ${T0INTCOUNT} -gt 0 ]]
                 then
                         echo "${T0INTINFO}" |jq -r .
                 else

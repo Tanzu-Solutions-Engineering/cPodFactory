@@ -2049,6 +2049,65 @@ configure_tier-0s_bgp_redistribution_rules(){
         fi
 }
 
+get_tier0_route_redistribution() {
+ #/infra/tier-0s/Tier-0/locale-services/default/bgp/neighbors/071971c8-4229-439f-bcdb-6f0378510b11
+        T0NAME=$1
+
+        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/policy/api/v1/infra/tier-0s/${T0NAME}/locale-services/default)
+        HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+
+        if [ $HTTPSTATUS -eq 200 ]
+        then
+                ROUTEINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+                ROUTEREDIST=$(echo ${ROUTEINFO} | jq .route_redistribution_config)
+        else
+                echo "  error configuring Tier-0s BGP Neighbor ${$NBNAME}"
+                echo ${HTTPSTATUS}
+                echo ${RESPONSE}
+                exit
+        fi
+}
+
+patch_tier0_route_redistribution() {
+        #/infra/tier-0s/Tier-0/locale-services/default/bgp/neighbors/071971c8-4229-439f-bcdb-6f0378510b11
+        T0NAME=$1
+
+        T0_RULES_JSON='{
+        "bgp_enabled": true,
+        "ospf_enabled": false,
+        "redistribution_rules": [
+        {
+        "name": "default",
+        "route_redistribution_types": [
+                "TIER1_LB_VIP",
+                "TIER1_NAT",
+                "TIER1_CONNECTED",
+                "TIER1_STATIC"
+        ],
+        "destinations": [ "BGP" ]
+        }
+        ]
+        }'
+        SCRIPT="/tmp/T0_RULES_JSON"
+        echo ${T0_RULES_JSON} > ${SCRIPT}
+
+        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} -H 'Content-Type: application/json' -X PATCH -d @${SCRIPT} https://${NSXFQDN}/policy/api/v1/infra/tier-0s/${T0NAME}/locale-services/default)
+        HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+
+        if [ $HTTPSTATUS -eq 200 ]
+        then
+                NBINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+                echo $NBINFO > /tmp/t0-bgp-nb-configured-json 
+                echo "  BGP Neighbor ${NBNAME} added successully" 
+        else
+                echo "  error configuring Tier-0s BGP Neighbor ${$NBNAME}"
+                echo ${HTTPSTATUS}
+                echo ${RESPONSE}
+                exit
+        fi
+        
+}
+
 ###################
 CPOD_NAME="cpod-$1"
 NAME_HIGHER=$( echo ${1} | tr '[:lower:]' '[:upper:]' )
@@ -2653,24 +2712,29 @@ fi
 # T1 subnets : LB vip - nat ip - static routes - connected interfaces and segments
 
 echo 
-RTRID=$(get_logical_router_id  "${T0GWNAME}" )
-BGPREDIST=$(get_logical_router_redistribution_bgp ${RTRID})
-if [ "${BGPREDIST}" == "true" ]
+
+RULES=$(get_tier0_route_redistribution "${T0GWNAME}"  )
+TESTBGP=$(echo "${RULES}" | jq -r .bgp_enabled )
+if [ "${TESTBGP}" == "true" ]
 then
         echo "  BGP redistribution already enabled"
+        echo "  verifying rules"
+        RULES=$(get_tier0_route_redistribution "${T0GWNAME}"  )
+        TESTBGP=$(echo "${RULES}" | jq -r .redistribution_rules[] )
+
+        if [ "${TESTBGP}" != "" ]
+        then
+                echo "  BGP redistribution rules are present"
+        else
+                echo "  enabling BGP redistribution and rules"
+                patch_tier0_route_redistribution  "${T0GWNAME}"
+        fi
 else
-        echo "  enabling BGP redistribution"
-        configure_tier-0s_bgp_redistribution ${RTRID}
+        echo "  enabling BGP redistribution and rules"
+        patch_tier0_route_redistribution  "${T0GWNAME}"
 fi
 
-RULES=$(get_logical_router_redistribution_bgp_revision_rules ${RTRID})
-if [ "${RULES}" == "" ]
-then
-        echo "  enabling BGP redistribution rules"
-        configure_tier-0s_bgp_redistribution_rules ${RTRID}        
-else
-        echo "  BGP redistribution already enabled"
-fi
+
 
 #
 # ===== NSX cleanup =====

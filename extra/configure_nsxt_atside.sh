@@ -1537,6 +1537,7 @@ create_t0_segment() {
 }
 
 get_tier-0s(){
+        SEGMENTNAME=$1
         
         RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/policy/api/v1/infra/tier-0s)
         HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
@@ -1549,6 +1550,13 @@ get_tier-0s(){
                 if [[ ${T0COUNT} -gt 0 ]]
                 then
                         echo "${T0INFO}" |jq -r '.results[]'
+                        if [ "$SEGMENTNAME" == "" ]
+                        then
+                                echo $T0INFO |jq -r '.results[] | [.display_name, .id] |@tsv'
+                        else
+                                echo $T0INFO |jq -r '.results[] | select (.display_name =="'$SEGMENTNAME'") | .id'
+                        fi
+
                 else
                         echo ""
                 fi
@@ -1559,6 +1567,144 @@ get_tier-0s(){
                 exit
         fi
 }
+
+create_t0_gw() {
+        #
+        T0NAME=$1
+        
+        T0GW_JSON='{ "ha_mode":"ACTIVE_ACTIVE" }'
+        SCRIPT="/tmp/T0GW_JSON"
+        echo ${T0GW_JSON} > ${SCRIPT}
+
+        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} -H 'Content-Type: application/json' -X PUT -d @${SCRIPT} https://${NSXFQDN}/policy/api/v1/infra/tier-0s/${T0NAME})
+        HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+
+        if [ $HTTPSTATUS -eq 200 ]
+        then
+                T0GWINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+                echo "  ${T0NAME} created succesfully"
+                echo ${T0GWINFO} > /tmp/t0-gw-create.json
+
+        else
+                echo "  error creating T0 GW : ${T0NAME}"
+                echo ${HTTPSTATUS}
+                echo ${RESPONSE}
+                exit
+        fi
+}
+
+get_tier-0s_locale_services(){
+        SERVICENAME=$1
+        
+        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/policy/api/v1/infra/tier-0s/Tier-0/locale-services/default)
+        HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+
+        if [ $HTTPSTATUS -eq 200 ]
+        then
+                T0INFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+                T0COUNT=$(echo ${T0INFO} | jq .result_count)
+                echo $T0INFO > /tmp/t0-json 
+                if [[ ${T0COUNT} -gt 0 ]]
+                then
+                        echo "${T0INFO}" |jq -r '.results[]'
+                        if [ "$SEGMENTNAME" == "" ]
+                        then
+                                echo $T0INFO |jq -r '.results[] | [.display_name, .id] |@tsv'
+                        else
+                                echo $T0INFO |jq -r '.results[] | select (.display_name =="'$SEGMENTNAME'") | .id'
+                        fi
+
+                else
+                        echo ""
+                fi
+        else
+                echo "  error getting Tier-0s"
+                echo ${HTTPSTATUS}
+                echo ${RESPONSE}
+                exit
+        fi
+}
+
+get_tier-0s_interfaces(){
+        #https://${NSXFQDN}/policy/api/v1/infra/tier-0s/Tier-0/locale-services/default/interfaces
+        SERVICENAME=$1
+        
+        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/policy/api/v1/infra/tier-0s/Tier-0/locale-services/default)
+        HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+
+        if [ $HTTPSTATUS -eq 200 ]
+        then
+                T0INFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+                T0COUNT=$(echo ${T0INFO} | jq .result_count)
+                echo $T0INFO > /tmp/t0-json 
+                if [[ ${T0COUNT} -gt 0 ]]
+                then
+                        echo "${T0INFO}" |jq -r '.results[]'
+                        if [ "$SEGMENTNAME" == "" ]
+                        then
+                                echo $T0INFO |jq -r '.results[] | [.display_name, .id] |@tsv'
+                        else
+                                echo $T0INFO |jq -r '.results[] | select (.display_name =="'$SEGMENTNAME'") | .id'
+                        fi
+
+                else
+                        echo ""
+                fi
+        else
+                echo "  error getting Tier-0s"
+                echo ${HTTPSTATUS}
+                echo ${RESPONSE}
+                exit
+        fi
+}
+
+get_tier-0s_bgp(){
+        
+        #/infra/tier-0s/Tier-0/locale-services/default/bgp/neighbors/071971c8-4229-439f-bcdb-6f0378510b11
+        SERVICENAME=$1
+        
+        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/policy/api/v1/infra/tier-0s/Tier-0/locale-services/default)
+        HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+
+        if [ $HTTPSTATUS -eq 200 ]
+        then
+                T0INFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+                T0COUNT=$(echo ${T0INFO} | jq .result_count)
+                echo $T0INFO > /tmp/t0-json 
+                if [[ ${T0COUNT} -gt 0 ]]
+                then
+                        echo "${T0INFO}" |jq -r '.results[]'
+                        if [ "$SEGMENTNAME" == "" ]
+                        then
+                                echo $T0INFO |jq -r '.results[] | [.display_name, .id] |@tsv'
+                        else
+                                echo $T0INFO |jq -r '.results[] | select (.display_name =="'$SEGMENTNAME'") | .id'
+                        fi
+
+                else
+                        echo ""
+                fi
+        else
+                echo "  error getting Tier-0s"
+                echo ${HTTPSTATUS}
+                echo ${RESPONSE}
+                exit
+        fi
+}
+
+
+# https://${NSXFQDN}/policy/api/v1/infra/tier-0s/Tier-0/locale-services/default
+# set value edge_cluster_path : "/infra/sites/default/enforcement-points/default/edge-clusters/<edge-cluster-id>"
+
+# /policy/api/v1/infra/tier-0s/Tier-0/locale-services/default/bgp
+
+# /policy/api/v1/infra/tier-0s/Tier-0/locale-services/default/bgp/neighbors
+
+# /api/v1/logical-routers/<logical-router-id>/routing/redistribution
+
+
+
+
 
 ###################
 CPOD_NAME="cpod-$1"
@@ -2049,14 +2195,45 @@ fi
 # name : edge-2-uplink-2 - type : external - ip : 10.vlan.4.12 - segment : t0-uplink-1 - edge node : edge-2
 
 
+echo "Processing T0 gateway"
+echo
+
+T0GWNAME="Tier-0 "
+
+T0IP01="10.${VLAN}.4.11"
+T0IP01="10.${VLAN}.4.12"
+
+if [ "$(get_tier-0s "${T0GWNAME}")" == "" ]
+then
+        create_t0_gw "${T0GWNAME}"
+else
+        echo "  ${T0SEGMENTNAME} - present"
+fi
+
 # configure cpodrouter bgp:
 #
-# cpodrouter-nsxtv3# configure terminal
-# cpodrouter-nsxtv3(config)# router bgp 65934
-# cpodrouter-nsxtv3(config-router)# neighbor 10.134.4.11 remote-as 66934
-# cpodrouter-nsxtv3(config-router)# neighbor 10.134.4.11 default-originate
-# cpodrouter-nsxtv3(config-router)# do write memory
-# 
+
+ASNCPOD=$(get_cpod_asn ${CPOD_NAME_LOWER})
+ASNNSXT=$((ASNCPOD + 1000))
+CPODBGPTABLE=$(get_cpodrouter_bgp_neighbors_table ${CPOD_NAME_LOWER})
+#test if already configured
+IPTEST=$(echo "${CPODBGPTABLE}" |grep ${T0IP01})
+if [ "${IPTEST}" == "" ];
+then
+        echo "  adding ${T0IP01} bgp neighbor"
+        add_cpodrouter_bgp_neighbor "${T0IP01}" "${ASNNSXT}" "${CPOD_NAME_LOWER}"
+else
+        echo "  ${T0IP01} already defined as bgp neighbor"
+fi
+
+IPTEST=$(echo "${CPODBGPTABLE}" |grep ${T0IP02})
+if [ "${IPTEST}" == "" ];
+then
+        echo "  adding ${T0IP02} bgp neighbor"
+        add_cpodrouter_bgp_neighbor "${T0IP02}" "${ASNNSXT}" "${CPOD_NAME_LOWER}"
+else
+        echo "  ${T0IP02} already defined as bgp neighbor"
+fi
 
 # configure T0 bgp
 # set AS number = cpodrouter + 1000
@@ -2064,6 +2241,8 @@ fi
 # set neighbors
 # add neighbor
 # ip address : 10.vlan.4.1 - remote as number : cpodrouter asn
+
+
 
 # route redistribution
 # set redistribution

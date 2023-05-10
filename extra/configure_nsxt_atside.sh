@@ -1935,7 +1935,7 @@ get_logical_router_redistribution_bgp_revision(){
         then
                 LRINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
                 echo $LRINFO > /tmp/logical-routers-redist-json 
-                ROUTER=$(echo "${LRINFO}" | jq -r '._revision')
+                echo "${LRINFO}" | jq -r '._revision'
         else
                 echo "  error getting Tier-0s routing redistribution"
                 echo ${HTTPSTATUS}
@@ -2659,14 +2659,14 @@ if [ "${BGPREDIST}" == "true" ]
 then
         echo "  BGP redistribution already enabled"
 else
-        echo "  enbling BGP redistribution"
+        echo "  enabling BGP redistribution"
         configure_tier-0s_bgp_redistribution ${RTRID}
 fi
 
 RULES=$(get_logical_router_redistribution_bgp_revision_rules ${RTRID})
 if [ "${RULES}" == "" ]
 then
-        echo "  enbling BGP redistribution rules"
+        echo "  enabling BGP redistribution rules"
         configure_tier-0s_bgp_redistribution_rules ${RTRID}        
 else
         echo "  BGP redistribution already enabled"

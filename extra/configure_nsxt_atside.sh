@@ -1674,31 +1674,24 @@ create_t0_locale_service() {
 
 get_tier-0s_interfaces(){
         #https://${NSXFQDN}/policy/api/v1/infra/tier-0s/Tier-0/locale-services/default/interfaces
-        SERVICENAME=$1
+        T0NAME=$1
         
-        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/policy/api/v1/infra/tier-0s/Tier-0/locale-services/default)
+        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/policy/api/v1/infra/tier-0s/${T0NAME}/locale-services/default/interfaces)
         HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
 
         if [ $HTTPSTATUS -eq 200 ]
         then
-                T0INFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
-                T0COUNT=$(echo ${T0INFO} | jq .result_count)
-                echo $T0INFO > /tmp/t0-json 
+                T0INTINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+                T0INTCOUNT=$(echo ${T0INTINFO} | jq .result_count)
+                echo $T0INFO > /tmp/t0-interfeces-json 
                 if [[ ${T0COUNT} -gt 0 ]]
                 then
-                        echo "${T0INFO}" |jq -r '.results[]'
-                        if [ "$SEGMENTNAME" == "" ]
-                        then
-                                echo $T0INFO |jq -r '.results[] | [.display_name, .id] |@tsv'
-                        else
-                                echo $T0INFO |jq -r '.results[] | select (.display_name =="'$SEGMENTNAME'") | .id'
-                        fi
-
+                        echo "${T0INTINFO}" |jq -r .
                 else
                         echo ""
                 fi
         else
-                echo "  error getting Tier-0s"
+                echo "  error getting Tier-0s interfaces"
                 echo ${HTTPSTATUS}
                 echo ${RESPONSE}
                 exit
@@ -2267,9 +2260,17 @@ else
         echo "  locale_services present"
 fi
 
+echo
+echo "  Checinkg interfaces"
+echo
+
+get_tier-0s_interfaces
 
 # configure cpodrouter bgp:
 #
+echo
+echo checking bgp on cpodrouter
+echo
 
 ASNCPOD=$(get_cpod_asn ${CPOD_NAME_LOWER})
 ASNNSXT=$((ASNCPOD + 1000))
@@ -2292,6 +2293,8 @@ then
 else
         echo "  ${T0IP02} already defined as bgp neighbor"
 fi
+
+
 
 # configure T0 bgp
 # set AS number = cpodrouter + 1000

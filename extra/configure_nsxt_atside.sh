@@ -1874,11 +1874,180 @@ configure_tier-0s_bgp_neighbor(){
         fi
 }
 
+get_logical_router_id(){
+        
+        T0NAME=$1
+        
+        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/api/v1/logical-routers)
+        HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+
+        if [ $HTTPSTATUS -eq 200 ]
+        then
+                LRINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+                echo $LRINFO > /tmp/logical-routers-json 
+                ROUTER=$(echo "${LRINFO}" | jq -r '.results[] | select (.display_name == "'${T0NAME}'")')
+                if [ "${ROUTER}" != "" ]
+                then
+                        echo "${LRINFO}" | jq -r '.results[] | select (.display_name == "'${T0NAME}'") | .id'
+                else
+                        echo ""
+                fi
+
+
+        else
+                echo "  error getting Tier-0s"
+                echo ${HTTPSTATUS}
+                echo ${RESPONSE}
+                exit
+        fi
+}
+
 # /api/v1/logical-routers/<logical-router-id>/routing/redistribution
 
+get_logical_router_redistribution_bgp(){
+        
+        LRID=$1
+        
+        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/api/v1/logical-routers/${LRID}/routing/redistribution)
+        HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
 
+        if [ $HTTPSTATUS -eq 200 ]
+        then
+                LRINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+                echo $LRINFO > /tmp/logical-routers-redist-json 
+                ROUTER=$(echo "${LRINFO}" | jq -r '.bgp_enabled')
+        else
+                echo "  error getting Tier-0s routing redistribution"
+                echo ${HTTPSTATUS}
+                echo ${RESPONSE}
+                exit
+        fi
+}
 
+get_logical_router_redistribution_bgp_revision(){
+        
+        LRID=$1
+        
+        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/api/v1/logical-routers/${LRID}/routing/redistribution)
+        HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
 
+        if [ $HTTPSTATUS -eq 200 ]
+        then
+                LRINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+                echo $LRINFO > /tmp/logical-routers-redist-json 
+                ROUTER=$(echo "${LRINFO}" | jq -r '._revision')
+        else
+                echo "  error getting Tier-0s routing redistribution"
+                echo ${HTTPSTATUS}
+                echo ${RESPONSE}
+                exit
+        fi
+}
+
+configure_tier-0s_bgp_redistribution(){
+        
+        #/infra/tier-0s/Tier-0/locale-services/default/bgp/neighbors/071971c8-4229-439f-bcdb-6f0378510b11
+        LRID=$1
+        REVISION=$(get_logical_router_redistribution_bgp_revision "${LRID}")
+        T0_LR_JSON='{
+        "resource_type": "RedistributionConfig",
+        "display_name": "BGP route redistribution",
+        "bgp_enabled": true,
+        "_revision": '${REVISION}'
+        }'
+        SCRIPT="/tmp/T0_LR_JSON"
+        echo ${T0_LR_JSON} > ${SCRIPT}
+
+        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} -H 'Content-Type: application/json' -X PUT -d @${SCRIPT} https://${NSXFQDN}/api/v1/logical-routers/${LRID}/routing/redistribution )
+        HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+
+        if [ $HTTPSTATUS -eq 200 ]
+        then
+                NBINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+                echo $NBINFO > /tmp/t0-bgp-redist-configured-json 
+                echo "  BGP route redistribution set successully" 
+        else
+                echo "  error configuring Tier-0s BGP redistribution"
+                echo ${HTTPSTATUS}
+                echo ${RESPONSE}
+                exit
+        fi
+}
+
+get_logical_router_redistribution_bgp_revision_rules(){
+        
+        LRID=$1
+        
+        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/api/v1/logical-routers/${LRID}/routing/redistribution/rules)
+        HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+
+        if [ $HTTPSTATUS -eq 200 ]
+        then
+                LRINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+                echo $LRINFO > /tmp/logical-routers-redist-rules-json 
+                ROUTER=$(echo "${LRINFO}" | jq -r '.rules[]')
+        else
+                echo "  error getting Tier-0s routing redistribution"
+                echo ${HTTPSTATUS}
+                echo ${RESPONSE}
+                exit
+        fi
+}
+
+get_logical_router_redistribution_bgp_rules_reivision(){
+        
+        LRID=$1
+        
+        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/api/v1/logical-routers/${LRID}/routing/redistribution/rules)
+        HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+
+        if [ $HTTPSTATUS -eq 200 ]
+        then
+                LRINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+                echo $LRINFO > /tmp/logical-routers-redist-rules-json 
+                ROUTER=$(echo "${LRINFO}" | jq -r '._revision')
+        else
+                echo "  error getting Tier-0s routing redistribution"
+                echo ${HTTPSTATUS}
+                echo ${RESPONSE}
+                exit
+        fi
+}
+
+configure_tier-0s_bgp_redistribution_rules(){
+        
+        #/infra/tier-0s/Tier-0/locale-services/default/bgp/neighbors/071971c8-4229-439f-bcdb-6f0378510b11
+        LRID=$1
+        REVISION=$(get_logical_router_redistribution_bgp_rules_reivision "${LRID}")
+        T0_RDST_RULES_JSON='{
+        "_revision": '${REVISION}',
+        "rules": [{
+        "sources" : [ "T1_CONNECTED", "T1_STATIC", "T1_LB_VIP", "T1_NAT" ],
+        "destinations" : [ "BGP" ],
+        "destination" : "BGP",
+        "address_family" : "IPV4_AND_IPV6",
+        "display_name" : "default"
+        }
+        ]
+        }'
+        SCRIPT="/tmp/T0_RDST_RULES_JSON"
+        echo ${T0_RDST_RULES_JSON} > ${SCRIPT}
+
+        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} -H 'Content-Type: application/json' -X PUT -d @${SCRIPT} https://${NSXFQDN}/api/v1/logical-routers/${LRID}/routing/redistribution/rules )
+        HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+
+        if [ $HTTPSTATUS -eq 200 ]
+        then
+                NBINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+                echo $NBINFO > /tmp/t0-bgp-redist-rules-configured-json 
+                echo "  BGP route redistribution rules set successully" 
+        else
+                echo "  error configuring Tier-0s BGP redistribution rules"
+                echo ${HTTPSTATUS}
+                echo ${RESPONSE}
+                exit
+        fi
+}
 
 ###################
 CPOD_NAME="cpod-$1"
@@ -2477,14 +2646,31 @@ else
         echo "  BGP Neighbor present"
 fi
 
-
-
 # route redistribution
 # set redistribution
 # add route redistribution
 # name: default - set route redistribution:
 # T1 subnets : LB vip - nat ip - static routes - connected interfaces and segments
 
+echo 
+RTRID=$(get_logical_router_id  "${T0GWNAME}" )
+BGPREDIST=$(get_logical_router_redistribution_bgp ${RTRID})
+if [ "${BGPREDIST}" == "true" ]
+then
+        echo "  BGP redistribution already enabled"
+else
+        echo "  enbling BGP redistribution"
+        configure_tier-0s_bgp_redistribution ${RTRID}
+fi
+
+RULES=$(get_logical_router_redistribution_bgp_revision_rules ${RTRID})
+if [ "${RULES}" == "" ]
+then
+        echo "  enbling BGP redistribution rules"
+        configure_tier-0s_bgp_redistribution_rules ${RTRID}        
+else
+        echo "  BGP redistribution already enabled"
+fi
 
 #
 # ===== NSX cleanup =====

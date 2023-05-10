@@ -1834,7 +1834,7 @@ get_tier-0s_bgp_neighbors(){
         then
                 BGPINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
                 echo $BGPINFO > /tmp/t0-bgp-neighbors-json 
-                echo "${BGPINFO}" 
+                echo "${BGPINFO}" | jq .results[]
         else
                 echo "  error getting Tier-0s"
                 echo ${HTTPSTATUS}

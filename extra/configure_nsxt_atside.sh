@@ -1650,8 +1650,7 @@ create_t0_locale_service() {
         EDGECLUSTERPATH="/infra/sites/default/enforcement-points/default/edge-clusters/${EDGECLUSTERID}"
 
         T0_LS_JSON='{
-        "edge_cluster_path": "'${EDGECLUSTERPATH}'",
-        "_revision": 0
+        "edge_cluster_path": "'${EDGECLUSTERPATH}'"
         }'
         SCRIPT="/tmp/T0_LS_JSON"
         echo ${T0_LS_JSON} > ${SCRIPT}
@@ -1663,10 +1662,10 @@ create_t0_locale_service() {
         then
                 T0GWINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
                 echo "  ${T0NAME} created succesfully"
-                echo ${T0GWINFO} > /tmp/t0-gw-create.json
+                echo ${T0GWINFO} > /tmp/t0-ls-create.json
 
         else
-                echo "  error creating T0 GW : ${T0NAME}"
+                echo "  error creating T0 locale_service : default"
                 echo ${HTTPSTATUS}
                 echo ${RESPONSE}
                 exit

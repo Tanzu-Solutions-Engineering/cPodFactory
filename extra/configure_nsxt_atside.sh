@@ -54,7 +54,7 @@ get_nsx_manager_status() {
         case $HTTPSTATUS in
 
                 200)    
-                        echo ${RESPONSE} |awk -F '####' '{print $1}'  | jq .mgmt_cluster_status.status
+                        echo ${RESPONSE} |awk -F '####' '{print $1}'  | jq -r .mgmt_cluster_status.status
                         ;;
 
                 503)    

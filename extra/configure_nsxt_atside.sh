@@ -2414,7 +2414,7 @@ OVERLAYTZID=$(get_transport_zone_id "overlay-tz")
 echo "  OVERLAY TZ ID: ${OVERLAYTZID}"
 
 #GET IP POOL ID
-IPPOOLID=$(get_ip_pool_id "TEP-pool")
+IPPOOLID=$(get_ip_pool_path "TEP-pool")
 echo "  IP POOL ID : ${IPPOOLID}"
 
 echo

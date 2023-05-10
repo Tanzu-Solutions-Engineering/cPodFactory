@@ -1556,7 +1556,6 @@ get_tier-0s(){
                         else
                                 echo $T0INFO |jq -r '.results[] | select (.display_name =="'$SEGMENTNAME'") | .id'
                         fi
-
                 else
                         echo ""
                 fi
@@ -2198,10 +2197,10 @@ fi
 echo "Processing T0 gateway"
 echo
 
-T0GWNAME="Tier-0 "
+T0GWNAME="Tier-0"
 
 T0IP01="10.${VLAN}.4.11"
-T0IP01="10.${VLAN}.4.12"
+T0IP02="10.${VLAN}.4.12"
 
 if [ "$(get_tier-0s "${T0GWNAME}")" == "" ]
 then

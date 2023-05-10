@@ -47,6 +47,41 @@ source ./extra/functions.sh
 
 # ========== NSX functions ===========
 
+get_nsx_manager_status() {
+        #returns json
+        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/api/v1/cluster/status)
+        HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+        case $HTTPSTATUS in
+
+                200)    
+                        echo ${RESPONSE} |awk -F '####' '{print $2}'  | jq .mgmt_cluster_status.status
+                        ;;
+
+                503)    
+                        echo "Not Ready"
+                        ;;
+                *)      
+                         echo ${RESPONSE} |awk -F '####' '{print $2}'
+                        ;;
+
+        esac
+}
+
+loop_wait_nsx_manager_status(){
+        #$1 = Compute Mgr ID
+        echo "  Checking nsx manager status"
+        echo
+        printf "\t connecting to nsx ."
+        INPROGRESS=$(get_nsx_manager_status)
+        while [[ "$INPROGRESS" != "STABLE" ]]
+        do      
+                printf '.' >/dev/tty
+                sleep 10
+                INPROGRESS=$(get_compute_manager_status)
+        done
+
+}
+
 get_compute_manager() {
         # $1 = compute manager name
         # returns json
@@ -2147,16 +2182,7 @@ do
         printf '.' >/dev/tty
 done
 echo
-RESPONSE=$(curl -s -k -w '####%{response_code}' https://${NSXFQDN}/login.jsp)
-HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
-printf "\t connecting to nsx ."
-while [[ ${HTTPSTATUS} != 200  ]]
-do
-        sleep 10
-        RESPONSE=$(curl -s -k -w '####%{response_code}' https://${NSXFQDN}/login.jsp)
-        HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
-        printf '.' >/dev/tty
-done
+loop_wait_nsx_manager_status
 
 # ===== checking nsx version =====
 echo

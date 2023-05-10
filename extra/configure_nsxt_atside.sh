@@ -1621,7 +1621,7 @@ create_t0_gw() {
 
 get_tier-0s_locale_services(){
         
-        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/policy/api/v1/infra/tier-0s/Tier-0/locale-services/default)
+        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/policy/api/v1/infra/tier-0s/Tier-0/locale-services)
         HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
 
         if [ $HTTPSTATUS -eq 200 ]
@@ -2219,6 +2219,7 @@ fi
 
 # ===== create nsx segments for T0 =====
 # name: t0-uplink-1 - no gw - tz : edge-vlan-tz - teaming : edge-uplink-1 - vlan id : VLAN#4 (uplinks)
+echo
 echo "Processing T0 segment"
 echo
 
@@ -2241,8 +2242,7 @@ fi
 # name : edge-1-uplink-1 - type : external - ip : 10.vlan.4.11 - segment : t0-uplink-1 - edge node : edge-1
 # add interfce
 # name : edge-2-uplink-2 - type : external - ip : 10.vlan.4.12 - segment : t0-uplink-1 - edge node : edge-2
-
-
+echo
 echo "Processing T0 gateway"
 echo
 
@@ -2255,7 +2255,7 @@ if [ "$(get_tier-0s "${T0GWNAME}")" == "" ]
 then
         create_t0_gw "${T0GWNAME}"
 else
-        echo "  ${T0SEGMENTNAME} - present"
+        echo "  ${T0GWNAME} - present"
 fi
 
 get_tier-0s_locale_services

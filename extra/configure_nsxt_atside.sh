@@ -1812,7 +1812,7 @@ configure_tier-0s_bgp(){
         then
                 BGPINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
                 echo $BGPINFO > /tmp/t0-bgp-configured-json 
-                echo "${BGPINFO}" 
+                echo "  BGP Enabled succesfully with ASN : ${ASNNUMBER}" 
         else
                 echo "  error configuring Tier-0s BGP"
                 echo ${HTTPSTATUS}

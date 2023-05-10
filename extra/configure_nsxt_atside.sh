@@ -135,7 +135,7 @@ nsx_accept_eula() {
 nsx_ceip_agreement() {
         #
         CEIP_JSON='{
-        "_revision": 0,
+        "_revision": 1,
         "id": "TelemetryAgreementIdentifier",
         "resource_type": "TelemetryAgreement",
         "telemetry_agreement_displayed": true

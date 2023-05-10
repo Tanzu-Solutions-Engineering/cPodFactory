@@ -717,7 +717,7 @@ create_ip_pool() {
         if [ $HTTPSTATUS -eq 200 ]
         then
                 IPPOOLINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
-                echo "${IPPOOLINFO} created succesfully"
+                echo "  ${IPPOOLNAME} created succesfully"
                 #echo ${IPPOOLINFO} |jq .
                 IPPOOLID=$(echo ${IPPOOLINFO} |jq -r .id)
                 create_ip_pool_subnet $IPPOOLID $2 $3 $4 $5 $6
@@ -2391,7 +2391,7 @@ fi
 #/policy/api/v1/infra/ip-pools
 #Check if one present
 #Check if subnets present
-
+echo
 POOL=$(check_ip_pool "TEP-pool")
 if [ "${POOL}" == "" ]
 then

@@ -837,7 +837,7 @@ create_transport_node_profile() {
                 ],
                 "is_migrate_pnics": false,
                 "ip_assignment_spec": {
-                "ip_pool_id": "/infra/ip-pools/'${IPPOOLID}'",
+                "ip_pool_id": "'${IPPOOLID}'",
                 "resource_type": "StaticIpPoolSpec"
                 },
                 "transport_zone_endpoints": [

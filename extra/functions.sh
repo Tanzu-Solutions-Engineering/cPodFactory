@@ -178,8 +178,7 @@ get_cpodrouter_bgp_neighbors_table(){
 	echo "get bgp neighbors table"
         CMD="vtysh -e \"show bgp summary\""
         BGPSUMMARY=$(ssh -o LogLevel=error ${1} "${CMD}")
-        echo "${BGPSUMMARY}"
-        #vtysh -e "show bgp summary" | grep Neighbor -A20 | awk '{print $1 "\t" $3}'
-        
+        PEERS=$(echo "${BGPSUMMARY}" | grep Peers | cut -d" " -f2 | cut -"d," -f1)
+        echo "${BGPSUMMARY}" | grep Neighbor -A${PEERS} | awk '{print $1 "\t" $3}'
 }
 

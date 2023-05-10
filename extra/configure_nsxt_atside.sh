@@ -1802,8 +1802,8 @@ configure_tier-0s_bgp(){
         "local_as_num": "'${ASNNUMBER}'",
         "enabled": true
         }'
-        SCRIPT="/tmp/T0_INT_JSON"
-        echo ${T0_INT_JSON} > ${SCRIPT}
+        SCRIPT="/tmp/T0_BGP_JSON"
+        echo ${T0_BGP_JSON} > ${SCRIPT}
 
         RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} -H 'Content-Type: application/json' -X PUT -d @${SCRIPT} https://${NSXFQDN}/policy/api/v1/infra/tier-0s/${T0NAME}/locale-services/default/bgp)
         HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')

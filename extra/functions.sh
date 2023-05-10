@@ -167,4 +167,19 @@ add_cpodrouter_bgp_neighbor() {
         echo "${CMD}"
 
 	#ssh -o LogLevel=error ${3} "${CMD}"
+
 }
+
+get_cpodrouter_bgp_neighbors_table(){
+	# ${1} : cpod_name_lower
+
+        [ "$1" == "" ] && echo "usage: $0 <cpod_name_lower>" && exit 1 
+
+	echo "get bgp neighbors table"
+        CMD="vtysh -e \"show bgp summary\""
+        BGPSUMMARY=$(ssh -o LogLevel=error ${1} "${CMD}")
+        echo "${BGPSUMMARY}"
+        #vtysh -e "show bgp summary" | grep Neighbor -A20 | awk '{print $1 "\t" $3}'
+        
+}
+

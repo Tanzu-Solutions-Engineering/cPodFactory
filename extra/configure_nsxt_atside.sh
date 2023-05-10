@@ -1698,6 +1698,35 @@ get_tier-0s_interfaces(){
         fi
 }
 
+create_t0_interface() {
+        #
+        T0NAME=$1
+        EDGECLUSTERID=$2
+        EDGECLUSTERPATH="/infra/sites/default/enforcement-points/default/edge-clusters/${EDGECLUSTERID}"
+
+        T0_LS_JSON='{
+        "edge_cluster_path": "'${EDGECLUSTERPATH}'"
+        }'
+        SCRIPT="/tmp/T0_LS_JSON"
+        echo ${T0_LS_JSON} > ${SCRIPT}
+
+        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} -H 'Content-Type: application/json' -X PUT -d @${SCRIPT} https://${NSXFQDN}/policy/api/v1/infra/tier-0s/${T0NAME}/locale-services/default)
+        HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+
+        if [ $HTTPSTATUS -eq 200 ]
+        then
+                T0GWINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+                echo "  ${T0NAME} created succesfully"
+                echo ${T0GWINFO} > /tmp/t0-ls-create.json
+
+        else
+                echo "  error creating T0 locale_service : default"
+                echo ${HTTPSTATUS}
+                echo ${RESPONSE}
+                exit
+        fi
+}
+
 get_tier-0s_bgp(){
         
         #/infra/tier-0s/Tier-0/locale-services/default/bgp/neighbors/071971c8-4229-439f-bcdb-6f0378510b11
@@ -2250,8 +2279,10 @@ else
         echo "  ${T0GWNAME} - present"
 fi
 
-get_tier-0s_locale_services
+echo
 echo "  Checking locale_services"
+echo 
+
 if [ "$(get_tier-0s_locale_services)" == "" ]
 then
         EDGECLUSTERID=$(get_edge_clusters_id "edge-cluster")
@@ -2264,7 +2295,7 @@ echo
 echo "  Checinkg interfaces"
 echo
 
-get_tier-0s_interfaces
+get_tier-0s_interfaces  "${T0GWNAME}"
 
 # configure cpodrouter bgp:
 #

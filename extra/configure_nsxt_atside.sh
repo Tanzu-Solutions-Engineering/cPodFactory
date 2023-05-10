@@ -2073,20 +2073,15 @@ patch_tier0_route_redistribution() {
         T0NAME=$1
 
         T0_RULES_JSON='{
-        "bgp_enabled": true,
-        "ospf_enabled": false,
-        "redistribution_rules": [
-        {
-        "name": "default",
-        "route_redistribution_types": [
-                "TIER1_LB_VIP",
-                "TIER1_NAT",
-                "TIER1_CONNECTED",
-                "TIER1_STATIC"
-        ],
-        "destinations": [ "BGP" ]
+        "route_redistribution_config" : {
+        "bgp_enabled" : true,
+        "ospf_enabled" : false,
+        "redistribution_rules" : [ {
+        "name" : "default",
+        "route_redistribution_types" : [ "TIER1_LB_VIP", "TIER1_NAT", "TIER1_CONNECTED", "TIER1_STATIC" ],
+        "destinations" : [ "BGP" ]
+        } ]
         }
-        ]
         }'
         SCRIPT="/tmp/T0_RULES_JSON"
         echo ${T0_RULES_JSON} > ${SCRIPT}

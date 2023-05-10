@@ -70,6 +70,7 @@ cpodctl vcsa $1 $3
 ./extra/create_vds_vsan_nsxt.sh $1 $3
 ./extra/enable_vsanOSA.sh $1 $3
 ./extra/deploy_nsxt_mgr.sh $1 $3
+./extra/configure_nsxt_atside.sh $1 $3
 
 #get data
 CPOD_NAME=$( echo ${1} | tr '[:lower:]' '[:upper:]' )

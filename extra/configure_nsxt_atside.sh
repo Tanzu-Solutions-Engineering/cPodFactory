@@ -2135,6 +2135,19 @@ PASSWORD=$( ./${EXTRA_DIR}/passwd_for_cpod.sh ${1} )
 NSXFQDN=${HOSTNAME}.${CPOD_NAME_LOWER}.${ROOT_DOMAIN}
 echo ${NSXFQDN}
 
+echo "  waiting for nsx mgr to answer ping"
+echo 
+
+STATUS=$( ping -c 1 ${NSXFQDN} 2>&1 > /dev/null ; echo $? )
+printf "\t ping nsx ."
+while [[ ${STATUS} != 0  ]]
+do
+        sleep 10
+        STATUS=$( ping -c 1 ${NSXFQDN} 2>&1 > /dev/null ; echo $? )
+        printf '.' >/dev/tty
+done
+
+
 # ===== checking nsx version =====
 echo
 echo "Checking nsx version"
@@ -2729,17 +2742,11 @@ else
         patch_tier0_route_redistribution  "${T0GWNAME}"
 fi
 
-
-
 #
 # ===== NSX cleanup =====
 # accept eula
-# reject CEIP
-# skip welcome tour
 
 nsx_accept_eula
-nsx_ceip_telemetry
-nsx_ceip_agreement
 
 # ===== Script finished =====
 echo "Configuration done"

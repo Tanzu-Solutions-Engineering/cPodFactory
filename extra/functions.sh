@@ -114,7 +114,6 @@ enable_dhcp_cpod_vlanx() {
 	#restart_cpodrouter_dnsmasq ${2}    
 }
 
-
 get_last_ip() {
         # ${1} : subnet
         # ${2} : cpod_name_lower to query
@@ -140,4 +139,15 @@ add_cpod_ssh_key_to_edge_know_hosts() {
         sed "/${KEY_ESC}/d" -i ~/.ssh/known_hosts
         #add key to known hosts
         echo "${KEY}" >> ~/.ssh/known_hosts
+}
+
+get_cpod_asn(){
+        # ${1} : cpod_name_lower
+        # this function will use ssh-keyscan to add the cpod public to the known hosts file, use this function to prevent scripts breaking down the line.
+        CPODNAMELOWER=$1
+        HOSTS=/etc/hosts
+
+        CPODIP=$( cat ${HOSTS} | grep ${CPODNAMELOWER} | cut -f1 | cut -d"." -f4 )
+        CPODASN=$( expr ${ASN} + ${CPODIP} )
+        echo "${CPODASN}"
 }

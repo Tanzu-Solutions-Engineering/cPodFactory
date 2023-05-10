@@ -77,7 +77,7 @@ loop_wait_nsx_manager_status(){
         do      
                 printf '.' >/dev/tty
                 sleep 10
-                INPROGRESS=$(get_compute_manager_status)
+                INPROGRESS=$(get_nsx_manager_status)
                 echo "$INPROGRESS"
         done
 

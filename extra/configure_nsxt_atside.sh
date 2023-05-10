@@ -141,6 +141,7 @@ nsx_ceip_agreement() {
 #        "telemetry_agreement_displayed": true
 #        }'
         CEIP_JSON='{
+        "_revision": 0,                
         "telemetry_agreement_displayed": true
         }'
         SCRIPT="/tmp/CEIP_JSON"
@@ -163,7 +164,7 @@ nsx_ceip_agreement() {
 nsx_ceip_telemetry() {
         #
 
-        CEIP_JSON='{"ceip_acceptance" : false, "schedule_enabled": true, "_revision" : 1}'
+        CEIP_JSON='{"ceip_acceptance" : false, "schedule_enabled": true, "_revision" : 0}'
         SCRIPT="/tmp/CEIP_JSON"
         echo ${CEIP_JSON} > ${SCRIPT}
 

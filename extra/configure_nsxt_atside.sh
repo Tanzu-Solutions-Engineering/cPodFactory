@@ -1812,7 +1812,7 @@ configure_tier-0s_bgp(){
         then
                 BGPINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
                 echo $BGPINFO > /tmp/t0-bgp-configured-json 
-                echo "${$BGPINFO}" 
+                echo "${BGPINFO}" 
         else
                 echo "  error configuring Tier-0s BGP"
                 echo ${HTTPSTATUS}
@@ -1834,7 +1834,7 @@ get_tier-0s_bgp_neighbors(){
         then
                 BGPINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
                 echo $BGPINFO > /tmp/t0-bgp-neighbors-json 
-                echo "${$BGPINFO}" 
+                echo "${BGPINFO}" 
         else
                 echo "  error getting Tier-0s"
                 echo ${HTTPSTATUS}
@@ -1852,8 +1852,8 @@ configure_tier-0s_bgp_neighbor(){
         NBNAME=$4
 
         T0_NB_JSON='{
-        "neighbor_address": "'${T0NAME}'",
-        "remote_as_num": "'${NBIP}'"
+        "neighbor_address": "'${NBIP}'",
+        "remote_as_num": "'${NBASN}'"
         }'
         SCRIPT="/tmp/T0_NB_JSON"
         echo ${T0_NB_JSON} > ${SCRIPT}
@@ -1865,7 +1865,7 @@ configure_tier-0s_bgp_neighbor(){
         then
                 NBINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
                 echo $NBINFO > /tmp/t0-bgp-nb-configured-json 
-                echo "  BGP Neighbor ${$NBNAME} added successully" 
+                echo "  BGP Neighbor ${NBNAME} added successully" 
         else
                 echo "  error configuring Tier-0s BGP Neighbor ${$NBNAME}"
                 echo ${HTTPSTATUS}

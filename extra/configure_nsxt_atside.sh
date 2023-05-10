@@ -2086,7 +2086,7 @@ patch_tier0_route_redistribution() {
         SCRIPT="/tmp/T0_RULES_JSON"
         echo ${T0_RULES_JSON} > ${SCRIPT}
 
-        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} -H 'Content-Type: application/json' -X PUT -d @${SCRIPT} https://${NSXFQDN}/policy/api/v1/infra/tier-0s/${T0NAME}/locale-services/default)
+        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} -H 'Content-Type: application/json' -X PATCH -d @${SCRIPT} https://${NSXFQDN}/policy/api/v1/infra/tier-0s/${T0NAME}/locale-services/default)
         HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
 
         if [ $HTTPSTATUS -eq 200 ]

@@ -251,7 +251,7 @@ loop_wait_compute_manager_status(){
                 echo 
                 sleep 10
                 MGRSTATUS=$(get_compute_manager_status "${MGRID}")
-                INPROGRESS=$(echo "${MGRSTATUS}" | jq .connection_status)
+                INPROGRESS=$(echo "${MGRSTATUS}" | jq -r .connection_status)
         done
 
 }
@@ -2146,7 +2146,17 @@ do
         STATUS=$( ping -c 1 ${NSXFQDN} 2>&1 > /dev/null ; echo $? )
         printf '.' >/dev/tty
 done
-
+echo
+RESPONSE=$(curl -s -k -w '####%{response_code}' https://${NSXFQDN}/login.jsp)
+HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+printf "\t connecting to nsx ."
+while [[ ${HTTPSTATUS} != 200  ]]
+do
+        sleep 10
+        RESPONSE=$(curl -s -k -w '####%{response_code}' https://${NSXFQDN}/login.jsp)
+        HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+        printf '.' >/dev/tty
+done
 
 # ===== checking nsx version =====
 echo
@@ -2181,9 +2191,9 @@ then
                         echo "lowestversion: $LOWESTVERSION"
                         if [[ "${LOWESTVERSION}" == "4.1" ]]
                         then
-                                echo "Version is at lease 4.1"
+                                echo "  Version is at lease 4.1"
                         else
-                                echo "Version is below 4.1. Script uses newer API (>3.2 or >4.1). stopping here."
+                                echo "  Version is below 4.1. Script uses newer API (>3.2 or >4.1). stopping here."
                                 exit
                         fi			
 			;;
@@ -2206,10 +2216,7 @@ echo
 echo "Accepting EULA and settting CEIP"
 echo
 
-#nsx_accept_eula
-#nsx_ceip_agreement
-#nsx_ceip_telemetry
-
+nsx_accept_eula
 
 #======== License NSX-T ========
 
@@ -2741,12 +2748,6 @@ else
         echo "  enabling BGP redistribution and rules"
         patch_tier0_route_redistribution  "${T0GWNAME}"
 fi
-
-#
-# ===== NSX cleanup =====
-# accept eula
-
-nsx_accept_eula
 
 # ===== Script finished =====
 echo "Configuration done"

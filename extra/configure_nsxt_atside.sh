@@ -54,14 +54,14 @@ get_nsx_manager_status() {
         case $HTTPSTATUS in
 
                 200)    
-                        echo ${RESPONSE} |awk -F '####' '{print $2}'  | jq .mgmt_cluster_status.status
+                        echo ${RESPONSE} |awk -F '####' '{print $1}'  | jq .mgmt_cluster_status.status
                         ;;
 
                 503)    
                         echo "Not Ready"
                         ;;
                 *)      
-                         echo ${RESPONSE} |awk -F '####' '{print $2}'
+                         echo ${RESPONSE} |awk -F '####' '{print $1}'
                         ;;
 
         esac
@@ -2181,6 +2181,7 @@ do
         STATUS=$( ping -c 1 ${NSXFQDN} 2>&1 > /dev/null ; echo $? )
         printf '.' >/dev/tty
 done
+echo
 echo
 loop_wait_nsx_manager_status
 

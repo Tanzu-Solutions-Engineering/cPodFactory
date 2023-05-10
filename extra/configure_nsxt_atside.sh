@@ -1698,29 +1698,71 @@ get_tier-0s_interfaces(){
         fi
 }
 
-create_t0_interface() {
-        #
-        T0NAME=$1
-        EDGECLUSTERID=$2
-        EDGECLUSTERPATH="/infra/sites/default/enforcement-points/default/edge-clusters/${EDGECLUSTERID}"
-
-        T0_LS_JSON='{
-        "edge_cluster_path": "'${EDGECLUSTERPATH}'"
-        }'
-        SCRIPT="/tmp/T0_LS_JSON"
-        echo ${T0_LS_JSON} > ${SCRIPT}
-
-        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} -H 'Content-Type: application/json' -X PUT -d @${SCRIPT} https://${NSXFQDN}/policy/api/v1/infra/tier-0s/${T0NAME}/locale-services/default)
+get_edge_node_cluster_member_index(){
+        #$1 segments name to look for
+        #returns json
+        EDGECLUSTERNAME=$1
+        EDGENODENAME=$2
+  
+        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/api/v1/edge-clusters)
         HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
 
         if [ $HTTPSTATUS -eq 200 ]
         then
-                T0GWINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
-                echo "  ${T0NAME} created succesfully"
-                echo ${T0GWINFO} > /tmp/t0-ls-create.json
+                EDGECLUSTERSINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+                EDGECLUSTERSCOUNT=$(echo ${EDGECLUSTERSINFO} | jq .result_count)
+                echo $EDGECLUSTERSINFO > /tmp/edge-clusters-json 
+                if [[ ${EDGECLUSTERSCOUNT} -gt 0 ]]
+                then
+                        CLUSTER=$(echo "${EDGECLUSTERSINFO}" |jq '.results[] | select (.display_name =="'${EDGECLUSTERNAME}'")' )
+                        echo $CLUSTER |jq '.members[] | select (.display_name == "'${EDGENODENAME}'") | .member_index'
+                else
+                        echo ""
+                fi
+        else
+                echo "  error getting edge-clusters"
+                echo ${HTTPSTATUS}
+                echo ${RESPONSE}
+                exit
+        fi
+}
+
+create_t0_interface() {
+        #
+        T0NAME=$1
+        EDGECLUSTERID=$2
+        INTIP=$3
+        SEGMENT=$4
+        EDGENODEIDX=$5
+        INTNAME=$6
+
+        EDGECLUSTERPATH="/infra/sites/default/enforcement-points/default/edge-clusters/${EDGECLUSTERID}/edge-nodes/${EDGENODEIDX}"
+
+        T0_INT_JSON='{
+        "segment_path": "/infra/segments/'${SEGMENT}'",
+        "subnets": [
+        {
+        "ip_addresses": [ "'${INTIP}'" ],
+        "prefix_len": 24
+        }
+        ],
+        "edge_path": "'${EDGECLUSTERPATH}'",
+        "type": "EXTERNAL"
+        }'
+        SCRIPT="/tmp/T0_INT_JSON"
+        echo ${T0_INT_JSON} > ${SCRIPT}
+
+        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} -H 'Content-Type: application/json' -X PUT -d @${SCRIPT} https://${NSXFQDN}/policy/api/v1/infra/tier-0s/${T0NAME}/locale-services/default/interfaces/${INTNAME})
+        HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+
+        if [ $HTTPSTATUS -eq 200 ]
+        then
+                T0INTINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+                echo "  ${INTNAME} created succesfully"
+                echo ${T0INTINFO} > /tmp/t0-int-create.json
 
         else
-                echo "  error creating T0 locale_service : default"
+                echo "  error creating T0 interface : ${INTNAME} "
                 echo ${HTTPSTATUS}
                 echo ${RESPONSE}
                 exit
@@ -2258,19 +2300,11 @@ fi
 # create TO in network - T0 gateways
 # name : Tier-0 - HA mode : active-active - edge cluster : edge-cluster
 # save
-# set interfaces
-# add interfce
-# name : edge-1-uplink-1 - type : external - ip : 10.vlan.4.11 - segment : t0-uplink-1 - edge node : edge-1
-# add interfce
-# name : edge-2-uplink-2 - type : external - ip : 10.vlan.4.12 - segment : t0-uplink-1 - edge node : edge-2
 echo
 echo "Processing T0 gateway"
 echo
 
 T0GWNAME="Tier-0"
-
-T0IP01="10.${VLAN}.4.11"
-T0IP02="10.${VLAN}.4.12"
 
 if [ "$(get_tier-0s "${T0GWNAME}")" == "" ]
 then
@@ -2291,11 +2325,31 @@ else
         echo "  locale_services present"
 fi
 
+# set interfaces
+# add interfce
+# name : edge-1-uplink-1 - type : external - ip : 10.vlan.4.11 - segment : t0-uplink-1 - edge node : edge-1
+# add interfce
+# name : edge-2-uplink-2 - type : external - ip : 10.vlan.4.12 - segment : t0-uplink-1 - edge node : edge-2
+
 echo
 echo "  Checinkg interfaces"
 echo
 
-get_tier-0s_interfaces  "${T0GWNAME}"
+T0IP01="10.${VLAN}.4.11"
+T0IP02="10.${VLAN}.4.12"
+
+INTERFACES=$(get_tier-0s_interfaces  "${T0GWNAME}")
+
+if [ "${INTERFACES}" == "" ]
+then
+        EDGECLUSTERID=$(get_edge_clusters_id "edge-cluster")
+        EDGEIDX01=$(get_edge_node_cluster_member_index "edge-cluster" "edge-1")
+        EDGEIDX02=$(get_edge_node_cluster_member_index "edge-cluster" "edge-2")
+        create_t0_interface "${T0GWNAME}" "${EDGECLUSTERID}" "${T0IP01}" "${T0SEGMENTNAME}" "${EDGEIDX01}" "edge-1-uplink-1"
+        create_t0_interface "${T0GWNAME}" "${EDGECLUSTERID}" "${T0IP02}" "${T0SEGMENTNAME}" "${EDGEIDX02}" "edge-1-uplink-2"
+else
+        echo "  locale_services present"
+fi
 
 # configure cpodrouter bgp:
 #
@@ -2324,8 +2378,6 @@ then
 else
         echo "  ${T0IP02} already defined as bgp neighbor"
 fi
-
-
 
 # configure T0 bgp
 # set AS number = cpodrouter + 1000

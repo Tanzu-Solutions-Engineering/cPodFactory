@@ -2453,7 +2453,7 @@ echo
 echo "  Checking Tier 0 BGP"
 echo
 
-TOASN=$(get_tier-0s_bgp | jq .local_as_num)
+TOASN=$(get_tier-0s_bgp "${T0GWNAME}"  | jq .local_as_num)
 
 if [ "${TOASN}" !=  "${ASNNSXT}" ]
 then

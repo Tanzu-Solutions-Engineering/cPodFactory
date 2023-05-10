@@ -1500,6 +1500,33 @@ create_edge_cluster() {
 
 }
 
+get_edge_clusters_id(){
+        #$1 segments name to look for
+        #returns json
+        EDGECLUSTERNAME=$1
+
+        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/api/v1/edge-clusters)
+        HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+
+        if [ $HTTPSTATUS -eq 200 ]
+        then
+                EDGECLUSTERSINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+                EDGECLUSTERSCOUNT=$(echo ${EDGECLUSTERSINFO} | jq .result_count)
+                echo $EDGECLUSTERSINFO > /tmp/edge-clusters-json 
+                if [[ ${EDGECLUSTERSCOUNT} -gt 0 ]]
+                then
+                        echo "${EDGECLUSTERSINFO}" |jq -r '.results[] | select (.display_name == "'${EDGECLUSTERNAME}'") | .id'
+                else
+                        echo ""
+                fi
+        else
+                echo "  error getting edge-clusters"
+                echo ${HTTPSTATUS}
+                echo ${RESPONSE}
+                exit
+        fi
+}
+
 create_t0_segment() {
         #$1 profile name string
         #$2 VLAN ID
@@ -1593,7 +1620,6 @@ create_t0_gw() {
 }
 
 get_tier-0s_locale_services(){
-        SERVICENAME=$1
         
         RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/policy/api/v1/infra/tier-0s/Tier-0/locale-services/default)
         HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
@@ -1602,22 +1628,45 @@ get_tier-0s_locale_services(){
         then
                 T0INFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
                 T0COUNT=$(echo ${T0INFO} | jq .result_count)
-                echo $T0INFO > /tmp/t0-json 
+                echo $T0INFO > /tmp/t0-local_services-json 
                 if [[ ${T0COUNT} -gt 0 ]]
                 then
-                        echo "${T0INFO}" |jq -r '.results[]'
-                        if [ "$SEGMENTNAME" == "" ]
-                        then
-                                echo $T0INFO |jq -r '.results[] | [.display_name, .id] |@tsv'
-                        else
-                                echo $T0INFO |jq -r '.results[] | select (.display_name =="'$SEGMENTNAME'") | .id'
-                        fi
-
+                        echo "${T0INFO}" |jq -r .
                 else
                         echo ""
                 fi
         else
-                echo "  error getting Tier-0s"
+                echo "  error getting Tier-0s locale_services"
+                echo ${HTTPSTATUS}
+                echo ${RESPONSE}
+                exit
+        fi
+}
+
+create_t0_locale_service() {
+        #
+        T0NAME=$1
+        EDGECLUSTERID=$2
+        EDGECLUSTERPATH="/infra/sites/default/enforcement-points/default/edge-clusters/${EDGECLUSTERID}"
+
+        T0_LS_JSON='{
+        "edge_cluster_path": "'${EDGEPATH}'",
+        "_revision": 0
+        }'
+        SCRIPT="/tmp/T0_LS_JSON"
+        echo ${T0_LS_JSON} > ${SCRIPT}
+
+        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} -H 'Content-Type: application/json' -X PUT -d @${SCRIPT} https://${NSXFQDN}/policy/api/v1/infra/tier-0s/${T0NAME}/locale-services/default)
+        HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+
+        if [ $HTTPSTATUS -eq 200 ]
+        then
+                T0GWINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+                echo "  ${T0NAME} created succesfully"
+                echo ${T0GWINFO} > /tmp/t0-gw-create.json
+
+        else
+                echo "  error creating T0 GW : ${T0NAME}"
                 echo ${HTTPSTATUS}
                 echo ${RESPONSE}
                 exit
@@ -2208,6 +2257,17 @@ then
 else
         echo "  ${T0SEGMENTNAME} - present"
 fi
+
+get_tier-0s_locale_services
+echo "  Checking locale_services"
+if [ "$(get_tier-0s_locale_services)" == "" ]
+then
+        EDGECLUSTERID=$(get_edge_clusters_id "edge-cluster")
+        create_t0_locale_service "${T0GWNAME}" "${EDGECLUSTERID}"
+else
+        echo "  locale_services present"
+fi
+
 
 # configure cpodrouter bgp:
 #

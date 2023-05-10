@@ -2737,6 +2737,10 @@ fi
 # reject CEIP
 # skip welcome tour
 
+nsx_accept_eula
+nsx_ceip_agreement
+nsx_ceip_telemetry
+
 
 # ===== Script finished =====
 echo "Configuration done"

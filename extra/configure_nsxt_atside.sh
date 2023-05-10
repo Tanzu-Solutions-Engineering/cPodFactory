@@ -1772,29 +1772,16 @@ create_t0_interface() {
 get_tier-0s_bgp(){
         
         #/infra/tier-0s/Tier-0/locale-services/default/bgp/neighbors/071971c8-4229-439f-bcdb-6f0378510b11
-        SERVICENAME=$1
+        T0NAME=$1
         
-        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/policy/api/v1/infra/tier-0s/Tier-0/locale-services/default)
+        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/policy/api/v1/infra/tier-0s/${T0NAME}/locale-services/default/bgp)
         HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
 
         if [ $HTTPSTATUS -eq 200 ]
         then
-                T0INFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
-                T0COUNT=$(echo ${T0INFO} | jq .result_count)
-                echo $T0INFO > /tmp/t0-json 
-                if [[ ${T0COUNT} -gt 0 ]]
-                then
-                        echo "${T0INFO}" |jq -r '.results[]'
-                        if [ "$SEGMENTNAME" == "" ]
-                        then
-                                echo $T0INFO |jq -r '.results[] | [.display_name, .id] |@tsv'
-                        else
-                                echo $T0INFO |jq -r '.results[] | select (.display_name =="'$SEGMENTNAME'") | .id'
-                        fi
-
-                else
-                        echo ""
-                fi
+                BGPINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+                echo $BGPINFO > /tmp/t0-bgp-json 
+                echo "${$BGPINFO}" 
         else
                 echo "  error getting Tier-0s"
                 echo ${HTTPSTATUS}
@@ -1803,13 +1790,89 @@ get_tier-0s_bgp(){
         fi
 }
 
-
-# https://${NSXFQDN}/policy/api/v1/infra/tier-0s/Tier-0/locale-services/default
-# set value edge_cluster_path : "/infra/sites/default/enforcement-points/default/edge-clusters/<edge-cluster-id>"
-
 # /policy/api/v1/infra/tier-0s/Tier-0/locale-services/default/bgp
 
+configure_tier-0s_bgp(){
+        
+        #/infra/tier-0s/Tier-0/locale-services/default/bgp/neighbors/071971c8-4229-439f-bcdb-6f0378510b11
+        T0NAME=$1
+        ASNNUMBER=$2
+
+        T0_BGP_JSON='{
+        "local_as_num": "'${ASNNUMBER}'",
+        "enabled": true
+        }'
+        SCRIPT="/tmp/T0_INT_JSON"
+        echo ${T0_INT_JSON} > ${SCRIPT}
+
+        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} -H 'Content-Type: application/json' -X PUT -d @${SCRIPT} https://${NSXFQDN}/policy/api/v1/infra/tier-0s/${T0NAME}/locale-services/default/bgp)
+        HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+
+        if [ $HTTPSTATUS -eq 200 ]
+        then
+                BGPINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+                echo $BGPINFO > /tmp/t0-bgp-configured-json 
+                echo "${$BGPINFO}" 
+        else
+                echo "  error configuring Tier-0s BGP"
+                echo ${HTTPSTATUS}
+                echo ${RESPONSE}
+                exit
+        fi
+}
 # /policy/api/v1/infra/tier-0s/Tier-0/locale-services/default/bgp/neighbors
+
+get_tier-0s_bgp_neighbors(){
+        
+        #/infra/tier-0s/Tier-0/locale-services/default/bgp/neighbors/071971c8-4229-439f-bcdb-6f0378510b11
+        T0NAME=$1
+        
+        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/policy/api/v1/infra/tier-0s/${T0NAME}/locale-services/default/bgp/neighbors)
+        HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+
+        if [ $HTTPSTATUS -eq 200 ]
+        then
+                BGPINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+                echo $BGPINFO > /tmp/t0-bgp-neighbors-json 
+                echo "${$BGPINFO}" 
+        else
+                echo "  error getting Tier-0s"
+                echo ${HTTPSTATUS}
+                echo ${RESPONSE}
+                exit
+        fi
+}
+
+configure_tier-0s_bgp_neighbor(){
+        
+        #/infra/tier-0s/Tier-0/locale-services/default/bgp/neighbors/071971c8-4229-439f-bcdb-6f0378510b11
+        T0NAME=$1
+        NBIP=$2
+        NBASN=$3
+        NBNAME=$4
+
+        T0_NB_JSON='{
+        "neighbor_address": "'${T0NAME}'",
+        "remote_as_num": "'${NBIP}'"
+        }'
+        SCRIPT="/tmp/T0_NB_JSON"
+        echo ${T0_NB_JSON} > ${SCRIPT}
+
+        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} -H 'Content-Type: application/json' -X PUT -d @${SCRIPT} https://${NSXFQDN}/policy/api/v1/infra/tier-0s/${T0NAME}/locale-services/default/bgp/neighbors/${NBNAME})
+        HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+
+        if [ $HTTPSTATUS -eq 200 ]
+        then
+                NBINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+                echo $NBINFO > /tmp/t0-bgp-nb-configured-json 
+                echo "  BGP Neighbor ${$NBNAME} added successully" 
+        else
+                echo "  error configuring Tier-0s BGP Neighbor ${$NBNAME}"
+                echo ${HTTPSTATUS}
+                echo ${RESPONSE}
+                exit
+        fi
+}
 
 # /api/v1/logical-routers/<logical-router-id>/routing/redistribution
 
@@ -2348,7 +2411,7 @@ then
         create_t0_interface "${T0GWNAME}" "${EDGECLUSTERID}" "${T0IP01}" "${T0SEGMENTNAME}" "${EDGEIDX01}" "edge-1-uplink-1"
         create_t0_interface "${T0GWNAME}" "${EDGECLUSTERID}" "${T0IP02}" "${T0SEGMENTNAME}" "${EDGEIDX02}" "edge-1-uplink-2"
 else
-        echo "  locale_services present"
+        echo "  interfaces present"
 fi
 
 # configure cpodrouter bgp:
@@ -2385,6 +2448,34 @@ fi
 # set neighbors
 # add neighbor
 # ip address : 10.vlan.4.1 - remote as number : cpodrouter asn
+
+echo
+echo "  Checking Tier 0 BGP"
+echo
+
+TOASN=$(get_tier-0s_bgp | jq .local_as_num)
+
+if [ "${TOASN}" !=  "${ASNNSXT}" ]
+then
+        #set bgp
+        configure_tier-0s_bgp "${T0GWNAME}" "${ASNNSXT}"
+else
+        echo "  Tier-0 BGP ASN already Set"
+fi
+
+echo
+echo "  Checking BGP Neighbors"
+echo
+
+NEIGHBORS=$(get_tier-0s_bgp_neighbors  "${T0GWNAME}")
+
+if [ "${NEIGHBORS}" == "" ]
+then
+        CPODASNIP="10.${VLAN}.4.1"
+        configure_tier-0s_bgp_neighbor "${T0GWNAME}"  "${CPODASNIP}"  "${ASNCPOD}"  "${CPOD_NAME_LOWER}"
+else
+        echo "  BGP Neighbor present"
+fi
 
 
 

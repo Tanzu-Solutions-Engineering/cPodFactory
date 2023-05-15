@@ -30,6 +30,16 @@ source ./env
 source ./govc_env
 source ./extra/functions.sh
 
+# Check NSX-T backbone
+
+if [ ${BACKEND_NETWORK} != "NSX-T" ]; then
+        echo
+        echo "This script requires NSX-T as the networking layer for cPodFactory."
+        echo "Stopping script execution."
+        echo     
+        exit
+fi
+
 # let's get started
 
 echo

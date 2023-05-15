@@ -73,14 +73,18 @@ loop_wait_nsx_manager_status(){
         echo
         printf "\t connecting to nsx ."
         INPROGRESS=$(get_nsx_manager_status)
+        CURRENTSTATE=${INPROGRESS}
         while [[ "$INPROGRESS" != "STABLE" ]]
         do      
                 printf '.' >/dev/tty
                 sleep 10
                 INPROGRESS=$(get_nsx_manager_status)
-                echo "$INPROGRESS"
+                if [ "${INPROGRESS}" != "${CURRENTSTATE}" ] 
+                then 
+                        echo "  ${INPROGRESS}"
+                        CURRENTSTATE=${INPROGRESS}
+                fi
         done
-
 }
 
 get_compute_manager() {
@@ -2167,6 +2171,12 @@ fi
 PASSWORD=$( ./${EXTRA_DIR}/passwd_for_cpod.sh ${1} )
 
 # ===== Start of code =====
+
+echo
+echo "========================="
+echo "Configuring NSX-T manager"
+echo "========================="
+echo
 
 NSXFQDN=${HOSTNAME}.${CPOD_NAME_LOWER}.${ROOT_DOMAIN}
 echo ${NSXFQDN}

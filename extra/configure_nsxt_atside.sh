@@ -81,7 +81,7 @@ loop_wait_nsx_manager_status(){
                 INPROGRESS=$(get_nsx_manager_status)
                 if [ "${INPROGRESS}" != "${CURRENTSTATE}" ] 
                 then 
-                        echo "  ${INPROGRESS}"
+                        printf "\n\t%s" ${INPROGRESS}
                         CURRENTSTATE=${INPROGRESS}
                 fi
         done

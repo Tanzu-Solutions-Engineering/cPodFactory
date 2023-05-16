@@ -10,7 +10,7 @@ source ./env
 
 #==========CONNECTION DETAILS==========
 NAME="$( echo ${1} | tr '[:lower:]' '[:upper:]' )"
-POD_NAME="cPod-${1}"
+POD_NAME="cpod-${1}"
 POD_NAME_LOWER="$( echo ${POD_NAME} | tr '[:upper:]' '[:lower:]' )"
 POD_FQDN="${POD_NAME_LOWER}.${ROOT_DOMAIN}"
 

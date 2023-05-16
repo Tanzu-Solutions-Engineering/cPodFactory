@@ -114,7 +114,6 @@ enable_dhcp_cpod_vlanx() {
 	#restart_cpodrouter_dnsmasq ${2}    
 }
 
-
 get_last_ip() {
         # ${1} : subnet
         # ${2} : cpod_name_lower to query
@@ -140,4 +139,63 @@ add_cpod_ssh_key_to_edge_know_hosts() {
         sed "/${KEY_ESC}/d" -i ~/.ssh/known_hosts
         #add key to known hosts
         echo "${KEY}" >> ~/.ssh/known_hosts
+}
+
+get_cpod_asn(){
+        # ${1} : cpod_name_lower
+        # this function will use ssh-keyscan to add the cpod public to the known hosts file, use this function to prevent scripts breaking down the line.
+        CPODNAMELOWER=$1
+        HOSTS=/etc/hosts
+
+        CPODIP=$( cat ${HOSTS} | grep ${CPODNAMELOWER} | cut -f1 | cut -d"." -f4 )
+        CPODASN=$( expr ${ASN} + ${CPODIP} )
+        echo "${CPODASN}"
+}
+
+add_cpodrouter_bgp_neighbor() {
+	# ${1} : Neighbor IP address to add
+	# ${2} : Neighbor ASN to add
+	# ${3} : cpod_name_lower
+        [ "$1" == "" -o "$2" == "" ] && echo "usage: $0 <peer_ip> <peer_asn>" && exit 1 
+
+	echo "add bgp neighbor ${1} -> ${2} in ${3}"
+
+        CPODROUTERASN=$(get_cpod_asn ${3})
+        CMD="vtysh -e \"configure terminal\" -e \"router bgp ${CPODROUTERASN}\" -e \"neighbor ${1} remote-as ${2}\" -e \"neighbor ${1} default-originate\" -e \"exit\" -e \"exit\" -e \"write\""
+	ssh -o LogLevel=error ${3} "${CMD}"
+
+        echo
+        echo "getting result"
+        echo
+        get_cpodrouter_bgp_neighbors_table ${3}
+}
+
+get_cpodrouter_bgp_neighbors_table(){
+	# ${1} : cpod_name_lower
+
+        [ "$1" == "" ] && echo "usage: $0 <cpod_name_lower>" && exit 1 
+
+	echo "get bgp neighbors table"
+        CMD="vtysh -e \"show bgp summary\""
+        BGPSUMMARY=$(ssh -o LogLevel=error ${1} "${CMD}")
+        PEERS=$(echo "${BGPSUMMARY}" | grep Peers | cut -d" " -f2 | cut -"d," -f1)
+        echo "${BGPSUMMARY}" | grep Neighbor -A${PEERS} | awk '{print $1 "\t" $3}'
+}
+
+delete_cpodrouter_bgp_neighbor() {
+	# ${1} : Neighbor IP address to add
+	# ${2} : Neighbor ASN to add
+	# ${3} : cpod_name_lower
+        [ "$1" == "" -o "$2" == "" ] && echo "usage: $0 <peer_ip> <peer_asn>" && exit 1 
+
+	echo "deleting bgp neighbor ${1} -> ${2} in ${3}"
+
+        CPODROUTERASN=$(get_cpod_asn ${3})
+        CMD="vtysh -e \"configure terminal\" -e \"router bgp ${CPODROUTERASN}\" -e \"no neighbor ${1} remote-as ${2}\"  -e \"exit\" -e \"exit\" -e \"write\""
+	ssh -o LogLevel=error ${3} "${CMD}"
+
+        echo
+        echo "getting result"
+        echo
+        get_cpodrouter_bgp_neighbors_table ${3}
 }

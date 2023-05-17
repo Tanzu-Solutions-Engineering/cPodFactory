@@ -41,11 +41,11 @@ else {
 		$VDSwitch = New-VDSwitch -Name $vds_name -Location $Datacenter  -Mtu $mtu -NumUplinkPorts 2 -Version $vdsversion -ErrorAction Stop
 	} catch {
 		write-host "Problem creating VDSwitch. Checking Versions."
-		$originalerrormsg = $_.ToString() 
+		$errormsg = $_.ToString() 
 
-		if ($originalerrormsg -like "*Valid versions are*") { 
+		if ($errormsg -like "*Valid versions are*") { 
 			write-host "Checking Versions."
-			write-host $originalerrormsg 
+			write-host $errormsg 
 			$pos = $errormsg.IndexOf("are")
 			$validversions =  $errormsg.Substring($pos+4)
 			$count=$validversions.split(",").count

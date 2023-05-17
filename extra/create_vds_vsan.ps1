@@ -36,7 +36,7 @@ if ($test.count -gt 0) {
 else {
 	# Create the new VDS named VDSwitch
 	try {
-		$VDSwitch = New-VDSwitch -Name $vds_name -Location $Datacenter  -Mtu $mtu -NumUplinkPorts 2 -Version $esxiversion
+		$VDSwitch = New-VDSwitch -Name $vds_name -Location $Datacenter  -Mtu $mtu -NumUplinkPorts 2 -Version $esxiversion -ErrorAction Stop
 	} catch {
 		write-host "Problem creating VDSwitch."
 		Write-Host $_

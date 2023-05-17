@@ -20,6 +20,8 @@ $mgmt_portgroup_vds = "vlan-0-mgmt"
 $vds_name = "VDSwitch"
 $datacenter = "TODO"
 
+$vdsversion = $esxiversion
+
 # Get the Datacenter Object
 $Datacenter = Get-Datacenter
 
@@ -36,12 +38,31 @@ if ($test.count -gt 0) {
 else {
 	# Create the new VDS named VDSwitch
 	try {
-		$VDSwitch = New-VDSwitch -Name $vds_name -Location $Datacenter  -Mtu $mtu -NumUplinkPorts 2 -Version $esxiversion -ErrorAction Stop
+		$VDSwitch = New-VDSwitch -Name $vds_name -Location $Datacenter  -Mtu $mtu -NumUplinkPorts 2 -Version $vdsversion -ErrorAction Stop
 	} catch {
-		write-host "Problem creating VDSwitch."
-		Write-Host $_
-		write-host "version used : " + $esxiversion
-		exit
+		write-host "Problem creating VDSwitch. Checking Versions."
+		$errormsg = $_
+		if ($errormsg -like "*Valid versions are*") { 
+			$errormsg = $errormsg.Substring(0,$errormsg.Length-1) #remove trailing dot
+			$pos = $errormsg.IndexOf("are")
+			$validversions =  $errormsg.Substring($pos+4)
+			$count=$validversions.split(",").count
+			$highestversion = $validversions.split(",")[$count-1]
+			$vdsversion = $highestversion
+			#try again with highest version
+			try {
+				$VDSwitch = New-VDSwitch -Name $vds_name -Location $Datacenter  -Mtu $mtu -NumUplinkPorts 2 -Version $vdsversion -ErrorAction Stop
+			} catch {
+				write-host "Problem creating VDSwitch."
+				write-host $_
+				exit
+			}
+		  }
+		else {
+			write-host "Problem creating VDSwitch."
+			write-host $_
+			exit
+		}
 	}
 	# Use Get-View to set NIOC
 	$VDSwitchView = Get-View -Id $VDSwitch.Id

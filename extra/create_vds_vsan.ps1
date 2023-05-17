@@ -29,13 +29,20 @@ $Cluster = Get-Cluster -Name "Cluster"
 #create the vds
 $test = Get-VDSwitch -Name $vds_name -Location $Datacenter  -ErrorAction SilentlyContinue
 if ($test.count -gt 0) {
-    write-host "VDSwitch already exists."
-    #write-host "quitting process."
-    #exit
+	write-host "VDSwitch already exists."
+	#write-host "quitting process."
+	#exit
 }
 else {
 	# Create the new VDS named VDSwitch
-	$VDSwitch = New-VDSwitch -Name $vds_name -Location $Datacenter  -Mtu $mtu -NumUplinkPorts 2 -Version $esxiversion
+	try {
+		$VDSwitch = New-VDSwitch -Name $vds_name -Location $Datacenter  -Mtu $mtu -NumUplinkPorts 2 -Version $esxiversion
+	} catch {
+		write-host "Problem creating VDSwitch."
+		Write-Host $_
+		write-host "version used : " + $esxiversion
+		exit
+	}
 	# Use Get-View to set NIOC
 	$VDSwitchView = Get-View -Id $VDSwitch.Id
 	$VDSwitchView.EnableNetworkResourceManagement($true)

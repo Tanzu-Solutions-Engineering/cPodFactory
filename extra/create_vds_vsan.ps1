@@ -52,6 +52,12 @@ else {
 			$count=$validversions.split(",").count
 			$highestversion = $validversions.split(",")[$count-1]
 			$vdsversion = $highestversion
+
+			write-host $validversions
+			write-host $count
+			write-host $highestversion
+			write-host $vdsversion
+			
 			#try again with highest version
 			try {
 				$VDSwitch = New-VDSwitch -Name $vds_name -Location $Datacenter  -Mtu $mtu -NumUplinkPorts 2 -Version $vdsversion -ErrorAction Stop

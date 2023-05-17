@@ -45,8 +45,10 @@ else {
 
 		if ($errormsg -like "*Valid versions are*") { 
 			write-host "Checking Versions."
-
+			write-host $errormsg 
 			$errormsg = $errormsg.Substring(0,$errormsg.Length-1) #remove trailing dot
+			write-host $errormsg 
+			
 			$pos = $errormsg.IndexOf("are")
 			$validversions =  $errormsg.Substring($pos+4)
 			$count=$validversions.split(",").count
@@ -57,7 +59,7 @@ else {
 			write-host $count
 			write-host $highestversion
 			write-host $vdsversion
-			
+
 			#try again with highest version
 			try {
 				$VDSwitch = New-VDSwitch -Name $vds_name -Location $Datacenter  -Mtu $mtu -NumUplinkPorts 2 -Version $vdsversion -ErrorAction Stop

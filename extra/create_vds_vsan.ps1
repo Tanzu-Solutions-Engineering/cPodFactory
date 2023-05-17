@@ -20,8 +20,6 @@ $mgmt_portgroup_vds = "vlan-0-mgmt"
 $vds_name = "VDSwitch"
 $datacenter = "TODO"
 
-$vdsversion = $esxiversion
-
 # Get the Datacenter Object
 $Datacenter = Get-Datacenter
 
@@ -31,47 +29,13 @@ $Cluster = Get-Cluster -Name "Cluster"
 #create the vds
 $test = Get-VDSwitch -Name $vds_name -Location $Datacenter  -ErrorAction SilentlyContinue
 if ($test.count -gt 0) {
-	write-host "VDSwitch already exists."
-	#write-host "quitting process."
-	#exit
+    write-host "VDSwitch already exists."
+    #write-host "quitting process."
+    #exit
 }
 else {
 	# Create the new VDS named VDSwitch
-	try {
-		$VDSwitch = New-VDSwitch -Name $vds_name -Location $Datacenter  -Mtu $mtu -NumUplinkPorts 2 -Version $vdsversion -ErrorAction Stop
-	} catch {
-		write-host "Problem creating VDSwitch. Checking Versions."
-		$errormsg = $_.ToString() 
-
-		if ($errormsg -like "*Valid versions are*") { 
-			write-host "Checking Versions."
-			write-host $errormsg 
-			$pos = $errormsg.IndexOf("are")
-			$validversions =  $errormsg.Substring($pos+4)
-			$count=$validversions.split(",").count
-			$highestversion = $validversions.split(",")[$count-1]
-			$vdsversion = $highestversion
-			$vdsversion = $vdsversion.Substring(0,$vdsversion.Length-1)
-			write-host $validversions
-			write-host $count
-			write-host $highestversion
-			write-host $vdsversion
-
-			#try again with highest version
-			try {
-				$VDSwitch = New-VDSwitch -Name $vds_name -Location $Datacenter  -Mtu $mtu -NumUplinkPorts 2 -Version $vdsversion -ErrorAction Stop
-			} catch {
-				write-host "Problem creating VDSwitch."
-				write-host $_
-				exit
-			}
-		  }
-		else {
-			write-host "Problem creating VDSwitch."
-			write-host $_
-			exit
-		}
-	}
+	$VDSwitch = New-VDSwitch -Name $vds_name -Location $Datacenter  -Mtu $mtu -NumUplinkPorts 2 -Version $esxiversion
 	# Use Get-View to set NIOC
 	$VDSwitchView = Get-View -Id $VDSwitch.Id
 	$VDSwitchView.EnableNetworkResourceManagement($true)

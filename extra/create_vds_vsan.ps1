@@ -46,15 +46,12 @@ else {
 		if ($originalerrormsg -like "*Valid versions are*") { 
 			write-host "Checking Versions."
 			write-host $originalerrormsg 
-			$errormsg = $originalerrormsg.Substring(0,$originalerrormsg.Length-1) #remove trailing dot
-			write-host $errormsg 
-
 			$pos = $errormsg.IndexOf("are")
 			$validversions =  $errormsg.Substring($pos+4)
 			$count=$validversions.split(",").count
 			$highestversion = $validversions.split(",")[$count-1]
 			$vdsversion = $highestversion
-
+			$vdsversion = $vdsversion.Substring(0,$vdsversion.Length-1)
 			write-host $validversions
 			write-host $count
 			write-host $highestversion

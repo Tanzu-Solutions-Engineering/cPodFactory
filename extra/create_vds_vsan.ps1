@@ -20,6 +20,12 @@ $mgmt_portgroup_vds = "vlan-0-mgmt"
 $vds_name = "VDSwitch"
 $datacenter = "TODO"
 
+$vdsversion = $esxiversion
+
+if ($[System.Version]$vdsversion -gt [System.Version]"8.0.0") {
+    $vdsversion = "8.0.0"
+}
+
 # Get the Datacenter Object
 $Datacenter = Get-Datacenter
 
@@ -35,7 +41,7 @@ if ($test.count -gt 0) {
 }
 else {
 	# Create the new VDS named VDSwitch
-	$VDSwitch = New-VDSwitch -Name $vds_name -Location $Datacenter  -Mtu $mtu -NumUplinkPorts 2 -Version $esxiversion
+	$VDSwitch = New-VDSwitch -Name $vds_name -Location $Datacenter  -Mtu $mtu -NumUplinkPorts 2 -Version $vdsversion
 	# Use Get-View to set NIOC
 	$VDSwitchView = Get-View -Id $VDSwitch.Id
 	$VDSwitchView.EnableNetworkResourceManagement($true)

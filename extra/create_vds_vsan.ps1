@@ -22,7 +22,7 @@ $datacenter = "TODO"
 
 $vdsversion = $esxiversion
 
-if ($[System.Version]$vdsversion -gt [System.Version]"8.0.0") {
+if ([System.Version]$vdsversion -gt [System.Version]"8.0.0") {
     $vdsversion = "8.0.0"
 }
 

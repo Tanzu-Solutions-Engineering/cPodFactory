@@ -22,6 +22,7 @@ exit 1
    
 PASSWORD=$VCENTER_PASSWD
 ESX_FQDN=""
+TSM_SSH="false"
 CPOD_NAME=$( echo ${1} | tr '[:lower:]' '[:upper:]' )
 NAME_LOWER=$( echo ${CPOD_NAME} | tr '[:upper:]' '[:lower:]' )
 #PASSWORD=$( ${EXTRA_DIR}/passwd_for_cpod.sh ${CPOD_NAME} )
@@ -106,6 +107,8 @@ do
 	echo ${STATE}
 	if [[ ${STATE} == *"connected"* ]]; then
 		echo "It is connectable"
+		TSM_SSH=$(govc host.service.ls -json | jq ' .[] | select(.Key=="TSM-SSH").Running ')
+		echo "and SSH is $TSM_SSH"
 		ESX_FQDN=$FQDN		
 		export GOVC_HOST=${VCENTER}
 		break
@@ -116,6 +119,30 @@ done
 
 }
 
+
+get_vms () {
+	echo "getting VMs"
+	VMS=($(./compute/list_cpod.sh ))
+	SIZE_TOTAL=0
+for VM in ${VMS[@]}
+do
+	SIZE_VM=0
+	echo "================"
+	echo "VMs in cPOD: $VM"
+	CONTENTS=($( govc ls /$GOVC_DATACENTER/vm | grep -i $VM ))
+	for CONT in ${CONTENTS[@]}
+	do
+		SIZE_CONT=0
+		DISKS=($( govc device.info -json -vm $CONT disk-* | jq .Devices[].CapacityInKB ))
+		SIZE_CONT=$(IFS=+; echo "$((${DISKS[*]}))")
+		#echo "$CONT : $SIZE_CONT with Disk ${DISKS[@]}"
+		SIZE_VM=$(echo "$SIZE_VM + $SIZE_CONT" | bc)
+	done
+	SIZE_TOTAL=$(echo "$SIZE_TOTAL + $SIZE_VM"| bc)
+	echo "Provisioned Size of $VM is $( echo "scale=2; $SIZE_VM / 1073741824" | bc -l) TB"
+done
+	echo "Provisioned Size of Total is $( echo "scale=2; $SIZE_TOTAL / 1073741824" | bc -l) TB"
+}
  
 case "$1" in
 all)
@@ -138,6 +165,11 @@ fetch)
 	echo "Fetching object data from '$ESX_FQDN' to '$OUTPUT'"
 	get_objects  
 	exit 1
+	;;
+
+vms)
+	echo "getting VMs"
+	get_vms 
 	;;
 
 list)

@@ -8,15 +8,14 @@
 #govc device.ls -vm /muc-dc01/vm/cPod-CPBU-V441-esx04
 #govc datastore.disk.info 1280ce62-e49a-3a3f-d2f7-a4bf016abb56/cPod-CPBU-V441-esx04_6.vmdk
 
-# $1 : cPod Name
 . ./env
 
 [ "$1" == "" ] && 
-echo "usage: ./extra/check_size.sh	  <cpodname> |" &&
+echo "usage: ./extra/check_size.sh        <cpodname> |" &&
 echo "                                    <list> [cpodname] |" && 
 echo "                                    <all> | <fetch> | <help> | <refresh> " &&
 echo "" &&
-echo "Shows the size of cpod, if name is <all> lists all objects" &&    
+echo "Shows the size of cpod, if cpodname is \"all\" lists all objects" &&    
 echo "Try '$0 help' for more information." &&
 exit 1
    
@@ -24,11 +23,13 @@ PASSWORD=$VCENTER_PASSWD
 ESX_FQDN=""
 TSM_SSH="false"
 CPOD_NAME=$( echo ${1} | tr '[:lower:]' '[:upper:]' )
+LHEADER=$( echo ${HEADER} | tr '[:upper:]' '[:lower:]' )
 NAME_LOWER=$( echo ${CPOD_NAME} | tr '[:upper:]' '[:lower:]' )
 #PASSWORD=$( ${EXTRA_DIR}/passwd_for_cpod.sh ${CPOD_NAME} )
 
 
 OUTPUT=$( echo "/tmp/vsan.out" | tr '[:upper:]' '[:lower:]')
+VMS_OUTPUT=$( echo "/tmp/vms.out" | tr '[:upper:]' '[:lower:]')
 #[[ ! -f $OUTPUT ]] && echo "/tmp/vsan.out does not exists try $0 <fetch>" && exit 1
 #if vsan.out does not exist need to create it: cases: all, cpod-name, 
 
@@ -121,7 +122,6 @@ done
 
 
 get_vms () {
-	echo "getting VMs"
 	VMS=($(./compute/list_cpod.sh ))
 	SIZE_TOTAL=0
 for VM in ${VMS[@]}
@@ -143,6 +143,34 @@ do
 done
 	echo "Provisioned Size of Total is $( echo "scale=2; $SIZE_TOTAL / 1073741824" | bc -l) TB"
 }
+
+get_vms_list () {
+
+	VMS=($(./compute/list_cpod.sh | sed s/$LHEADER-//))
+	[[  -f $DIRTY ]] && echo "${#VMS[@]}" > $DIRTY || echo "$DIRTY does not exist, creating it now"; touch $DIRTY ; echo "${#VMS[@]}" > $DIRTY
+	echo -e "-----cPod-Name-----#SIZE TB\n" > $VMS_OUTPUT 
+	#delete the old contents of the output. this script runs only if the refresh is needed, or number of cms increased
+	echo "There are ${#VMS[@]} cPods to be processed"
+	i=0
+for VM in ${VMS[@]}
+do
+	i=$(expr $i + 1) ; echo -e "\r$i"; 
+	SIZE_VM=0
+	CONTENTS=($( govc ls /$GOVC_DATACENTER/vm | grep -i $VM ))
+	for CONT in ${CONTENTS[@]}
+	do
+		SIZE_CONT=0
+                DISKS=($( govc device.info -json -vm $CONT disk-* | jq .Devices[].CapacityInKB ))
+                SIZE_CONT=$(IFS=+; echo "$((${DISKS[*]}))")
+                #echo "$CONT : $SIZE_CONT with Disk ${DISKS[@]}"
+                SIZE_VM=$(echo "$SIZE_VM + $SIZE_CONT" | bc)
+	done	
+	echo -e "$VM#$( echo "scale=2; $SIZE_VM / 1073741824" | bc -l) TB\n" >> $VMS_OUTPUT
+done
+	cat $VMS_OUTPUT | column -t -s '#' 
+	
+}
+
  
 case "$1" in
 all)
@@ -171,7 +199,14 @@ vms)
 	echo "getting VMs"
 	get_vms 
 	;;
-
+vms-list)
+	[[ ! -f $VMS_OUTPUT ]] && echo "output VMs in $VMS_OUTPUT" || echo "creating file $VMS_OUTPUT"; touch $VMS_OUTPUT
+	
+	get_vms_list &
+	pid=$!
+	s='-\|/'; i=0; while kill -0 $pid 2>/dev/null; do i=$(( (i+1) %4 )); printf "\r${s:$i:1}"; sleep .1; done
+	;;
+	
 list)
 	get_host
         [[ ! -f $OUTPUT ]] && get_objects ssh;
@@ -204,13 +239,16 @@ refresh)
 	;;
 
 help)
-	echo "usage:   $0   <cpodname> | <list> | <all> | <help> ..." &&
+	echo "usage:   $0   <cpodname> |  <all> | <help> " &&
+	echo "              <list> [cpodname] | " &&
+	echo "              <vms> | <fetch> | <refresh> |" &&
 	echo "" &&
-	echo "<all>            : reads the vsan objects from first esxi " &&        
-	echo "<list> <cpodname>: lists all objects in the cache file '/tmp/vsan.out' OR '/tmp/vsan.out-cpodname'" &&        
+	echo "<all>            :  the vsan objects from first esxi " &&        
+	echo "<list> [cpodname]: lists all objects in the cache file '/tmp/vsan.out' OR '/tmp/vsan.out-cpodname'" &&        
 	echo "<cpodname>       : calculates only the root objects of this cpod. only high level objects (ESXi VMs, cpodrouter)" &&         
 	echo "<refresh>        : same as 'touch /tmp/refresh-needed' . triggers object refresh in '/tmp/vsan-out' " &&	
 	echo "<fetch>          : fetch via SSH the vsan object data from first ESXi in the hosts file" &&
+	echo "<help>           : this page" 
 	echo "" &&	
 	echo "vSAN capacity properties:" &&
 	echo "\"Used\"  : This is the physical space, the total sum of objects placed on storage. It includes the storage policy overhead and the small object overheads" && 

@@ -26,20 +26,19 @@ CPOD_NAME=$( echo ${1} | tr '[:lower:]' '[:upper:]' )
 LHEADER=$( echo ${HEADER} | tr '[:upper:]' '[:lower:]' )
 NAME_LOWER=$( echo ${CPOD_NAME} | tr '[:upper:]' '[:lower:]' )
 #PASSWORD=$( ${EXTRA_DIR}/passwd_for_cpod.sh ${CPOD_NAME} )
-
-
 OUTPUT=$( echo "/tmp/vsan.out" | tr '[:upper:]' '[:lower:]')
 VMS_OUTPUT=$( echo "/tmp/vms.out" | tr '[:upper:]' '[:lower:]')
-#[[ ! -f $OUTPUT ]] && echo "/tmp/vsan.out does not exists try $0 <fetch>" && exit 1
-#if vsan.out does not exist need to create it: cases: all, cpod-name, 
 
 #create dirty flag file for checking if cached files are outdated. it should be started when cpodctl creates pods or removes them
 #if refresh-needed is newer than vsan.out get_objects has to run for cases : all,cpod-name, partly list 
 DIRTY=$( echo "/tmp/refresh-needed")
+#fill number of cpods in DIRTY. Will be used to check if changes are there
+VMS=($(./compute/list_cpod.sh))
+#number of seconds in a day
+DAY=86400
 
 
-
-
+#Functions start here
 get_objects() {
 
                 start=`date +%s`
@@ -170,8 +169,29 @@ done
 	cat $VMS_OUTPUT | column -t -s '#' 
 	
 }
+#Main function
+if [  -f $DIRTY ]; then
+        DUEDATE=$(( $(stat -c %Y $DIRTY)-$DAY ))
+        echo "due date is $(date -d @$DUEDATE)"
+        if [ $(cat $DIRTY) -ne ${#VMS[@]} ]; then
+                echo "${#VMS[@]}" > $DIRTY
+                echo "number of cpods changed. need refresh"
+                #get esxi hosts from datacenter and if ssh service is on
+                get_host
+                #get vsan objects either via ssh or govc and input in $OUTPUT file
+                [ $TSM_SSH == "true" ] && get_objects ssh || get_objects;
+                #get vms provisioned space via govc and input in $VMS_OUTPUT
+                get_vms_list
+        else
+                echo "number of cpods is unchanged. unsing $OUTPUT for vsan cpods and $VMS_OUTPUT for cpods on other datastores"
+        fi
+else
+        echo "$DIRTY does not exist, creating it now"
+        touch $DIRTY
+        echo "${#VMS[@]}" > $DIRTY
+fi
 
- 
+#Case choice starts here 
 case "$1" in
 all)
 	namespace=$( echo "all")
@@ -234,7 +254,7 @@ list)
 	;;
 
 refresh)
-	touch echo $DIRTY
+	touch $DIRTY
 	exit 1
 	;;
 
@@ -260,8 +280,8 @@ help)
 	namespace=$( echo ${CPOD_NAME})
 	get_host
 	#this version fetches vsan objects from the first level nested VM level
-	[[ ! -f $OUTPUT ]] && get_objects ssh;
-        [ "$DIRTY" -nt "$OUTPUT" ] && get_objects ssh;
+	[ ! -f $OUTPUT ] && echo "$OUTPUT does not exist"
+       	[ "$DIRTY" -nt "$OUTPUT" ] && get_objects ssh;
  	echo "Calculating cPod size:"
 
 	#calculate vms and snapshots for namespace

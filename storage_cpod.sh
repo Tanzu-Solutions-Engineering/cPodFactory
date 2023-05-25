@@ -34,19 +34,19 @@ for CPOD in ${CPODS}; do
                 USEDVMSTORAGEGB=$(expr $USEDVMSTORAGERAW / 1024 / 1024 / 1024 )
                 TOTALVMSTORAGERAW=$(echo ${STORAGEJSON} | jq -r .Uncommitted)
                 TOTALVMSTORAGEGB=$(expr $TOTALVMSTORAGERAW / 1024 / 1024 / 1024 )
-                RATIO=$(expr $USEDVMSTORAGERAW / $TOTALVMSTORAGERAW)
+                RATIO=$(echo $(( USEDVMSTORAGERAW * 100 / TOTALVMSTORAGERAW ))" %")
                 printf "\t${USEDVMSTORAGEGB}\t${TOTALVMSTORAGEGB}\t${RATIO}%%\n"
                 USEDCPOD=$(expr ${USEDCPOD} + ${USEDVMSTORAGERAW})
                 TOTALCPOD=$(expr ${TOTALCPOD} + ${TOTALVMSTORAGERAW})
         done
         USEDCPODGB=$(expr $USEDCPOD / 1024 / 1024 / 1024 )
         TOTALCPODGB=$(expr $TOTALCPOD / 1024 / 1024 / 1024 )
-        RATIO=$(expr $USEDCPOD / $TOTALCPOD)
+        RATIO=$(echo $(( USEDCPOD * 100 / TOTALCPOD ))" %")
         printf "\t${USEDCPODGB}\t${TOTALCPODGB}\t${RATIO}%%\n"
         USED=$(expr ${USED} + ${USEDCPOD})
         TOTAL=$(expr ${TOTAL} + ${TOTALCPOD})
 done
 USEDGB=$(expr $USED / 1024 / 1024 / 1024 )
 TOTALGB=$(expr $TOTAL / 1024 / 1024 / 1024 )
-RATIO=$(expr $USED / $TOTAL)
+RATIO=$(echo $(( USED * 100 / TOTAL ))" %")
 printf "\t${USEDGB}\t${TOTALGB}\t${RATIO}%%\n"

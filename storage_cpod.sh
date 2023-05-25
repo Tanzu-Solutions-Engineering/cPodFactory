@@ -42,7 +42,7 @@ for CPOD in ${CPODS}; do
                # printf "\t${USEDVMSTORAGEGB}\t${TOTALVMSTORAGEGB}\t${RATIO}%%\n"
                 USEDCPOD=$(expr ${USEDCPOD} + ${USEDVMSTORAGERAW})
                 TOTALCPOD=$(expr ${TOTALCPOD} + ${TOTALVMSTORAGERAW})
-                VMSLIST+=(["VM"]=${VM} ["USED"]=${USEDCPOD} )
+                VMSLIST+=(["VM"]="${VM}" ["USED"]="${USEDCPOD}" )
         done
         USEDCPODGB=$(expr $USEDCPOD / 1024 / 1024 / 1024 )
         TOTALCPODGB=$(expr $TOTALCPOD / 1024 / 1024 / 1024 )
@@ -50,7 +50,7 @@ for CPOD in ${CPODS}; do
         #printf "\t${USEDCPODGB}\t${TOTALCPODGB}\t${RATIO}%%\n"
         USED=$(expr ${USED} + ${USEDCPOD})
         TOTAL=$(expr ${TOTAL} + ${TOTALCPOD})
-        CPODSLIST+=(["CPOD"]=${CPOD} ["USED"]=${USED} ["VMLIST"]="${VMSLIST[@]}")
+        CPODSLIST+=(["CPOD"]="${CPOD}" ["USED"]=${USED} ["VMLIST"]="${VMSLIST[@]}")
 done
 USEDGB=$(expr $USED / 1024 / 1024 / 1024 )
 TOTALGB=$(expr $TOTAL / 1024 / 1024 / 1024 )

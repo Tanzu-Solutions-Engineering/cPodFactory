@@ -58,7 +58,7 @@ for CPOD in ${CPODS}; do
 done
 
 echo "${CPODSTORAGE}" > /tmp/cpods_storage.json
-#clear
+clear
 echo =======================================
 echo "Overview of cPods Storage consumption" 
 echo =======================================

@@ -15,6 +15,11 @@ STORAGEJSON="/tmp/cpods_storage.json"
 #check if the json already exists otherwise call script to create it
 if [ ! -f "${STORAGEJSON}" ]; then
   ./storage_cpod.sh
+else
+        if [[ $(find "${STORAGEJSON}" -mtime +1 -print) ]]; then
+                # "File $filename exists and is older than 1 day"
+                ./storage_cpod.sh
+        fi
 fi
 
 CPODSTORAGE=$(cat "${STORAGEJSON}")

@@ -15,7 +15,6 @@ source ./extra/functions.sh
 echo =====================
 echo "cPods Storage Summary" 
 echo =====================
-echo "Network information:"
 echo
 
 CPODSTORAGE='{ "cpods" : [], "TotalStorageUsed" : 0 }'
@@ -26,7 +25,7 @@ USED=0
 TOTAL=0
 for CPOD in ${CPODS}; do
         CPODSTORAGE=$(echo "${CPODSTORAGE}" | jq '.cpods += [{"cPodName":"'${CPOD}'","TotalStorageUsed":0,"VirtualMachines":[]}]')
-
+        echo "${CPODSTORAGE}" | jq .
         USEDCPOD=0
         TOTALCPOD=0
         #printf "${CPOD}"
@@ -43,6 +42,7 @@ for CPOD in ${CPODS}; do
                 USEDCPOD=$(expr ${USEDCPOD} + ${USEDVMSTORAGERAW})
                 TOTALCPOD=$(expr ${TOTALCPOD} + ${TOTALVMSTORAGERAW})
                 CPODSTORAGE=$(echo "${CPODSTORAGE}" | jq '(.cpods[] | select (.cPodName == "'${CPOD}'")).VirtualMachines += [{"VMName":"'${VM}'","UsedStorage":'${USEDVMSTORAGEGB}'}]')
+                echo "${CPODSTORAGE}" | jq .
         done
         USEDCPODGB=$(expr $USEDCPOD / 1024 / 1024 / 1024 )
         TOTALCPODGB=$(expr $TOTALCPOD / 1024 / 1024 / 1024 )
@@ -51,6 +51,7 @@ for CPOD in ${CPODS}; do
         USED=$(expr ${USED} + ${USEDCPOD})
         TOTAL=$(expr ${TOTAL} + ${TOTALCPOD})
         CPODSTORAGE=$(echo "${CPODSTORAGE}" | jq '(.cpods[] | select (.cPodName == "'${CPOD}'")).TotalStorageUsed |= '${TOTALCPOD}'')
+        echo "${CPODSTORAGE}" | jq .
 done
 USEDGB=$(expr $USED / 1024 / 1024 / 1024 )
 TOTALGB=$(expr $TOTAL / 1024 / 1024 / 1024 )
@@ -60,3 +61,4 @@ then
 fi
 CPODSTORAGE=$(echo "${CPODSTORAGE}" | jq '(.TotalStorageUsed |= '${TOTAL}'')
 echo "${CPODSTORAGE}" > /tmp/cpods_storage.json
+echo "${CPODSTORAGE}" | jq .

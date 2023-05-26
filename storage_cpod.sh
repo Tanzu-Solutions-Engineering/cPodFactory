@@ -16,9 +16,9 @@ calc() {
 
 ### Local vars ####
 
-echo =====================
-echo "cPods Storage Summary" 
-echo =====================
+echo ===============================
+echo "Collecting cPods Storage data" 
+echo ===============================
 echo
 
 CPODSTORAGE='{ "cpods" : [], "TotalStorageUsedRaw" : 0, "TotalStorageUsedGB" : 0 }'
@@ -74,7 +74,19 @@ for CPOD in ${CPODS}; do
         CPODTOTAL=$(echo "${CPODSTORAGE}" | jq -r '.cpods[] | select (.cPodName == "'${CPOD}'") |.TotalStorageUsedRaw' )
         CPODRATIO=$(calc $CPODTOTAL*100/$TOTAL )
         CPODSTORAGE=$(echo "${CPODSTORAGE}" | jq '(.cpods[] | select (.cPodName == "'${CPOD}'")).TotalRatio |= "'${CPODRATIO}'%"')
+        VMS=$(echo  "${CPODSTORAGE}" | jq -r '.cpods[] | select (.cPodName == "'${CPOD}'") | .VirtualMachines[].VMName ')
+        for VM in ${VMS}; do
+                VMTOTAL=$(echo "${CPODSTORAGE}" | jq -r '.cpods[] | select (.cPodName == "'${CPOD}'") | .VirtualMachines[] | select (.VMName == "'${VM}'") |.UsedStorageRaw' )
+                VMRATIO=$(calc $VMTOTAL*100/$CPODTOTAL )
+                CPODSTORAGE=$(echo "${CPODSTORAGE}" | jq '(.cpods[] | select (.cPodName == "'${CPOD}'") | .VirtualMachines[] | select (.VMName == "'${VM}'")).CpodPercent |= "'${VMRATIO}'%"' )
+        done
 done
 
 echo "${CPODSTORAGE}" > /tmp/cpods_storage.json
-echo "${CPODSTORAGE}" | jq -r '["CPOD","TotalUsedqGB","Ratio-vs-Total"], ["----","-------","------------"], (.cpods[] | [.cPodShortName, .TotalStorageUsedGB, .TotalRatio]) | @tsv' | column -t
+clear
+echo =======================================
+echo "Overview of cPods Storage consumption" 
+echo =======================================
+echo
+echo "${CPODSTORAGE}" | jq -r '["CPOD","TotalUsedGB","Ratio-vs-Total"], ["----","-----------","------------"], (.cpods[] | [.cPodShortName, .TotalStorageUsedGB, .TotalRatio] ) | @tsv' | column -t
+

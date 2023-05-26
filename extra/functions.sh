@@ -199,3 +199,7 @@ delete_cpodrouter_bgp_neighbor() {
         echo
         get_cpodrouter_bgp_neighbors_table ${3}
 }
+
+calc() { 
+        awk "BEGIN{ printf \"%.2f\n\", $* }"; 
+}

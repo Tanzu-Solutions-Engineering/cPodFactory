@@ -14,7 +14,7 @@ calc() {
         awk "BEGIN{ printf \"%.2f\n\", $* }"; 
 }
 
-### Local vars ####
+### Main Code ####
 
 echo ===============================
 echo "Collecting cPods Storage data" 
@@ -48,7 +48,8 @@ for CPOD in ${CPODS}; do
                # printf "\t${USEDVMSTORAGEGB}\t${TOTALVMSTORAGEGB}\t${RATIO}%%\n"
                 USEDCPOD=$(expr ${USEDCPOD} + ${USEDVMSTORAGERAW})
                 TOTALCPOD=$(expr ${TOTALCPOD} + ${TOTALVMSTORAGERAW})
-                CPODSTORAGE=$(echo "${CPODSTORAGE}" | jq '(.cpods[] | select (.cPodName == "'${CPOD}'")).VirtualMachines += [{"VMName":"'${VM}'","UsedStorageGB":'${USEDVMSTORAGEGB}',"UsedStorageRaw":'${USEDVMSTORAGERAW}',"CpodPercent":""}]')
+                VMSHORTNAME=$(echo "${VM}" | rev | cut -d "/" -f1 | rev)
+                CPODSTORAGE=$(echo "${CPODSTORAGE}" | jq '(.cpods[] | select (.cPodName == "'${CPOD}'")).VirtualMachines += [{"VMName":"'${VM}'","VMShortName":"'${VMSHORTNAME}'","UsedStorageGB":'${USEDVMSTORAGEGB}',"UsedStorageRaw":'${USEDVMSTORAGERAW}',"CpodPercent":""}]')
                 #echo "${CPODSTORAGE}" | jq .
         done
         USEDCPODGB=$(expr $USEDCPOD / 1024 / 1024 / 1024 )

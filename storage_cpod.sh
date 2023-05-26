@@ -59,6 +59,6 @@ if [[ $TOTAL -gt 0 ]]
 then
         RATIO=$(( USED * 100 / TOTAL ))
 fi
-CPODSTORAGE=$(echo "${CPODSTORAGE}" | jq '(.TotalStorageUsed |= '${TOTAL}'')
+CPODSTORAGE=$(echo "${CPODSTORAGE}" | jq '.TotalStorageUsed |= '${TOTAL}'')
 echo "${CPODSTORAGE}" > /tmp/cpods_storage.json
 echo "${CPODSTORAGE}" | jq .

@@ -25,7 +25,7 @@ USED=0
 TOTAL=0
 for CPOD in ${CPODS}; do
         CPODSHORTNAME=$(echo "${CPOD}" | rev | cut -d "/" -f1 | rev)
-        CPODSTORAGE=$(echo "${CPODSTORAGE}" | jq '.cpods += [{ "cPodName": "'${CPOD}'", "cPodShortName" : "'${CPODSHORTNAME}'", "TotalStorageUsedRaw" : 0, "TotalStorageUsedGB" : 0, "VirtualMachines" : [] }]')
+        CPODSTORAGE=$(echo "${CPODSTORAGE}" | jq '.cpods += [{ "cPodName": "'${CPOD}'", "cPodShortName" : "'${CPODSHORTNAME}'", "TotalStorageUsedRaw" : 0, "TotalStorageUsedGB" : 0, "TotalRatio" : "", "VirtualMachines" : [] }]')
         echo "${CPODSTORAGE}" | jq .
         USEDCPOD=0
         TOTALCPOD=0
@@ -63,5 +63,13 @@ then
 fi
 CPODSTORAGE=$(echo "${CPODSTORAGE}" | jq '.TotalStorageUsedRaw |= '${TOTAL}'')
 CPODSTORAGE=$(echo "${CPODSTORAGE}" | jq '.TotalStorageUsedGB |= '${TOTALGB}'')
+
+
+for CPOD in ${CPODS}; do
+        CPODTOTAL=$(echo "${CPODSTORAGE}" | jq -r '.cpods[] | select (.cPodName == "'${CPOD}'") |.TotalStorageUsedRaw' )
+        CPODRATIO=$(expr $CPODTOTAL / 1024 / 1024 / 1024 )
+        CPODSTORAGE=$(echo "${CPODSTORAGE}" | jq '(.cpods[] | select (.cPodName == "'${CPOD}'")).TotalRatio |= "'${CPODRATIO}' %"')
+done
+
 echo "${CPODSTORAGE}" > /tmp/cpods_storage.json
-echo "${CPODSTORAGE}" | jq -r '.cpods[] | [.cPodShortName, .TotalStorageUsedGB] | @tsv'
+echo "${CPODSTORAGE}" | jq -r '["CPOD","TotalUsedqGB","Ratio-vs-Total"], ["----","-------","------------"], (.cpods[] | [.cPodShortName, .TotalStorageUsedGB, .TotalRatio]) | @tsv' | column -t

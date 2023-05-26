@@ -18,15 +18,15 @@ echo =====================
 echo "Network information:"
 echo
 
-declare -a CPODSLIST
-declare -a VMSLIST
-declare -a STORAGELIST
+CPODSTORAGE='{ "cpods" : [], "TotalStorageUsed" : 0 }'
 
 CPODS=$(govc find . -type ResourcePool | grep "cPod-Workload/cPod-")
 #printf "CPODNAME\t\tUSED\tTOTAL\tRATIO\n"
 USED=0
 TOTAL=0
 for CPOD in ${CPODS}; do
+        CPODSTORAGE=$(echo "${CPODSTORAGE}" | jq '.cpods += [{"cPodName":"'${CPOD}'","TotalStorageUsed":0,"VirtualMachines":[]}]')
+
         USEDCPOD=0
         TOTALCPOD=0
         #printf "${CPOD}"
@@ -42,7 +42,7 @@ for CPOD in ${CPODS}; do
                # printf "\t${USEDVMSTORAGEGB}\t${TOTALVMSTORAGEGB}\t${RATIO}%%\n"
                 USEDCPOD=$(expr ${USEDCPOD} + ${USEDVMSTORAGERAW})
                 TOTALCPOD=$(expr ${TOTALCPOD} + ${TOTALVMSTORAGERAW})
-                VMSLIST+=(["VM"]="${VM}" ["USED"]="${USEDCPOD}" )
+                CPODSTORAGE=$(echo "${CPODSTORAGE}" | jq '(.cpods[] | select (.cPodName == "'${CPOD}'")).VirtualMachines += [{"VMName":"'${VM}'","UsedStorage":'${USEDVMSTORAGEGB}'}]')
         done
         USEDCPODGB=$(expr $USEDCPOD / 1024 / 1024 / 1024 )
         TOTALCPODGB=$(expr $TOTALCPOD / 1024 / 1024 / 1024 )
@@ -50,11 +50,13 @@ for CPOD in ${CPODS}; do
         #printf "\t${USEDCPODGB}\t${TOTALCPODGB}\t${RATIO}%%\n"
         USED=$(expr ${USED} + ${USEDCPOD})
         TOTAL=$(expr ${TOTAL} + ${TOTALCPOD})
-        CPODSLIST+=(["CPOD"]="${CPOD}" ["USED"]=${USED} ["VMLIST"]="${VMSLIST[@]}")
+        CPODSTORAGE=$(echo "${CPODSTORAGE}" | jq '(.cpods[] | select (.cPodName == "'${CPOD}'")).TotalStorageUsed |= '${TOTALCPOD}'')
 done
 USEDGB=$(expr $USED / 1024 / 1024 / 1024 )
 TOTALGB=$(expr $TOTAL / 1024 / 1024 / 1024 )
-RATIO=$(( USED * 100 / TOTAL ))
-#printf "\t${USEDGB}\t${TOTALGB}\t${RATIO}%%\n"
-
-echo "${CPODSLIST[@]}"
+if [[ $TOTAL -gt 0 ]]
+then
+        RATIO=$(( USED * 100 / TOTAL ))
+fi
+CPODSTORAGE=$(echo "${CPODSTORAGE}" | jq '(.TotalStorageUsed |= '${TOTAL}'')
+echo "${CPODSTORAGE}" > /tmp/cpods_storage.json

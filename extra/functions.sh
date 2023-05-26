@@ -203,3 +203,7 @@ delete_cpodrouter_bgp_neighbor() {
 calc() { 
         awk "BEGIN{ printf \"%.2f\n\", $* }"; 
 }
+
+calc0() { 
+        awk "BEGIN{ printf \"%.0f\n\", $* }"; 
+}

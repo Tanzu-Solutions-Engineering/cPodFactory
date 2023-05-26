@@ -47,7 +47,7 @@ CPODSTORAGE=$(echo "${CPODSTORAGE}" | jq '.TotalStorageUsedGB |= '${USEDGB}'')
 
 for CPOD in ${CPODS}; do
         CPODTOTAL=$(echo "${CPODSTORAGE}" | jq -r '.cpods[] | select (.cPodName == "'${CPOD}'") |.TotalStorageUsedRaw' )
-        CPODRATIO=$(calc $CPODTOTAL*100/$TOTAL )
+        CPODRATIO=$(calc $CPODTOTAL*100/$USED )
         CPODSTORAGE=$(echo "${CPODSTORAGE}" | jq '(.cpods[] | select (.cPodName == "'${CPOD}'")).TotalRatio |= "'${CPODRATIO}'%"')
         VMS=$(echo  "${CPODSTORAGE}" | jq -r '.cpods[] | select (.cPodName == "'${CPOD}'") | .VirtualMachines[].VMName ')
         for VM in ${VMS}; do

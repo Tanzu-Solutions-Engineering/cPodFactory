@@ -19,13 +19,13 @@ fi
 
 CPODSTORAGE=$(cat "${STORAGEJSON}")
 
-CPODS=$(echo "${CPODSTORAGE}" | jq -r .cpods[].cPodName )
+CPODS=$(echo "${CPODSTORAGE}" | jq -r .cpods[].cPodShortName )
 for CPOD in ${CPODS}; do
         echo
         echo =======================================
         echo "${CPOD}"
         echo
-        CPODTOTAL=$(echo "${CPODSTORAGE}" | jq -r '.cpods[] | select (.cPodName == "'${CPOD}'") |.TotalStorageUsedRaw' )
-        VMS=$(echo  "${CPODSTORAGE}" | jq -r '.cpods[] | select (.cPodName == "'${CPOD}'") | .VirtualMachines[].VMName ')
-        echo "${CPODSTORAGE}" | jq -r '["VM","TotalUsedGB","Ratio-vs-Cpod"], ["----","-----------","------------"], (.cpods[] | select (.cPodName == "'${CPOD}'") | .VirtualMachines[] | [.VMShortName, .UsedStorageGB, .CpodPercent] ) | @tsv' | column -t | sed  -e 's/^/     /'       
+        CPODTOTAL=$(echo "${CPODSTORAGE}" | jq -r '.cpods[] | select (.cPodShortName == "'${CPOD}'") |.TotalStorageUsedRaw' )
+        VMS=$(echo  "${CPODSTORAGE}" | jq -r '.cpods[] | select (.cPodShortName == "'${CPOD}'") | .VirtualMachines[].VMName ')
+        echo "${CPODSTORAGE}" | jq -r '["VM","TotalUsedGB","Ratio-vs-Cpod"], ["----","-----------","------------"], (.cpods[] | select (.cPodShortName == "'${CPOD}'") | .VirtualMachines[] | [.VMShortName, .UsedStorageGB, .CpodPercent] ) | @tsv' | column -t | sed  -e 's/^/     /'       
 done

@@ -27,5 +27,5 @@ for CPOD in ${CPODS}; do
         echo
         CPODTOTAL=$(echo "${CPODSTORAGE}" | jq -r '.cpods[] | select (.cPodName == "'${CPOD}'") |.TotalStorageUsedRaw' )
         VMS=$(echo  "${CPODSTORAGE}" | jq -r '.cpods[] | select (.cPodName == "'${CPOD}'") | .VirtualMachines[].VMName ')
-        echo "${CPODSTORAGE}" | jq -r '.cpods[] | select (.cPodName == "'${CPOD}'") | .VirtualMachines[] | ["VM","TotalUsedGB","Ratio-vs-Total"], ["----","-----------","------------"], ([.VMShortName, .UsedStorageGB, .CpodPercent] ) | @tsv' | column -t | sed  -e 's/^/     /'       
+        echo "${CPODSTORAGE}" | jq -r '["VM","TotalUsedGB","Ratio-vs-Cpod"], ["----","-----------","------------"], (.cpods[] | select (.cPodName == "'${CPOD}'") | .VirtualMachines[] | [.VMShortName, .UsedStorageGB, .CpodPercent] ) | @tsv' | column -t | sed  -e 's/^/     /'       
 done

@@ -225,6 +225,8 @@ add_computer_manager() {
         "server": "'"${MGRFQDN}"'",
         "display_name": "'"${MGRFQDN}"'",
         "origin_type": "vCenter",
+        "set_as_oidc_provider": true,
+        "access_level_for_oidc": "FULL",
         "credential" : {
         "credential_type" : "UsernamePasswordLoginCredential",
         "username": "administrator@'${CPOD_NAME_LOWER}.${ROOT_DOMAIN}'",

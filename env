@@ -26,6 +26,9 @@ case $WHERE in
 	"164.132.217.50/28")
 		ALL_CLUSTER=(ovh)
 		;;
+	"192.168.10.250/24")
+		ALL_CLUSTER=(dxb)
+		;;
 	"172.17.111.169/16")
 		ALL_CLUSTER=(techdata)
 		;;

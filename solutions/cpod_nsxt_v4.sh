@@ -30,6 +30,16 @@ source ./env
 source ./govc_env
 source ./extra/functions.sh
 
+# Check NSX-T backbone
+
+if [ ${BACKEND_NETWORK} != "NSX-T" ]; then
+        echo
+        echo "This script requires NSX-T as the networking layer for cPodFactory."
+        echo "Stopping script execution."
+        echo     
+        exit
+fi
+
 # let's get started
 
 echo
@@ -67,9 +77,10 @@ echo
 
 cpodctl create $1 $2 $3
 cpodctl vcsa $1 $3
-./extra/create_vds_nsxt.sh $1 $3
-./extra/enable_drs_vsan.sh $1 $3
+./extra/create_vds_vsan_nsxt.sh $1 $3
+./extra/enable_vsanOSA.sh $1 $3
 ./extra/deploy_nsxt_mgr_v4.sh $1 $3
+./extra/configure_nsxt_atside.sh $1 $3
 
 #get data
 CPOD_NAME=$( echo ${1} | tr '[:lower:]' '[:upper:]' )
@@ -87,6 +98,6 @@ echo "=== In ${TIME} Seconds ==="
 echo "============================="
 
 echo
-./info_cpod.sh ${NAME_LOWER}
+./info_cpod.sh ${CPOD_NAME}
 
 export LOGGING=""

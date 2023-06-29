@@ -117,7 +117,7 @@ echo "cd /root/cPodFactory/ovftool" >> ${MYSCRIPT}
 echo './ovftool --acceptAllEulas  --X:enableHiddenProperties \'  >> ${MYSCRIPT} 
 echo '--sourceType=OVA --allowExtraConfig --acceptAllEulas --X:injectOvfEnv  \'  >> ${MYSCRIPT}
 echo '--X:waitForIp --X:logFile=/tmp/ovftool.log --X:logLevel=verbose --X:logTransferHeaderData \'  >> ${MYSCRIPT}
-echo '--name='${NAME}' --datastore='${DATASTORE}' --powerOn --noSSLVerify \'  >> ${MYSCRIPT}
+echo '--name='${NAME}' --datastore='${VCENTER_DATASTORE}' --powerOn --noSSLVerify \'  >> ${MYSCRIPT}
 echo '--diskMode=thin \'  >> ${MYSCRIPT}
 
 SAVEIFS=$IFS

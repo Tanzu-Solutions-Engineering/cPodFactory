@@ -55,6 +55,12 @@ fi
 
 PASSWORD=$( ./${EXTRA_DIR}/passwd_for_cpod.sh ${1} )
 
+echo
+echo "===================================="
+echo "Deploying NSX-T v3.x manager at side"
+echo "===================================="
+echo
+
 export MYSCRIPT=/tmp/$$
 
 cat << EOF > ${MYSCRIPT}

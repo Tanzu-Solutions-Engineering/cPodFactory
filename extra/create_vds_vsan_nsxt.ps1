@@ -2,7 +2,7 @@ $Vc = "###VCENTER###"
 $vcUser = "###VCENTER_ADMIN###"
 $vcPass = '###VCENTER_PASSWD###'
 $vlan = '###VLAN###'
-$mtu = '1500'
+$mtu = '1700'
 
 #connect to vCenter
 Set-PowerCLIConfiguration -InvalidCertificateAction Ignore -Confirm:$false -DefaultVIServerMode multiple
@@ -60,7 +60,7 @@ Foreach ($ESXhost in ($Cluster | Get-VMHost)) {
 }
 
 #add vlans
-for ($num = 1 ; $num -le 2 ; $num++){
+for ($num = 1 ; $num -le 4 ; $num++){
     if ([int]$vlan -gt 40) {
         $vlanID = $vlan + $num
     }else{
@@ -70,6 +70,8 @@ for ($num = 1 ; $num -le 2 ; $num++){
     Switch ($num){
         1 {$vlanname = $vlanname + "-vmotion"}
         2 {$vlanname = $vlanname + "-vsan"}
+		3 {$vlanname = $vlanname + "-TEPs"}
+		4 {$vlanname = $vlanname + "-Uplinks"}
     }
     write-host $vlanname
     Get-VDSwitch -Name $vds_name -Location $Datacenter | New-VDPortgroup -Name $vlanname -VLanId $vlanID -runasync

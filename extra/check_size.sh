@@ -13,7 +13,7 @@
 [ "$1" == "" ] && 
 echo "usage: ./extra/check_size.sh        <cpodname> |" &&
 echo "                                    <list> [cpodname] |" && 
-echo "                                    <all> | <fetch> | <help> | <refresh> " &&
+echo "                                    <all> | <fetch> | <vms-list> | <help> | <refresh> " &&
 echo "" &&
 echo "Shows the size of cpod, if cpodname is \"all\" lists all objects" &&    
 echo "Try '$0 help' for more information." &&
@@ -267,6 +267,7 @@ help)
 	echo "<list> [cpodname]: lists all objects in the cache file '/tmp/vsan.out' OR '/tmp/vsan.out-cpodname'" &&        
 	echo "<cpodname>       : calculates only the root objects of this cpod. only high level objects (ESXi VMs, cpodrouter)" &&         
 	echo "<refresh>        : same as 'touch /tmp/refresh-needed' . triggers object refresh in '/tmp/vsan-out' " &&	
+	echo "<vms-list>       : get vm-list and size from govc instead vsan" &&
 	echo "<fetch>          : fetch via SSH the vsan object data from first ESXi in the hosts file" &&
 	echo "<help>           : this page" 
 	echo "" &&	

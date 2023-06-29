@@ -12,7 +12,12 @@ $vcenterversion =  $global:DefaultVIServers | Select Name,Version
 $vmhosts = get-vmhost
 $esxiversion =  $vmhosts[0].Version 
 
- 
+$vdsversion = $esxiversion
+
+if ([System.Version]$vdsversion -gt [System.Version]"8.0.0") {
+    $vdsversion = "8.0.0"
+}
+
 # Get the Datacenter Object
 $Datacenter = Get-Datacenter 
 
@@ -25,7 +30,7 @@ if ($test.count -gt 0) {
 }
 
 # Create the new VDS named VDSwitch
-$VDSwitch = New-VDSwitch -Name "VDSwitch" -Location $Datacenter  -Mtu 9000 -NumUplinkPorts 1 -Version $esxiversion
+$VDSwitch = New-VDSwitch -Name "VDSwitch" -Location $Datacenter  -Mtu 9000 -NumUplinkPorts 1 -Version $vdsversion
 # Use Get-View to set NIOC
 $VDSwitchView = Get-View -Id $VDSwitch.Id
 $VDSwitchView.EnableNetworkResourceManagement($true)

@@ -64,6 +64,11 @@ fi
 CPODROUTER=$( echo "${HEADER}-${1}" | tr '[:upper:]' '[:lower:]' )
 NAME_UPPER=$( echo "${1}" | tr '[:lower:]' '[:upper:]' )
 LASTNUMESX=$(get_last_ip  "esx"  "${CPODROUTER}")
+
+if [ "$LASTNUMESX" == "" ]; then
+  echo "No ESX found. Start from .21"
+  LASTNUMESX=20
+fi
 STARTNUMESX=$(( LASTNUMESX-20+1 ))
 NUM_ESX="${2}"
 OWNER="${3}"

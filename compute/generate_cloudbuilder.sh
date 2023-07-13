@@ -117,11 +117,13 @@ read -n1 -s -r -p $'Hit enter to launch prereqs validation or ctrl-c to stop.\n'
 
 echo "Submitting SDDC validation"
 VALIDATIONJSON=$(curl -s -i -k -u admin:${PASSWORD} -H 'Content-Type: application/json' -H 'Accept: application/json' -d @${SCRIPT} -X POST https://cloudbuilder.${NAME_LOWER}.${ROOT_DOMAIN}/v1/sddcs/validations)
+echo "${VALIDATIONJSON}" > /tmp/scripts/validation_request.json
 VALIDATIONID=$(echo ${VALIDATIONJSON} | jq -r .id )
-echo ${VALIDATIONID}
+echo "validation id : ${VALIDATIONID}"
 
 echo "Querying validation result"
 VALIDATIONRESULT=$(curl -s -i -k -u admin:${PASSWORD} -H 'Content-Type: application/json' -H 'Accept: application/json' -X GET https://cloudbuilder.${NAME_LOWER}.${ROOT_DOMAIN}/v1/sddcs/validations/${VALIDATIONID}/report)
+echo "${VALIDATIONRESULT}" > /tmp/scripts/validation_result.json
 EXECUTIONSTATUS=$(echo ${VALIDATIONRESULT} | jq - r .executionStatus)
 
 while [[ "${EXECUTIONSTATUS}" != "COMPLETED" ]]

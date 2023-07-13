@@ -124,7 +124,7 @@ echo "validation id : ${VALIDATIONID}"
 echo "Querying validation result"
 VALIDATIONRESULT=$(curl -s -k -u admin:${PASSWORD} -H 'Content-Type: application/json' -H 'Accept: application/json' -X GET https://cloudbuilder.${NAME_LOWER}.${ROOT_DOMAIN}/v1/sddcs/validations/${VALIDATIONID})
 echo "${VALIDATIONRESULT}" > /tmp/scripts/validation_result.json
-EXECUTIONSTATUS=$(echo ${VALIDATIONRESULT} | jq - r .executionStatus)
+EXECUTIONSTATUS=$(echo ${VALIDATIONRESULT} | jq -r .executionStatus)
 
 while [[ "${EXECUTIONSTATUS}" != "COMPLETED" ]]
 do

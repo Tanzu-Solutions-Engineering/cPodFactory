@@ -16,21 +16,10 @@ POD_FQDN="${POD_NAME_LOWER}.${ROOT_DOMAIN}"
 
 SCRIPT=/tmp/scripts/govc_${POD_NAME}
 
+echo export GOVC_USERNAME="administrator@${POD_FQDN}" > ${SCRIPT}
+echo export GOVC_PASSWORD="$( ./extra/passwd_for_cpod.sh ${1} )" >> ${SCRIPT}
 
-if [ -z ${PSC_DOMAIN} ]; then
-	echo export GOVC_USERNAME="administrator@${POD_FQDN}" >> ${SCRIPT}
-else
-	echo export GOVC_USERNAME="administrator@${PSC_DOMAIN}" >> ${SCRIPT}
-fi
-
-if [ -z ${PSC_DOMAIN} ]; then
-	echo export GOVC_PASSWORD="$( ./extra/passwd_for_cpod.sh ${1} )" >> ${SCRIPT}
-else
-	echo export GOVC_PASSWORD="${PSC_PASSWORD}" >> ${SCRIPT}
-	VCENTER_CPOD_PASSWD=${PSC_PASSWORD}
-fi
-
-echo export GOVC_URL="https://${GOVC_USERNAME}:${GOVC_PASSWORD}@vcsa.${POD_FQDN}" >> ${SCRIPT}
+echo export GOVC_URL="https://vcsa.${POD_FQDN}" >> ${SCRIPT}
 echo export GOVC_DATACENTER="" >> ${SCRIPT}
 
 echo "govc_env script available at : ${SCRIPT}"

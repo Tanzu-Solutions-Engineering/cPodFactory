@@ -38,3 +38,9 @@ EDGESTORAGE=$(df -h $CPODEDGE_DATASTORE | grep "/" | rev | awk '{print $2}' | re
 [[ $EDGESTORAGE -gt 90 ]] && EDGESTATUS="!! alert !!" || EDGESTATUS="ok"
 echo "cPodEdge $CPODEDGE_DATASTORE : ${EDGESTORAGE}% - ${EDGESTATUS}"
 echo =====================
+
+SCRIPTDIR="/tmp/scripts"
+if [ ! -d "$SCRIPTDIR" ]; then
+    mkdir -p "$SCRIPTDIR"
+    chmod 750 "$SCRIPTDIR"
+fi

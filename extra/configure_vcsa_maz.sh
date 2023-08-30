@@ -25,6 +25,23 @@ echo "==========================================="
 echo "=== Configuring VCSA for Multi-AZ setup ==="
 echo "==========================================="
 echo
+####################
+# Local function
+create_vlans_pg_dvs() { 
+	# ${1} = AZx_VLANID - example $AZ1_VLANID
+	# ${2} = DVS name - example $CPOD_AZ1_LOWER 
+
+	VLANID=${1}
+	DVSNAME=${2}
+
+	if [ ${VLANID} -gt 40 ]; then
+		govc dvs.portgroup.add -dc=${DATACENTER} -dvs $DVSNAME  -vlan=${VLANID}1 "$DVSNAME-vmotion"
+		govc dvs.portgroup.add -dc=${DATACENTER} -dvs $DVSNAME  -vlan=${VLANID}2 "$DVSNAME-vsan"
+	else
+		govc dvs.portgroup.add -dc=${DATACENTER} -dvs $DVSNAME  -vlan=${VLANID}01 "$DVSNAME-vmotion"
+		govc dvs.portgroup.add -dc=${DATACENTER} -dvs $DVSNAME  -vlan=${VLANID}02 "$DVSNAME-vsan"
+	fi
+}
 
 ###################
 #Check CPODnames are correct and exist
@@ -63,8 +80,11 @@ PASSWORDAZ1=$( ./${EXTRA_DIR}/passwd_for_cpod.sh ${2} )
 PASSWORDAZ2=$( ./${EXTRA_DIR}/passwd_for_cpod.sh ${3} )
 PASSWORDAZ3=$( ./${EXTRA_DIR}/passwd_for_cpod.sh ${4} )
 
-
 POD_FQDN="${CPOD_MGMT_LOWER}.${ROOT_DOMAIN}"
+
+AZ1_VLANID=$( cat /etc/hosts | grep ${CPOD_AZ1_LOWER} | cut -f1 | cut -d"." -f4 )
+AZ2_VLANID=$( cat /etc/hosts | grep ${CPOD_AZ2_LOWER} | cut -f1 | cut -d"." -f4 )
+AZ3_VLANID=$( cat /etc/hosts | grep ${CPOD_AZ3_LOWER} | cut -f1 | cut -d"." -f4 )
 
 export GOVC_USERNAME="administrator@${POD_FQDN}"
 export GOVC_PASSWORD="${PASSWORDMGMT}"
@@ -88,8 +108,16 @@ govc cluster.create -dc=${DATACENTER} $CPOD_AZ3_LOWER
 
 #create dvs switches
 govc dvs.create  -dc=${DATACENTER}  -mtu 9000 -num-uplinks=2 $CPOD_AZ1_LOWER
+govc dvs.portgroup.add -dc=${DATACENTER} -dvs $CPOD_AZ1_LOWER  "$CPOD_AZ1_LOWER-mgmt"
+create_vlans_pg_dvs $AZ1_VLANID $CPOD_AZ1_LOWER
+
 govc dvs.create  -dc=${DATACENTER}  -mtu 9000 -num-uplinks=2 $CPOD_AZ2_LOWER
+govc dvs.portgroup.add -dc=${DATACENTER} -dvs $CPOD_AZ2_LOWER  "$CPOD_AZ2_LOWER-mgmt"
+create_vlans_pg_dvs $AZ2_VLANID $CPOD_AZ2_LOWER
+
 govc dvs.create  -dc=${DATACENTER}  -mtu 9000 -num-uplinks=2 $CPOD_AZ3_LOWER
+govc dvs.portgroup.add -dc=${DATACENTER} -dvs $CPOD_AZ3_LOWER  "$CPOD_AZ3_LOWER-mgmt"
+create_vlans_pg_dvs $AZ3_VLANID $CPOD_AZ3_LOWER
 
 #Add hosts to clusters
 #AZ1
@@ -106,7 +134,7 @@ for ESXHOST in ${AZ2HOSTS}; do
 	govc cluster.add -dc=${DATACENTER} -cluster $CPOD_AZ2_LOWER -hostname $ESXHOST -username root -password ${PASSWORDAZ2} -noverify
 	govc dvs.add -dc=${DATACENTER}  -dvs=$CPOD_AZ2_LOWER -pnic vmnic1 $ESXHOST
 done
-govc object.rename -dc=${DATACENTER} /MAZ-DC/datastore/nfsDatastore nfsDatastore-AZ2
+govc object.rename -dc=${DATACENTER} "/MAZ-DC/datastore/nfsDatastore (1)" nfsDatastore-AZ2
 
 #AZ3
 AZ3HOSTS=$(list_cpod_esx_hosts $CPOD_AZ3_LOWER)
@@ -114,5 +142,5 @@ for ESXHOST in ${AZ3HOSTS}; do
 	govc cluster.add -dc=${DATACENTER} -cluster $CPOD_AZ3_LOWER -hostname $ESXHOST -username root -password ${PASSWORDAZ3} -noverify
 	govc dvs.add -dc=${DATACENTER}  -dvs=$CPOD_AZ3_LOWER -pnic vmnic1 $ESXHOST
 done
-govc object.rename -dc=${DATACENTER} /MAZ-DC/datastore/nfsDatastore nfsDatastore-AZ3
+govc object.rename -dc=${DATACENTER} "/MAZ-DC/datastore/nfsDatastore (2)" nfsDatastore-AZ3
 

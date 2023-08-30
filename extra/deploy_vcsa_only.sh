@@ -127,21 +127,27 @@ restart_cpodrouter_dnsmasq ${CPOD_NAME}
 
 ONCE=0
 STATUS="RUNNING"
+PREVIOUSSTAGE=""
 printf "\t Installing VCSA "
 while [ "${STATUS}" != "SUCCEEDED" ]
 do
 	sleep 5
     printf '.' >/dev/tty
 	STATUS=$( curl -s -k -u root:${PASSWORD} -X GET https://${IP}:5480/rest/vcenter/deployment )
-	echo ${STATUS} | grep ".status" 2>&1 > /dev/null && STATUS=$( echo ${STATUS} | jq '.status' | sed 's/"//g' )	
+	echo ${STATUS} | grep ".status" 2>&1 > /dev/null && STATUS=$( echo ${STATUS} | jq -r '.status')	
+	STAGE=$(echo ${STATUS} | jq -r '.progress.message.default_message')
 	
 	if [ "${STATUS}" == "RUNNING" ] && [ ${ONCE} -eq 0 ]; then
 		ONCE=1
 		echo "Follow the deployment trough https://vcsa.${DOMAIN}:5480 - root pwd : ${PASSWORD}"
 		printf "\t Installing VCSA "
 	fi
+	if [ "${STAGE}" != "${PREVIOUSSTAGE}" ]; then
+		printf "\t %s" "${STAGE}"
+		PREVIOUSSTAGE=${STAGE}
+	fi
 done	
-
-echo "SUCCEEDED !"
+echo
+echo "VCSA Installation SUCCEEDED !"
 #sleep 60
 #rm ${MYSCRIPT}

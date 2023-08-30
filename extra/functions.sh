@@ -57,21 +57,21 @@ add_to_cpodrouter_dnsmasq() {
 	# ${1} : line to add to dnsmasq
         # ${2} : cpod_name_lower
         echo "add ${1} to ${2}"
-        ssh -o LogLevel=error ${2} "sed "/${1}/d" -i /etc/dnsmasq.conf ; printf \"${1}\n\" >> /etc/dnsmasq.conf"
-        ssh -o LogLevel=error ${2} "systemctl restart dnsmasq.service"
+        ssh -o LogLevel=error -o StrictHostKeyChecking=no ${2} "sed "/${1}/d" -i /etc/dnsmasq.conf ; printf \"${1}\n\" >> /etc/dnsmasq.conf"
+        ssh -o LogLevel=error -o StrictHostKeyChecking=no ${2} "systemctl restart dnsmasq.service"
 }
 
 add_entry_to_cpodrouter_dnsmasq() {
         # ${1} : line to add to dnsmasq
         # ${2} : cpod_name_lower
         echo "add ${1} to ${2}"
-        ssh -o LogLevel=error ${2} "sed "/${1}/d" -i /etc/dnsmasq.conf ; printf \"${1}\n\" >> /etc/dnsmasq.conf"
+        ssh -o LogLevel=error -o StrictHostKeyChecking=no ${2} "sed "/${1}/d" -i /etc/dnsmasq.conf ; printf \"${1}\n\" >> /etc/dnsmasq.conf"
 }
 
 restart_cpodrouter_dnsmasq() {
         # ${1} : cpod_name_lower
         echo "restarting dnsmasq on ${1}"
-        ssh -o LogLevel=error ${1} "systemctl restart dnsmasq.service"
+        ssh -o LogLevel=error -o StrictHostKeyChecking=no ${1} "systemctl restart dnsmasq.service"
 }
 
 add_to_cpodrouter_hosts() {
@@ -80,8 +80,8 @@ add_to_cpodrouter_hosts() {
         # ${3} : cpod_name_lower
 
         echo "add ${1} -> ${2} in ${3}"
-        ssh -o LogLevel=error ${3} "sed "/${1}/d" -i /etc/hosts ; printf \"${1}\\t${2}\\n\" >> /etc/hosts"
-        ssh -o LogLevel=error ${3} "systemctl restart dnsmasq.service"
+        ssh -o LogLevel=error -o StrictHostKeyChecking=no ${3} "sed "/${1}/d" -i /etc/hosts ; printf \"${1}\\t${2}\\n\" >> /etc/hosts"
+        ssh -o LogLevel=error -o StrictHostKeyChecking=no ${3} "systemctl restart dnsmasq.service"
 }
 
 add_entry_cpodrouter_hosts() {
@@ -90,7 +90,7 @@ add_entry_cpodrouter_hosts() {
 	# ${3} : cpod_name_lower
 
 	echo "add ${1} -> ${2} in ${3}"
-	ssh -o LogLevel=error ${3} "sed "/${1}/d" -i /etc/hosts ; printf \"${1}\\t${2}\\n\" >> /etc/hosts"
+	ssh -o LogLevel=error -o StrictHostKeyChecking=no ${3} "sed "/${1}/d" -i /etc/hosts ; printf \"${1}\\t${2}\\n\" >> /etc/hosts"
 }
 
 enable_dhcp_cpod_vlanx() {
@@ -120,7 +120,7 @@ get_last_ip() {
 
         SUBNET=${1}
         CPOD=${2}
-        LASTIP=$(ssh -o LogLevel=error ${CPOD} "cat /etc/hosts | grep ${SUBNET}" | awk '{print $1}' | sort -t . -k 2,2n -k 3,3n -k 4,4n | tail -n 1 | cut -d "." -f 4)
+        LASTIP=$(ssh -o LogLevel=error -o StrictHostKeyChecking=no ${CPOD} "cat /etc/hosts | grep ${SUBNET}" | awk '{print $1}' | sort -t . -k 2,2n -k 3,3n -k 4,4n | tail -n 1 | cut -d "." -f 4)
         echo $LASTIP
 }
 
@@ -162,7 +162,7 @@ add_cpodrouter_bgp_neighbor() {
 
         CPODROUTERASN=$(get_cpod_asn ${3})
         CMD="vtysh -e \"configure terminal\" -e \"router bgp ${CPODROUTERASN}\" -e \"neighbor ${1} remote-as ${2}\" -e \"neighbor ${1} default-originate\" -e \"exit\" -e \"exit\" -e \"write\""
-	ssh -o LogLevel=error ${3} "${CMD}"
+	ssh -o LogLevel=error -o StrictHostKeyChecking=no ${3} "${CMD}"
 
         echo
         echo "getting result"
@@ -177,7 +177,7 @@ get_cpodrouter_bgp_neighbors_table(){
 
 	echo "get bgp neighbors table"
         CMD="vtysh -e \"show bgp summary\""
-        BGPSUMMARY=$(ssh -o LogLevel=error ${1} "${CMD}")
+        BGPSUMMARY=$(ssh -o LogLevel=error -o StrictHostKeyChecking=no ${1} "${CMD}")
         PEERS=$(echo "${BGPSUMMARY}" | grep Peers | cut -d" " -f2 | cut -"d," -f1)
         echo "${BGPSUMMARY}" | grep Neighbor -A${PEERS} | awk '{print $1 "\t" $3}'
 }
@@ -192,7 +192,7 @@ delete_cpodrouter_bgp_neighbor() {
 
         CPODROUTERASN=$(get_cpod_asn ${3})
         CMD="vtysh -e \"configure terminal\" -e \"router bgp ${CPODROUTERASN}\" -e \"no neighbor ${1} remote-as ${2}\"  -e \"exit\" -e \"exit\" -e \"write\""
-	ssh -o LogLevel=error ${3} "${CMD}"
+	ssh -o LogLevel=error -o StrictHostKeyChecking=no ${3} "${CMD}"
 
         echo
         echo "getting result"

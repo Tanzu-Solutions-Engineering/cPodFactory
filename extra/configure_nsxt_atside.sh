@@ -2509,7 +2509,7 @@ then
 else
         echo "  Configuring NSX on hosts"
         echo
-        create_transport_node_collections "${CLUSTERCCID}" "${HTNPROFILENAME}"
+        create_transport_node_collections "${CLUSTERCCID}" "${HTNPROFILEID}"
         sleep 30
         loop_wait_host_state
 fi

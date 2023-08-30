@@ -29,7 +29,7 @@ fi
 
 # test external variables
 
-[ "${MKP_CLI_TOKEN}" == "" ] && echo "external variable ${MKP_CLI_TOKEN} not defined" && exit 1 
+[ "${MKP_CLI_TOKEN}" == "" ] && echo "external variable MKP_CLI_TOKEN not defined. add it to 'env.passwd'" && exit 1 
 
 #VLAN01-5
 if [[ ${VLAN} -gt 40 ]];then
@@ -42,7 +42,7 @@ if [[ ${VLAN} -gt 40 ]];then
 else
 	VLANID01="${VLAN}01"
 	VLANID02="${VLAN}02"
-	VLANID03="${VLAN}03"
+	VLANID03="${VLAN}03"	
 	VLANID04="${VLAN}04"
 	VLANID05="${VLAN}05"
 	VLANID06="${VLAN}06"

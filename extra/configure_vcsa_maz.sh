@@ -98,7 +98,7 @@ for ESXHOST in ${AZ1HOSTS}; do
 	govc cluster.add -dc=${DATACENTER} -cluster $CPOD_AZ1_LOWER -hostname $ESXHOST -username root -password ${PASSWORDAZ1} -noverify
 	govc dvs.add -dc=${DATACENTER}  -dvs=$CPOD_AZ1_LOWER -pnic vmnic1 $ESXHOST
 done
-govc object.rename /MAZ-DC/datastore/nfsDatastore nfsDatastore-AZ1
+govc -dc=${DATACENTER} object.rename /MAZ-DC/datastore/nfsDatastore nfsDatastore-AZ1
 
 #AZ2
 AZ2HOSTS=$(list_cpod_esx_hosts $CPOD_AZ2_LOWER)
@@ -106,7 +106,7 @@ for ESXHOST in ${AZ2HOSTS}; do
 	govc cluster.add -dc=${DATACENTER} -cluster $CPOD_AZ2_LOWER -hostname $ESXHOST -username root -password ${PASSWORDAZ2} -noverify
 	govc dvs.add -dc=${DATACENTER}  -dvs=$CPOD_AZ2_LOWER -pnic vmnic1 $ESXHOST
 done
-govc object.rename /MAZ-DC/datastore/nfsDatastore nfsDatastore-AZ2
+govc -dc=${DATACENTER} object.rename /MAZ-DC/datastore/nfsDatastore nfsDatastore-AZ2
 
 #AZ3
 AZ3HOSTS=$(list_cpod_esx_hosts $CPOD_AZ3_LOWER)
@@ -114,5 +114,5 @@ for ESXHOST in ${AZ3HOSTS}; do
 	govc cluster.add -dc=${DATACENTER} -cluster $CPOD_AZ3_LOWER -hostname $ESXHOST -username root -password ${PASSWORDAZ3} -noverify
 	govc dvs.add -dc=${DATACENTER}  -dvs=$CPOD_AZ3_LOWER -pnic vmnic1 $ESXHOST
 done
-govc object.rename /MAZ-DC/datastore/nfsDatastore nfsDatastore-AZ3
+govc -dc=${DATACENTER} object.rename /MAZ-DC/datastore/nfsDatastore nfsDatastore-AZ3
 

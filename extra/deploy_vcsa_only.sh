@@ -128,7 +128,7 @@ while [ "${STATUS}" != "SUCCEEDED" ]
 do
 	sleep 5
     printf '.' >/dev/tty
-	STATUS=$( curl -s -k -u administrator@${AUTH_DOMAIN}:${PASSWORD} -X GET https://${IP}:5480/rest/vcenter/deployment )
+	STATUS=$( curl -s -k -u root:${PASSWORD} -X GET https://${IP}:5480/rest/vcenter/deployment )
 	echo ${STATUS} | grep ".status" 2>&1 > /dev/null && STATUS=$( echo ${STATUS} | jq '.status' | sed 's/"//g' )	
 	
 	if [ "${STATUS}" == "RUNNING" ] && [ ${ONCE} -eq 0 ]; then

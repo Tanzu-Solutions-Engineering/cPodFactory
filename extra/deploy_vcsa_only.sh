@@ -125,6 +125,8 @@ bash ${MYSCRIPT}
 add_to_cpodrouter_hosts ${IP} vcsa ${CPOD_NAME}
 restart_cpodrouter_dnsmasq ${CPOD_NAME}
 
+echo
+
 ONCE=0
 STATUS="RUNNING"
 PREVIOUSSTAGE=""
@@ -133,14 +135,14 @@ while [ "${STATUS}" != "SUCCEEDED" ]
 do
 	sleep 5
     printf '.' >/dev/tty
-	STATUS=$( curl -s -k -u root:${PASSWORD} -X GET https://${IP}:5480/rest/vcenter/deployment )
-	echo ${STATUS} | grep ".status" 2>&1 > /dev/null && STATUS=$( echo ${STATUS} | jq -r '.status')	
-	STAGE=$(echo ${STATUS} | jq -r '.progress.message.default_message')
+	RESPONSE=$( curl -s -k -u root:${PASSWORD} -X GET https://${IP}:5480/rest/vcenter/deployment )
+	echo ${RESPONSE} | grep ".status" 2>&1 > /dev/null && STATUS=$( echo ${RESPONSE} | jq -r '.status')	
+	STAGE=$(echo ${RESPONSE} | jq '.progress.message.default_message')
 	
 	if [ "${STATUS}" == "RUNNING" ] && [ ${ONCE} -eq 0 ]; then
 		ONCE=1
 		echo "Follow the deployment trough https://vcsa.${DOMAIN}:5480 - root pwd : ${PASSWORD}"
-		printf "\t Installing VCSA "
+		printf "Installing VCSA "
 	fi
 	if [ "${STAGE}" != "${PREVIOUSSTAGE}" ]; then
 		printf "\t %s" "${STAGE}"

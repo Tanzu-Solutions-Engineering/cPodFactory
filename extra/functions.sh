@@ -207,3 +207,9 @@ calc() {
 calc0() { 
         awk "BEGIN{ printf \"%.0f\n\", $* }"; 
 }
+
+list_cpod_esx_hosts() {
+        # ${1} : cpod_name_lower
+        ssh -o LogLevel=error -o StrictHostKeyChecking=no ${1} "cat /etc/hosts" |grep esx | awk '{print $2}' | xargs -I _ echo "_.${1}.${ROOT_DOMAIN}"
+}
+

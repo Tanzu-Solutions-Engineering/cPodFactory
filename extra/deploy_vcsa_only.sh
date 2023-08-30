@@ -136,16 +136,20 @@ do
 	sleep 5
     printf '.' >/dev/tty
 	RESPONSE=$( curl -s -k -u root:${PASSWORD} -X GET https://${IP}:5480/rest/vcenter/deployment )
-	echo ${RESPONSE} | grep ".status" 2>&1 > /dev/null && STATUS=$( echo ${RESPONSE} | jq -r '.status')	
-	STAGE=$(echo ${RESPONSE} | jq '.progress.message.default_message')
 	
+	echo ${RESPONSE} | grep ".status" 2>&1 > /dev/null && STATUS=$( echo ${RESPONSE} | jq -r '.status')	
+	STAGE=$(echo ${RESPONSE} | jq -r '.progress.message.default_message')
+	if [ $? -ne 0 ]; then
+		STAMP=$(date +'%F-%T')
+		echo "${RESPONSE}" > /tmp/response-$STAMP
+	fi
 	if [ "${STATUS}" == "RUNNING" ] && [ ${ONCE} -eq 0 ]; then
 		ONCE=1
 		echo "Follow the deployment trough https://vcsa.${DOMAIN}:5480 - root pwd : ${PASSWORD}"
 		printf "Installing VCSA "
 	fi
 	if [ "${STAGE}" != "${PREVIOUSSTAGE}" ]; then
-		printf "\n %s" "${STAGE}"
+		printf "\n\t %s" "${STAGE}"
 		PREVIOUSSTAGE=${STAGE}
 	fi
 done	

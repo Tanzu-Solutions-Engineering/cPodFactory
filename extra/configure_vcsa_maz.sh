@@ -53,7 +53,7 @@ PASSWORDAZ2=$( ./${EXTRA_DIR}/passwd_for_cpod.sh ${3} )
 PASSWORDAZ3=$( ./${EXTRA_DIR}/passwd_for_cpod.sh ${4} )
 
 
-POD_FQDN="${CPOD_NAME_LOWER}.${ROOT_DOMAIN}"
+POD_FQDN="${CPOD_MGMT_LOWER}.${ROOT_DOMAIN}"
 
 export GOVC_USERNAME="administrator@${POD_FQDN}"
 export GOVC_PASSWORD="${PASSWORDMGMT}"

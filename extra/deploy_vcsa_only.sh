@@ -130,7 +130,7 @@ echo
 ONCE=0
 STATUS="RUNNING"
 PREVIOUSSTAGE=""
-printf "\t Installing VCSA "
+printf "Installing VCSA "
 while [ "${STATUS}" != "SUCCEEDED" ]
 do
 	sleep 5
@@ -145,7 +145,7 @@ do
 		printf "Installing VCSA "
 	fi
 	if [ "${STAGE}" != "${PREVIOUSSTAGE}" ]; then
-		printf "\t %s" "${STAGE}"
+		printf "\n %s" "${STAGE}"
 		PREVIOUSSTAGE=${STAGE}
 	fi
 done	

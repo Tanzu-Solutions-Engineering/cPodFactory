@@ -126,12 +126,11 @@ add_to_cpodrouter_hosts ${IP} vcsa ${CPOD_NAME}
 restart_cpodrouter_dnsmasq ${CPOD_NAME}
 
 echo
-
 ONCE=0
 STATUS=""
 PREVIOUSSTAGE=""
 JQRESPONSE=""
-printf "Installing VCSA "
+printf "Waiting for VCSA setup "
 while [ "${STATUS}" != "SUCCEEDED" ]
 do
 	RESPONSE=$(curl -s -k -w '####%{response_code}' -u root:${PASSWORD} -X GET https://${IP}:5480/rest/vcenter/deployment )
@@ -139,14 +138,12 @@ do
 	if [ $HTTPSTATUS -eq 200 ]
 	then
 		JQRESPONSE=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
-	else
-		STAMP=$(date +'%F-%T')
-		echo "${RESPONSE}" > /tmp/response-$STAMP
 	fi
 	echo ${JQRESPONSE} | grep ".status" 2>&1 > /dev/null && STATUS=$( echo ${JQRESPONSE} | jq -r '.status')	
 	STAGE=$(echo ${JQRESPONSE} | jq -r '.progress.message.default_message')
 	if [ "${STATUS}" == "RUNNING" ] && [ ${ONCE} -eq 0 ]; then
 		ONCE=1
+		echo
 		echo "Follow the deployment trough https://vcsa.${DOMAIN}:5480 - root pwd : ${PASSWORD}"
 		printf "Installing VCSA "
 	fi
@@ -159,5 +156,4 @@ do
 done	
 echo
 echo "VCSA Installation SUCCEEDED !"
-#sleep 60
-#rm ${MYSCRIPT}
+rm ${MYSCRIPT}

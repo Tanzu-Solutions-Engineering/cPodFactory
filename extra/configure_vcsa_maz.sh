@@ -35,11 +35,11 @@ create_vlans_pg_dvs() {
 	DVSNAME=${2}
 
 	if [ ${VLANID} -gt 40 ]; then
-		govc dvs.portgroup.add -dc=${DATACENTER} -dvs $DVSNAME  -vlan=${VLANID}1 "$DVSNAME-vmotion"
-		govc dvs.portgroup.add -dc=${DATACENTER} -dvs $DVSNAME  -vlan=${VLANID}2 "$DVSNAME-vsan"
+		govc dvs.portgroup.add -dc=${DATACENTER} -dvs $DVSNAME -type ephemeral -vlan=${VLANID}1 "$DVSNAME-vmotion"
+		govc dvs.portgroup.add -dc=${DATACENTER} -dvs $DVSNAME -type ephemeral -vlan=${VLANID}2 "$DVSNAME-vsan"
 	else
-		govc dvs.portgroup.add -dc=${DATACENTER} -dvs $DVSNAME  -vlan=${VLANID}01 "$DVSNAME-vmotion"
-		govc dvs.portgroup.add -dc=${DATACENTER} -dvs $DVSNAME  -vlan=${VLANID}02 "$DVSNAME-vsan"
+		govc dvs.portgroup.add -dc=${DATACENTER} -dvs $DVSNAME -type ephemeral -vlan=${VLANID}01 "$DVSNAME-vmotion"
+		govc dvs.portgroup.add -dc=${DATACENTER} -dvs $DVSNAME -type ephemeral -vlan=${VLANID}02 "$DVSNAME-vsan"
 	fi
 }
 
@@ -112,15 +112,15 @@ DVSAZ3="dvs-$CPOD_AZ3_LOWER"
 
 #create dvs switches
 govc dvs.create  -dc=${DATACENTER}  -mtu 9000 -num-uplinks=2 "${DVSAZ1}"
-govc dvs.portgroup.add -dc=${DATACENTER} -dvs "${DVSAZ1}"  "$CPOD_AZ1_LOWER-mgmt"
+govc dvs.portgroup.add -dc=${DATACENTER} -dvs "${DVSAZ1}" -type ephemeral "$CPOD_AZ1_LOWER-mgmt"
 create_vlans_pg_dvs $AZ1_VLANID "${DVSAZ1}"
 
 govc dvs.create  -dc=${DATACENTER}  -mtu 9000 -num-uplinks=2 "${DVSAZ2}"
-govc dvs.portgroup.add -dc=${DATACENTER} -dvs "${DVSAZ2}"  "$CPOD_AZ2_LOWER-mgmt"
+govc dvs.portgroup.add -dc=${DATACENTER} -dvs "${DVSAZ2}" -type ephemeral "$CPOD_AZ2_LOWER-mgmt"
 create_vlans_pg_dvs $AZ2_VLANID "${DVSAZ2}"
 
 govc dvs.create  -dc=${DATACENTER}  -mtu 9000 -num-uplinks=2 "${DVSAZ3}"
-govc dvs.portgroup.add -dc=${DATACENTER} -dvs "${DVSAZ3}"  "$CPOD_AZ3_LOWER-mgmt"
+govc dvs.portgroup.add -dc=${DATACENTER} -dvs "${DVSAZ3}" -type ephemeral  "$CPOD_AZ3_LOWER-mgmt"
 create_vlans_pg_dvs $AZ3_VLANID "${DVSAZ3}"
 
 #Add hosts to clusters

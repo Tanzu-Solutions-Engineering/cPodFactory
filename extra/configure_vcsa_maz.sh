@@ -106,25 +106,30 @@ govc cluster.create -dc=${DATACENTER} $CPOD_AZ1_LOWER
 govc cluster.create -dc=${DATACENTER} $CPOD_AZ2_LOWER
 govc cluster.create -dc=${DATACENTER} $CPOD_AZ3_LOWER
 
+DVSAZ1="dvs-$CPOD_AZ1_LOWER"
+DVSAZ2="dvs-$CPOD_AZ2_LOWER"
+DVSAZ3="dvs-$CPOD_AZ3_LOWER"
+
 #create dvs switches
-govc dvs.create  -dc=${DATACENTER}  -mtu 9000 -num-uplinks=2 $CPOD_AZ1_LOWER
-govc dvs.portgroup.add -dc=${DATACENTER} -dvs $CPOD_AZ1_LOWER  "$CPOD_AZ1_LOWER-mgmt"
-create_vlans_pg_dvs $AZ1_VLANID $CPOD_AZ1_LOWER
+govc dvs.create  -dc=${DATACENTER}  -mtu 9000 -num-uplinks=2 "${DVSAZ1}"
+govc dvs.portgroup.add -dc=${DATACENTER} -dvs "${DVSAZ1}"  "$CPOD_AZ1_LOWER-mgmt"
+create_vlans_pg_dvs $AZ1_VLANID "${DVSAZ1}"
 
-govc dvs.create  -dc=${DATACENTER}  -mtu 9000 -num-uplinks=2 $CPOD_AZ2_LOWER
-govc dvs.portgroup.add -dc=${DATACENTER} -dvs $CPOD_AZ2_LOWER  "$CPOD_AZ2_LOWER-mgmt"
-create_vlans_pg_dvs $AZ2_VLANID $CPOD_AZ2_LOWER
+govc dvs.create  -dc=${DATACENTER}  -mtu 9000 -num-uplinks=2 "${DVSAZ2}"
+govc dvs.portgroup.add -dc=${DATACENTER} -dvs "${DVSAZ2}"  "$CPOD_AZ2_LOWER-mgmt"
+create_vlans_pg_dvs $AZ2_VLANID "${DVSAZ2}"
 
-govc dvs.create  -dc=${DATACENTER}  -mtu 9000 -num-uplinks=2 $CPOD_AZ3_LOWER
-govc dvs.portgroup.add -dc=${DATACENTER} -dvs $CPOD_AZ3_LOWER  "$CPOD_AZ3_LOWER-mgmt"
-create_vlans_pg_dvs $AZ3_VLANID $CPOD_AZ3_LOWER
+govc dvs.create  -dc=${DATACENTER}  -mtu 9000 -num-uplinks=2 "${DVSAZ3}"
+govc dvs.portgroup.add -dc=${DATACENTER} -dvs "${DVSAZ3}"  "$CPOD_AZ3_LOWER-mgmt"
+create_vlans_pg_dvs $AZ3_VLANID "${DVSAZ3}"
 
 #Add hosts to clusters
 #AZ1
 AZ1HOSTS=$(list_cpod_esx_hosts $CPOD_AZ1_LOWER)
 for ESXHOST in ${AZ1HOSTS}; do
 	govc cluster.add -dc=${DATACENTER} -cluster $CPOD_AZ1_LOWER -hostname $ESXHOST -username root -password ${PASSWORDAZ1} -noverify
-	govc dvs.add -dc=${DATACENTER}  -dvs=$CPOD_AZ1_LOWER -pnic vmnic1 $ESXHOST
+	govc dvs.add -dc=${DATACENTER}  -dvs="${DVSAZ1}" -pnic vmnic1 $ESXHOST
+	govc esxcli -dc=${DATACENTER} -hostname $ESXHOST
 done
 govc object.rename -dc=${DATACENTER} /MAZ-DC/datastore/nfsDatastore nfsDatastore-AZ1
 
@@ -132,7 +137,7 @@ govc object.rename -dc=${DATACENTER} /MAZ-DC/datastore/nfsDatastore nfsDatastore
 AZ2HOSTS=$(list_cpod_esx_hosts $CPOD_AZ2_LOWER)
 for ESXHOST in ${AZ2HOSTS}; do
 	govc cluster.add -dc=${DATACENTER} -cluster $CPOD_AZ2_LOWER -hostname $ESXHOST -username root -password ${PASSWORDAZ2} -noverify
-	govc dvs.add -dc=${DATACENTER}  -dvs=$CPOD_AZ2_LOWER -pnic vmnic1 $ESXHOST
+	govc dvs.add -dc=${DATACENTER}  -dvs="${DVSAZ2}" -pnic vmnic1 $ESXHOST
 done
 govc object.rename -dc=${DATACENTER} "/MAZ-DC/datastore/nfsDatastore (1)" nfsDatastore-AZ2
 
@@ -140,7 +145,7 @@ govc object.rename -dc=${DATACENTER} "/MAZ-DC/datastore/nfsDatastore (1)" nfsDat
 AZ3HOSTS=$(list_cpod_esx_hosts $CPOD_AZ3_LOWER)
 for ESXHOST in ${AZ3HOSTS}; do
 	govc cluster.add -dc=${DATACENTER} -cluster $CPOD_AZ3_LOWER -hostname $ESXHOST -username root -password ${PASSWORDAZ3} -noverify
-	govc dvs.add -dc=${DATACENTER}  -dvs=$CPOD_AZ3_LOWER -pnic vmnic1 $ESXHOST
+	govc dvs.add -dc=${DATACENTER}  -dvs="${DVSAZ3}" -pnic vmnic1 $ESXHOST
 done
 govc object.rename -dc=${DATACENTER} "/MAZ-DC/datastore/nfsDatastore (2)" nfsDatastore-AZ3
 

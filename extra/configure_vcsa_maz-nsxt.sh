@@ -199,5 +199,5 @@ for ESXHOST in ${AZ3HOSTS}; do
 	govc dvs.add -dc=${DATACENTER}  -dvs="${DVSAZ3}" -pnic vmnic1 $ESXHOST
 done
 govc object.rename -dc=${DATACENTER} "/MAZ-DC/datastore/nfsDatastore (2)" nfsDatastore-AZ3
-create_vmkernel_interfaces "${CPOD_AZ3LOWER}" "${AZ3_VLANID}" "${DVSAZ3}" "${CPOD_AZ3_LOWER}-mgmt" "${DVSAZ3}-vmotion" "${DVSAZ3}-vsan" 
+create_vmkernel_interfaces "${CPOD_AZ3_LOWER}" "${AZ3_VLANID}" "${DVSAZ3}" "${CPOD_AZ3_LOWER}-mgmt" "${DVSAZ3}-vmotion" "${DVSAZ3}-vsan" 
 

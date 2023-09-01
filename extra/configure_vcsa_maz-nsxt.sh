@@ -238,12 +238,15 @@ create_vmkernel_interfaces "${CPOD_AZ3_LOWER}" "${AZ3_VLANID}" "${DVSAZ3}" "${CP
 # Enable VSAN
 #AZ1
 enable_vsan_cluster "${CPOD_AZ1_LOWER}"
+govc object.rename -dc=${DATACENTER} "/MAZ-DC/datastore/vsanDatastore" vsanDatastore-AZ1
 
 #AZ2
 enable_vsan_cluster "${CPOD_AZ2_LOWER}"
+govc object.rename -dc=${DATACENTER} "/MAZ-DC/datastore/vsanDatastore" vsanDatastore-AZ2
 
 #AZ3
 enable_vsan_cluster "${CPOD_AZ3_LOWER}"
+govc object.rename -dc=${DATACENTER} "/MAZ-DC/datastore/vsanDatastore" vsanDatastore-AZ3
 
 echo
 echo "================================================="

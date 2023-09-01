@@ -68,11 +68,6 @@ Foreach($VMHost in $ClusterHosts)
     Write-Host "========"
     Write-Host "host : " $VMHost
 
-    Write-Host "enabling vmotion and vsan on vmk0"
-    $vmk0 = Get-VMHostNetworkAdapter -VmHost $VMHost  -Name "vmk0" 
-    Set-VMHostNetworkAdapter -VirtualNic $vmk0 -VsanTrafficEnabled $true -VMotionEnabled $true -Confirm:$false 
-   
-
     Write-Host "setting disks as flash on host" 
     $LunIDs = Get-ScsiLun -VmHost $VMHost | Where { $_.CapacityGB -gt 100 } | select ConsoleDeviceName,CapacityGB
     $storSys = Get-View -Id $VMHost.ExtensionData.ConfigManager.StorageSystem
@@ -109,8 +104,8 @@ Foreach($VMHost in $ClusterHosts)
 Write-Host "Clearing default VSAN Health Check Alarms, not applicable in Nested ESXi env ..."
 $alarmMgr = Get-View AlarmManager -Server $vc
 Get-Cluster -Server $vc | where {$_.ExtensionData.TriggeredAlarmState} | %{
-    $cluster = $_
-    $Cluster.ExtensionData.TriggeredAlarmState | %{
+    $clusterself = $_
+    $clusterself.ExtensionData.TriggeredAlarmState | %{
         $alarmMgr.AcknowledgeAlarm($_.Alarm,$cluster.ExtensionData.MoRef)
     }
 }

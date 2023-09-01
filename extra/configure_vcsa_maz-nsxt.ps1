@@ -6,6 +6,8 @@ $mtu = '1500'
 $Cluster = '###CLUSTER###'
 $vds_name = '###VDS###' 
 $mgmt_portgroup_vds = '###MGMTPORTGROUP###'
+$vmotion_portgroup_vds = '###VMOTIONPORTGROUP###'
+$vsan_portgroup_vds = '###VSANPORTGROUP###'
 
 #connect to vCenter
 Set-PowerCLIConfiguration -InvalidCertificateAction Ignore -Confirm:$false -DefaultVIServerMode multiple
@@ -63,7 +65,7 @@ Foreach ($ESXhost in ($Cluster | Get-VMHost)) {
 		write-host "vmk1 already exists on host" $ESXhost
 	}
 	else{
-		$pg = Get-VDPortgroup -Name *"vmotion"*
+		$pg = Get-VDPortgroup -Name $vmotion_portgroup_vds
 		$octet1 = "10"
 		$octet2 = $vlan
 		$octet3 = "1"
@@ -87,7 +89,7 @@ Foreach ($ESXhost in ($Cluster | Get-VMHost)) {
 		write-host "vmk2 already exists on host" $ESXhost
 	}
 	else{
-		$pg = Get-VDPortgroup -Name *"vsan"*
+		$pg = Get-VDPortgroup -Name $vsan_portgroup_vds
 		$octet1 = "10"
 		$octet2 = $vlan
 		$octet3 = "2"

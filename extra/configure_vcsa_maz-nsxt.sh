@@ -52,10 +52,13 @@ create_vmkernel_interfaces() {
 	# ${1} = cluster
 	# ${2} = dvs
 	# ${3} = portgroup
+	# ${4} = vmotion pg
 
 	CLUSTER="${1}"
 	VDS="${2}"
 	PORTGROUP="${3}"
+	VMOTIONPORTGROUP="${4}"
+	VSANPORTGROUP="${5}"
 
 	echo
 	echo "========================================================"
@@ -81,6 +84,8 @@ create_vmkernel_interfaces() {
 	sed -i -e "s/###CLUSTER###/${CLUSTER}/" ${SCRIPT}
 	sed -i -e "s/###VDS###/${VDS}/" ${SCRIPT}
 	sed -i -e "s/###MGMTPORTGROUP###/${PORTGROUP}/" ${SCRIPT}
+	sed -i -e "s/###VMOTIONPORTGROUP###/${VMOTIONPORTGROUP}/" ${SCRIPT}
+	sed -i -e "s/###VSANPORTGROUP###/${VSANPORTGROUP}/" ${SCRIPT}
 
 	docker run --interactive --tty --dns=${DNS} --entrypoint="/usr/bin/pwsh" -v /tmp/scripts:/tmp/scripts vmware/powerclicore:12.4 ${SCRIPT}
 	#rm -fr ${SCRIPT}
@@ -173,11 +178,10 @@ AZ1HOSTS=$(list_cpod_esx_hosts "${CPOD_AZ1_LOWER}")
 for ESXHOST in ${AZ1HOSTS}; do
 	govc cluster.add -dc=${DATACENTER} -cluster "${CPOD_AZ1_LOWER}" -hostname $ESXHOST -username root -password ${PASSWORDAZ1} -noverify
 	govc dvs.add -dc=${DATACENTER}  -dvs="${DVSAZ1}" -pnic vmnic1 $ESXHOST
-	govc esxcli -dc=${DATACENTER} -hostname $ESXHOST
 done
 govc object.rename -dc=${DATACENTER} /MAZ-DC/datastore/nfsDatastore nfsDatastore-AZ1
 
-create_vmkernel_interfaces "${CPOD_AZ1_LOWER}" "${DVSAZ1}" "${CPOD_AZ1_LOWER}-mgmt" 
+create_vmkernel_interfaces "${CPOD_AZ1_LOWER}" "${DVSAZ1}" "${CPOD_AZ1_LOWER}-mgmt" "${DVSAZ1}-vmotion" "${DVSAZ1}-vsan" 
 
 
 

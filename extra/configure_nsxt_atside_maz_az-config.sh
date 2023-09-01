@@ -3,7 +3,7 @@
 
 . ./env
 
-[ "${1}" == "" ] && echo "usage: ${0} <cPod Name> <owner email>" && exit 1
+[ "${1}" == "" ] && echo "usage: ${0} <cPod Name> <azcluster> <owner email>" && exit 1
 
 if [ -f "${1}" ]; then
         . ./${COMPUTE_DIR}/"${1}"
@@ -60,13 +60,9 @@ CPODROUTERIP=$(ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -
 VLAN=$( grep -m 1 "${CPOD_NAME_LOWER}\s" /etc/hosts | awk '{print $1}' | cut -d "." -f 4 )
 
 if [ ${VLAN} -gt 40 ]; then
-	VMOTIONVLANID=${VLAN}1
-	VSANVLANID=${VLAN}2
 	TEPVLANID=${VLAN}3
         UPLINKSVLANID=${VLAN}4
 else
-	VMOTIONVLANID=${VLAN}01
-	VSANVLANID=${VLAN}02
 	TEPVLANID=${VLAN}03
         UPLINKSVLANID=${VLAN}04
 fi

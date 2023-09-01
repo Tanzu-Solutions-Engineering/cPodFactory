@@ -93,6 +93,40 @@ create_vmkernel_interfaces() {
 
 }
 
+enable_vsan_cluster() {
+	# ${1} = cluster
+
+	CLUSTER="${1}"
+
+	echo
+	echo "========================================================"
+	echo "Creating vmkernels with powercli"
+	echo "========================================================"
+
+	PS_SCRIPT=configure_vcsa_maz_enable_drs_vsan.ps1
+
+	SCRIPT_DIR=/tmp/scripts
+	SCRIPT=/tmp/scripts/$$.ps1
+
+	mkdir -p ${SCRIPT_DIR}
+	cp ${EXTRA_DIR}/${PS_SCRIPT} ${SCRIPT}
+
+	CPOD_VCSA=vcsa.${CPOD_FQDN}
+	CPOD_ADMIN="administrator@${CPOD_FQDN}"
+	CPOD_PWD="${PASSWORDMGMT}"
+
+	sed -i -e "s/###VCENTER###/${CPOD_VCSA}/" ${SCRIPT}
+	sed -i -e "s/###VCENTER_ADMIN###/${CPOD_ADMIN}/" ${SCRIPT}
+	sed -i -e "s/###VCENTER_PASSWD###/${CPOD_PWD}/" ${SCRIPT}
+	sed -i -e "s/###CLUSTER###/${CLUSTER}/" ${SCRIPT}
+
+	docker run --interactive --tty --dns=${DNS} --entrypoint="/usr/bin/pwsh" -v /tmp/scripts:/tmp/scripts vmware/powerclicore:12.4 ${SCRIPT}
+	#rm -fr ${SCRIPT}
+
+}
+
+
+
 ###################
 #Check CPODnames are correct and exist
 
@@ -173,7 +207,7 @@ govc dvs.create  -dc=${DATACENTER}  -mtu 9000 -num-uplinks=2 "${DVSAZ3}"
 govc dvs.portgroup.add -dc=${DATACENTER} -dvs "${DVSAZ3}" -type ephemeral  "${CPOD_AZ3_LOWER}-mgmt"
 create_vlans_pg_dvs $AZ3_VLANID "${DVSAZ3}"
 
-#Add hosts to clusters
+#Add hosts to clusters ans set vmkernel ports
 #AZ1
 AZ1HOSTS=$(list_cpod_esx_hosts "${CPOD_AZ1_LOWER}")
 for ESXHOST in ${AZ1HOSTS}; do
@@ -201,3 +235,18 @@ done
 govc object.rename -dc=${DATACENTER} "/MAZ-DC/datastore/nfsDatastore (2)" nfsDatastore-AZ3
 create_vmkernel_interfaces "${CPOD_AZ3_LOWER}" "${AZ3_VLANID}" "${DVSAZ3}" "${CPOD_AZ3_LOWER}-mgmt" "${DVSAZ3}-vmotion" "${DVSAZ3}-vsan" 
 
+# Enable VSAN
+#AZ1
+enable_vsan_cluster "${CPOD_AZ1_LOWER}"
+
+#AZ2
+enable_vsan_cluster "${CPOD_AZ2_LOWER}"
+
+#AZ3
+enable_vsan_cluster "${CPOD_AZ3_LOWER}"
+
+echo
+echo "================================================="
+echo "=== VCSA and clusters Configuration completed ==="
+echo "================================================="
+echo

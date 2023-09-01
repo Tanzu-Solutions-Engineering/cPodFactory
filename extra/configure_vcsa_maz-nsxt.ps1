@@ -3,7 +3,7 @@ $vcUser = "###VCENTER_ADMIN###"
 $vcPass = '###VCENTER_PASSWD###'
 $vlan = '###VLAN###'
 $mtu = '1500'
-$Cluster = '###CLUSTER###'
+$ClusterName = '###CLUSTER###'
 $vds_name = '###VDS###' 
 $mgmt_portgroup_vds = '###MGMTPORTGROUP###'
 $vmotion_portgroup_vds = '###VMOTIONPORTGROUP###'
@@ -19,7 +19,7 @@ $vmhosts = get-vmhost
 $esxiversion =  $vmhosts[0].Version 
 
 # Set some extra stuff, need to fix datacenter
-$Cluster = Get-Cluster -Name $Cluster
+$Cluster = Get-Cluster -Name $ClusterName
 $mgmt_portgroup_vsw = "Management Network"
 
 # Get the Datacenter Object

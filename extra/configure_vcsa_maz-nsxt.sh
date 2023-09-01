@@ -55,11 +55,11 @@ create_vmkernel_interfaces() {
 	# ${4} = vmotion pg
 
 	CLUSTER="${1}"
-	VLAN=
-	VDS="${2}"
-	PORTGROUP="${3}"
-	VMOTIONPORTGROUP="${4}"
-	VSANPORTGROUP="${5}"
+	VLAN="${2}"
+	VDS="${3}"
+	PORTGROUP="${4}"
+	VMOTIONPORTGROUP="${5}"
+	VSANPORTGROUP="${6}"
 
 	echo
 	echo "========================================================"

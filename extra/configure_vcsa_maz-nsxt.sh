@@ -55,6 +55,7 @@ create_vmkernel_interfaces() {
 	# ${4} = vmotion pg
 
 	CLUSTER="${1}"
+	VLAN=
 	VDS="${2}"
 	PORTGROUP="${3}"
 	VMOTIONPORTGROUP="${4}"
@@ -180,11 +181,7 @@ for ESXHOST in ${AZ1HOSTS}; do
 	govc dvs.add -dc=${DATACENTER}  -dvs="${DVSAZ1}" -pnic vmnic1 $ESXHOST
 done
 govc object.rename -dc=${DATACENTER} /MAZ-DC/datastore/nfsDatastore nfsDatastore-AZ1
-
-create_vmkernel_interfaces "${CPOD_AZ1_LOWER}" "${DVSAZ1}" "${CPOD_AZ1_LOWER}-mgmt" "${DVSAZ1}-vmotion" "${DVSAZ1}-vsan" 
-
-
-
+create_vmkernel_interfaces "${CPOD_AZ1_LOWER}" "${AZ1_VLANID}" "${DVSAZ1}" "${CPOD_AZ1_LOWER}-mgmt" "${DVSAZ1}-vmotion" "${DVSAZ1}-vsan" 
 
 #AZ2
 AZ2HOSTS=$(list_cpod_esx_hosts "${CPOD_AZ2_LOWER}")
@@ -193,6 +190,7 @@ for ESXHOST in ${AZ2HOSTS}; do
 	govc dvs.add -dc=${DATACENTER}  -dvs="${DVSAZ2}" -pnic vmnic1 $ESXHOST
 done
 govc object.rename -dc=${DATACENTER} "/MAZ-DC/datastore/nfsDatastore (1)" nfsDatastore-AZ2
+create_vmkernel_interfaces "${CPOD_AZ2_LOWER}" "${AZ2_VLANID}" "${DVSAZ2}" "${CPOD_AZ2_LOWER}-mgmt" "${DVSAZ2}-vmotion" "${DVSAZ2}-vsan" 
 
 #AZ3
 AZ3HOSTS=$(list_cpod_esx_hosts "${CPOD_AZ3_LOWER}")
@@ -201,4 +199,5 @@ for ESXHOST in ${AZ3HOSTS}; do
 	govc dvs.add -dc=${DATACENTER}  -dvs="${DVSAZ3}" -pnic vmnic1 $ESXHOST
 done
 govc object.rename -dc=${DATACENTER} "/MAZ-DC/datastore/nfsDatastore (2)" nfsDatastore-AZ3
+create_vmkernel_interfaces "${CPOD_AZ3LOWER}" "${AZ3_VLANID}" "${DVSAZ3}" "${CPOD_AZ3_LOWER}-mgmt" "${DVSAZ3}-vmotion" "${DVSAZ3}-vsan" 
 

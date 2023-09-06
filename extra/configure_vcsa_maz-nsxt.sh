@@ -214,7 +214,7 @@ for ESXHOST in ${AZ1HOSTS}; do
 	govc cluster.add -dc=${DATACENTER} -cluster "${CPOD_AZ1_LOWER}" -hostname $ESXHOST -username root -password ${PASSWORDAZ1} -noverify
 	govc dvs.add -dc=${DATACENTER}  -dvs="${DVSAZ1}" -pnic vmnic1 $ESXHOST
 done
-govc object.rename -dc=${DATACENTER} /MAZ-DC/datastore/nfsDatastore nfsDatastore-AZ1
+govc object.rename -dc=${DATACENTER} /MAZ-DC/datastore/nfsDatastore "${CPOD_AZ1}-nfsDatastore"
 create_vmkernel_interfaces "${CPOD_AZ1_LOWER}" "${AZ1_VLANID}" "${DVSAZ1}" "${CPOD_AZ1_LOWER}-mgmt" "${DVSAZ1}-vmotion" "${DVSAZ1}-vsan" 
 
 #AZ2
@@ -223,7 +223,7 @@ for ESXHOST in ${AZ2HOSTS}; do
 	govc cluster.add -dc=${DATACENTER} -cluster "${CPOD_AZ2_LOWER}" -hostname $ESXHOST -username root -password ${PASSWORDAZ2} -noverify
 	govc dvs.add -dc=${DATACENTER}  -dvs="${DVSAZ2}" -pnic vmnic1 $ESXHOST
 done
-govc object.rename -dc=${DATACENTER} "/MAZ-DC/datastore/nfsDatastore (1)" nfsDatastore-AZ2
+govc object.rename -dc=${DATACENTER} "/MAZ-DC/datastore/nfsDatastore" "${CPOD_AZ2}-nfsDatastore"
 create_vmkernel_interfaces "${CPOD_AZ2_LOWER}" "${AZ2_VLANID}" "${DVSAZ2}" "${CPOD_AZ2_LOWER}-mgmt" "${DVSAZ2}-vmotion" "${DVSAZ2}-vsan" 
 
 #AZ3
@@ -232,21 +232,21 @@ for ESXHOST in ${AZ3HOSTS}; do
 	govc cluster.add -dc=${DATACENTER} -cluster "${CPOD_AZ3_LOWER}" -hostname $ESXHOST -username root -password ${PASSWORDAZ3} -noverify
 	govc dvs.add -dc=${DATACENTER}  -dvs="${DVSAZ3}" -pnic vmnic1 $ESXHOST
 done
-govc object.rename -dc=${DATACENTER} "/MAZ-DC/datastore/nfsDatastore (2)" nfsDatastore-AZ3
+govc object.rename -dc=${DATACENTER} "/MAZ-DC/datastore/nfsDatastore" "${CPOD_AZ3}-nfsDatastore"
 create_vmkernel_interfaces "${CPOD_AZ3_LOWER}" "${AZ3_VLANID}" "${DVSAZ3}" "${CPOD_AZ3_LOWER}-mgmt" "${DVSAZ3}-vmotion" "${DVSAZ3}-vsan" 
 
 # Enable VSAN
 #AZ1
 enable_vsan_cluster "${CPOD_AZ1_LOWER}"
-govc object.rename -dc=${DATACENTER} "/MAZ-DC/datastore/vsanDatastore" vsanDatastore-AZ1
+govc object.rename -dc=${DATACENTER} "/MAZ-DC/datastore/vsanDatastore" "${CPOD_AZ1}-vsanDatastore"
 
 #AZ2
 enable_vsan_cluster "${CPOD_AZ2_LOWER}"
-govc object.rename -dc=${DATACENTER} "/MAZ-DC/datastore/vsanDatastore" vsanDatastore-AZ2
+govc object.rename -dc=${DATACENTER} "/MAZ-DC/datastore/vsanDatastore" "${CPOD_AZ2}-vsanDatastore"
 
 #AZ3
 enable_vsan_cluster "${CPOD_AZ3_LOWER}"
-govc object.rename -dc=${DATACENTER} "/MAZ-DC/datastore/vsanDatastore" vsanDatastore-AZ3
+govc object.rename -dc=${DATACENTER} "/MAZ-DC/datastore/vsanDatastore" "${CPOD_AZ3}-vsanDatastore"
 
 echo
 echo "================================================="

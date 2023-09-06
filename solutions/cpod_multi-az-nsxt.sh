@@ -77,13 +77,11 @@ cpodctl create ${AZ3CPOD} 4 $3
 
 ./extra/deploy_vcsa_only.sh ${MGMTCPOD} $3
 ./extra/configure_vcsa_maz-nsxt.sh ${MGMTCPOD} ${AZ1CPOD} ${AZ2CPOD} ${AZ3CPOD}
-#./extra/deploy_nsxt_mgr_v4.sh ${MGMTCPOD} $3
-#./extra/configure_nsxt_atside.sh $1 $3
-
-#get data
-CPOD_NAME=$( echo ${MGMTCPOD} | tr '[:lower:]' '[:upper:]' )
-NAME_LOWER=$( echo ${HEADER}-${CPOD_NAME} | tr '[:upper:]' '[:lower:]' )
-PASSWORD=$( ${EXTRA_DIR}/passwd_for_cpod.sh ${CPOD_NAME} ) 
+./extra/deploy_nsxt_mgr_v4.sh ${MGMTCPOD} $3
+./extra/configure_nsxt_atside_maz_init ${MGMTCPOD} $3
+./extra/configure_nsxt_atside_maz_az-config ${MGMTCPOD} ${AZ1CPOD}
+./extra/configure_nsxt_atside_maz_az-config ${MGMTCPOD} ${AZ2CPOD}
+./extra/configure_nsxt_atside_maz_az-config ${MGMTCPOD} ${AZ3CPOD}
 
 
 END=$( date +%s )
@@ -96,6 +94,6 @@ echo "=== In ${TIME} Seconds ==="
 echo "============================="
 
 echo
-./info_cpod.sh ${CPOD_NAME}
+./info_cpod.sh ${MGMTCPOD}
 
 export LOGGING=""

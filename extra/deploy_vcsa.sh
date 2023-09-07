@@ -121,32 +121,44 @@ fi
 
 bash ${MYSCRIPT}
 
+add_to_cpodrouter_hosts ${IP} vcsa ${CPOD_NAME}
+restart_cpodrouter_dnsmasq ${CPOD_NAME}
+
+echo
 ONCE=0
-STATUS="RUNNING"
+STATUS=""
+PREVIOUSSTAGE=""
+JQRESPONSE=""
+printf "Waiting for VCSA setup "
 while [ "${STATUS}" != "SUCCEEDED" ]
 do
-	sleep 5
-	echo "Installing..."
-	#STATUS=$( curl -s -k -u administrator@${AUTH_DOMAIN}:${PASSWORD} -X GET https://${IP}:5480/rest/vcenter/deployment | jq '.status' | sed 's/"//g' )
-	STATUS=$( curl -s -k -u administrator@${AUTH_DOMAIN}:${PASSWORD} -X GET https://${IP}:5480/rest/vcenter/deployment )
-	echo ${STATUS} | grep ".status" 2>&1 > /dev/null && STATUS=$( echo ${STATUS} | jq '.status' | sed 's/"//g' )	
-	
+	RESPONSE=$(curl -s -k -w '####%{response_code}' -u root:${PASSWORD} -X GET https://${IP}:5480/rest/vcenter/deployment )
+	HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+	if [ $HTTPSTATUS -eq 200 ]
+	then
+		JQRESPONSE=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+	fi
+	echo ${JQRESPONSE} | grep ".status" 2>&1 > /dev/null && STATUS=$( echo ${JQRESPONSE} | jq -r '.status')	
+	STAGE=$(echo ${JQRESPONSE} | jq -r '.progress.message.default_message')
 	if [ "${STATUS}" == "RUNNING" ] && [ ${ONCE} -eq 0 ]; then
 		ONCE=1
-		./extra/post_slack.sh ":speech_balloon: You can follow vCenter deployment through <https://vcsa.${DOMAIN}:5480|VCSA admin URL> for cPod *${1}*"
-		echo "Follow the deployment trough https://vcsa.${DOMAIN}:5480"
+		echo
+		echo "Follow the deployment trough https://vcsa.${DOMAIN}:5480 - root pwd : ${PASSWORD}"
+		printf "Installing VCSA "
 	fi
+	if [ "${STAGE}" != "${PREVIOUSSTAGE}" ]; then
+		printf "\n\t %s" "${STAGE}"
+		PREVIOUSSTAGE=${STAGE}
+	fi
+    printf '.' >/dev/tty
+	sleep 5
 done	
+echo
+echo "VCSA Installation SUCCEEDED !"
 
-echo "SUCCEEDED !"
-#sleep 60
-
-./extra/post_slack.sh ":speech_balloon: Customizing <https://vcsa.${DOMAIN}|VCSA> for cPod *${1}*, almost finished!"
 CPOD="${1}"
 CPOD_LOWER=$( echo ${1} | tr '[:upper:]' '[:lower:]' )
 NUMESX=$( ssh -o "StrictHostKeyChecking no" root@cpod-${CPOD_LOWER} "grep esx /etc/hosts | wc -l" )
 ./compute/prep_vcsa.sh ${CPOD} ${NUMESX}
-
-./extra/post_slack.sh ":thumbsup: <https://vcsa.${DOMAIN}|VCSA> for cPod *${1}* seems ready!"
 
 rm ${MYSCRIPT}

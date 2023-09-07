@@ -86,32 +86,25 @@ HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
 if [ $HTTPSTATUS -eq 200 ]
 then
         USERINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
-
         echo $USERINFO | jq -r '["NAME","STATUS","PWD Freq","ID"], ["----","------","--------","--"], (.results[] | [.username, .status, .password_change_frequency, .userid]) | @tsv' | column -t -s $'\t'
-
         COUNTOFRISKS=$(echo $USERINFO |jq '.results[] | select (.password_change_frequency <100)| .userid' | wc -l)
         if [[ $COUNTOFRISKS > 0 ]]; then 
-                echo "Set users with pwd freq <100 (yes or no) ? "
-                read answer
-                if [[ $answer == "yes" ]]; then
-                        SHORTPWDUSERS=$(echo $USERINFO | jq '.results[] | select (.password_change_frequency <100)| .userid')
-                        for USERID in $SHORTPWDUSERS; do
-                                #echo "curl -s -k -w '####%{response_code}' -b /tmp/session.txt -H \"X-XSRF-TOKEN: ${XSRF}\" --data-binary '{ \"password_change_frequency\": 9999 }' https://${NSX}/api/v1/node/users/${USERID}"
-                                RESPONSE=$(curl -s -k -w '####%{response_code}' -b /tmp/session.txt -H "X-XSRF-TOKEN: ${XSRF}"  -X PUT -H 'Content-Type: application/json' --data-binary '{ "password_change_frequency": 9999 }' https://${NSXFQDN}/api/v1/node/users/${USERID})
-                                HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
-                                if [ $HTTPSTATUS -eq 200 ]
-                                then
-                                        echo "success for ${USERID}"
-                                else
-                                        echo "error setting user ${USERID}"
-                                        echo ${HTTPSTATUS}
-                                        echo ${RESPONSE}
-                                        exit
-                                fi
-                        done
-                else
-                        echo "you didn't chose 'yes'"
-                fi
+                echo "Fixing users with pwd freq <100"
+                SHORTPWDUSERS=$(echo $USERINFO | jq '.results[] | select (.password_change_frequency <100)| .userid')
+                for USERID in $SHORTPWDUSERS; do
+                        #echo "curl -s -k -w '####%{response_code}' -b /tmp/session.txt -H \"X-XSRF-TOKEN: ${XSRF}\" --data-binary '{ \"password_change_frequency\": 9999 }' https://${NSX}/api/v1/node/users/${USERID}"
+                        RESPONSE=$(curl -s -k -w '####%{response_code}' -b /tmp/session.txt -H "X-XSRF-TOKEN: ${XSRF}"  -X PUT -H 'Content-Type: application/json' --data-binary '{ "password_change_frequency": 9999 }' https://${NSXFQDN}/api/v1/node/users/${USERID})
+                        HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+                        if [ $HTTPSTATUS -eq 200 ]
+                        then
+                                echo "success for ${USERID}"
+                        else
+                                echo "error setting user ${USERID}"
+                                echo ${HTTPSTATUS}
+                                echo ${RESPONSE}
+                                exit
+                        fi
+                done
         else
                 echo
                 echo "No issues identified that require fixing"

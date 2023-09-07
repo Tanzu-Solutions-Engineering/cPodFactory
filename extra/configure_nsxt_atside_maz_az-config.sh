@@ -58,6 +58,8 @@ AZNAME_LOWER=$( echo ${2} | tr '[:upper:]' '[:lower:]' )
 AZCPOD_NAME_LOWER=$( echo ${AZCPOD_NAME} | tr '[:upper:]' '[:lower:]' )
 AZCPOD_PORTGROUP="${AZCPOD_NAME_LOWER}"
 
+NSXFQDN="nsx.${CPOD_NAME_LOWER}.${ROOT_DOMAIN}"
+echo ${NSXFQDN}
 
 AZVLAN=$( grep -m 1 "${AZCPOD_NAME_LOWER}\s" /etc/hosts | awk '{print $1}' | cut -d "." -f 4 )
 

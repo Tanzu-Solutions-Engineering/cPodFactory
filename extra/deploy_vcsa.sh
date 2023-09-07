@@ -2,6 +2,8 @@
 #bdereims@vmware.com
 
 . ./env
+source ./govc_env
+source ./extra/functions.sh
 
 [ "${1}" == "" ] && echo "usage: ${0} <cPod Name> <owner email>" && exit 1
 

@@ -63,7 +63,7 @@ JSESSIONID=$(cat /tmp/session.txt | grep JSESSIONID | rev | awk '{print $1}' | r
 # ===== checking nsx version =====
 echo "Checking nsx version"
 
-RESPONSE=$(curl -s -k -w '####%{response_code}' -b /tmp/session.txt -H "X-XSRF-TOKEN: ${XSRF}" https://${NSX}/api/v1/node/version)
+RESPONSE=$(curl -s -k -w '####%{response_code}' -b /tmp/session.txt -H "X-XSRF-TOKEN: ${XSRF}" https://${NSXFQDN}/api/v1/node/version)
 HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
 
 if [ $HTTPSTATUS -eq 200 ]
@@ -80,7 +80,7 @@ fi
 
 # ===== checking user admin =====
 echo "Checking user Admin"
-RESPONSE=$(curl -s -k -w '####%{response_code}' -b /tmp/session.txt -H "X-XSRF-TOKEN: ${XSRF}" https://${NSX}/api/v1/node/users)
+RESPONSE=$(curl -s -k -w '####%{response_code}' -b /tmp/session.txt -H "X-XSRF-TOKEN: ${XSRF}" https://${NSXFQDN}/api/v1/node/users)
 HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
 
 if [ $HTTPSTATUS -eq 200 ]
@@ -97,7 +97,7 @@ then
                         SHORTPWDUSERS=$(echo $USERINFO | jq '.results[] | select (.password_change_frequency <100)| .userid')
                         for USERID in $SHORTPWDUSERS; do
                                 #echo "curl -s -k -w '####%{response_code}' -b /tmp/session.txt -H \"X-XSRF-TOKEN: ${XSRF}\" --data-binary '{ \"password_change_frequency\": 9999 }' https://${NSX}/api/v1/node/users/${USERID}"
-                                RESPONSE=$(curl -s -k -w '####%{response_code}' -b /tmp/session.txt -H "X-XSRF-TOKEN: ${XSRF}"  -X PUT -H 'Content-Type: application/json' --data-binary '{ "password_change_frequency": 9999 }' https://${NSX}/api/v1/node/users/${USERID})
+                                RESPONSE=$(curl -s -k -w '####%{response_code}' -b /tmp/session.txt -H "X-XSRF-TOKEN: ${XSRF}"  -X PUT -H 'Content-Type: application/json' --data-binary '{ "password_change_frequency": 9999 }' https://${NSXFQDN}/api/v1/node/users/${USERID})
                                 HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
                                 if [ $HTTPSTATUS -eq 200 ]
                                 then

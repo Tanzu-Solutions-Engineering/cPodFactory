@@ -89,6 +89,7 @@ echo "processing uplink profiles"
 echo
 
 EDGE=$(check_uplink_profile "${AZNAME_LOWER}-edge-profile")
+echo "${EDGE}" 
 if [ "${EDGE}" == "" ]
 then
         echo "  create ${AZNAME_LOWER}-edge-profile"

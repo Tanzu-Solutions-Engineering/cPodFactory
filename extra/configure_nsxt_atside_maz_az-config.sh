@@ -91,8 +91,8 @@ echo "processing uplink profiles"
 echo
 
 EDGE=$(check_uplink_profile "${AZNAME_LOWER}-edge-profile")
-echo "${EDGE}" 
-if [[ "${EDGE}" == *"error"* ]]
+echo "uplink profile edge : ${EDGE}" 
+if [[ "${EDGE}" == *"error"* ]] || [[ "${EDGE}" == "" ]] 
 then
         echo "  create ${AZNAME_LOWER}-edge-profile"
         create_uplink_profile "${AZNAME_LOWER}-edge-profile" $TEPVLANID
@@ -102,7 +102,8 @@ else
 fi
 
 HOST=$(check_uplink_profile "${AZNAME_LOWER}-host-profile")
-if [[ "${HOST}" == *"error"* ]]
+echo "uplink profile edge : ${HOST}" 
+if [[ "${HOST}" == *"error"* ]] || [[ "${HOST}" == "" ]] 
 then
         echo "  create ${AZNAME_LOWER}-host-profile"
         create_uplink_profile "${AZNAME_LOWER}-host-profile" $TEPVLANID
@@ -223,7 +224,13 @@ then
 fi
 #get Host Profile ID
 HOSTPROFILEID=$(get_uplink_profile_id "${AZNAME_LOWER}-host-profile")
-echo "  HOST Profile ID: ${HOSTPROFILEID}"
+if [ "${HOSTPROFILEID}" == "" ]
+then
+        echo "  problem getting Host Profile ID : ${AZNAME_LOWER}-host-profile"
+        exit
+else
+        echo "  HOST Profile ID: ${HOSTPROFILEID}"
+fi
 
 #get transport zones ids
 HOSTTZID=$(get_transport_zone_id "${AZNAME_LOWER}-host-vlan-tz")

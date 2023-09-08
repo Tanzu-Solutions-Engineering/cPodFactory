@@ -193,7 +193,7 @@ fi
 #Check if subnets present
 echo
 POOL=$(check_ip_pool "${AZNAME_LOWER}-TEP-pool")
-if [ "${POOL}" == "" ] || [  $? -ne 0 ]
+if [[ "${POOL}" == *"error"* ]]
 then
         echo "  create ${AZNAME_LOWER}- TEP IP pool"
         create_ip_pool "${AZNAME_LOWER}-TEP-pool" "${AZNAME_LOWER}-TEP-pool-subnet"  "10.${AZVLAN}.3.2" "10.${AZVLAN}.3.200" "10.${AZVLAN}.3.0/24"  "10.${AZVLAN}.3.1" 

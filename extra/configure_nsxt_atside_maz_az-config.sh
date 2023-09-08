@@ -58,6 +58,8 @@ AZNAME_LOWER=$( echo ${2} | tr '[:upper:]' '[:lower:]' )
 AZCPOD_NAME_LOWER=$( echo ${AZCPOD_NAME} | tr '[:upper:]' '[:lower:]' )
 AZCPOD_PORTGROUP="${AZCPOD_NAME_LOWER}"
 
+AZSUBNET=$( ./${COMPUTE_DIR}/cpod_ip.sh ${2} )
+
 NSXFQDN="nsx.${CPOD_NAME_LOWER}.${ROOT_DOMAIN}"
 echo ${NSXFQDN}
 
@@ -406,7 +408,7 @@ echo "edge-${AZNAME_LOWER}"
 EDGEID=$(get_transport_node "edge-${AZNAME_LOWER}")
 if  [[ "${EDGEID}" == *"error"* ]] || [[ "${EDGEID}" == "" ]] 
 then
-        EDGE_IP="${SUBNET}.54"
+        EDGE_IP="${AZSUBNET}.54"
         FQDN="edge-${AZNAME_LOWER}.${CPOD_NAME_LOWER}.${ROOT_DOMAIN}"
         create_edge_node "edge-${AZNAME_LOWER}" "${UPLINKPROFILEID}" "${IPPOOLID}" "${OVLYTZID}" "${VLANTZID}" "${CLUSTERCCID}" "${COMPUTE_ID}" "${STORAGE_ID}" "${MANAGEMENT_NETWORK_ID}" "${EDGE_IP}" "${FQDN}"
 else

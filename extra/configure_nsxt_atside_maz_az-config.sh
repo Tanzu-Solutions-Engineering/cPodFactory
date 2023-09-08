@@ -228,7 +228,7 @@ then
 fi
 
 echo "Getting VDS uplinks"
-readarray -t VDSUPLINKS < <(govc ls -json=true network |jq -r '.elements[] | select ( .Object.Summary.ProductInfo.Name == "DVS" and .Object.Summary.Name == "dvs-'${AZCPOD_NAME_LOWER}'") |  .Object.Config.UplinkPortPolicy.UplinkPortName')
+readarray -t VDSUPLINKS < <(govc ls -json=true network |jq -r '.elements[] | select ( .Object.Summary.ProductInfo.Name == "DVS" and .Object.Summary.Name == "dvs-'${AZCPOD_NAME_LOWER}'") |  .Object.Config.UplinkPortPolicy.UplinkPortName[]')
 echo "  VDS UPLINKS : " 
 echo "${VDSUPLINKS[@]}"
 if [ "${VDSUPLINKS}" == "" ]

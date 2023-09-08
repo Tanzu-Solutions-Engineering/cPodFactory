@@ -409,7 +409,9 @@ EDGEID=$(get_transport_node "edge-${AZNAME_LOWER}")
 if  [[ "${EDGEID}" == *"error"* ]] || [[ "${EDGEID}" == "" ]] 
 then
         EDGE_IP="${AZSUBNET}.54"
+        echo "EDGE IP : ${EDGE_IP}"
         FQDN="edge-${AZNAME_LOWER}.${CPOD_NAME_LOWER}.${ROOT_DOMAIN}"
+        echo "EDGE FQDN : ${FQDN}"
         create_edge_node "edge-${AZNAME_LOWER}" "${UPLINKPROFILEID}" "${IPPOOLID}" "${OVLYTZID}" "${VLANTZID}" "${CLUSTERCCID}" "${COMPUTE_ID}" "${STORAGE_ID}" "${MANAGEMENT_NETWORK_ID}" "${EDGE_IP}" "${FQDN}"
 else
         echo "  edge-${AZNAME_LOWER} is present"

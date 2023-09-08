@@ -60,6 +60,8 @@ AZCPOD_PORTGROUP="${AZCPOD_NAME_LOWER}"
 
 AZSUBNET=$( ./${COMPUTE_DIR}/cpod_ip.sh ${2} )
 
+AZCPODROUTERIP=$(ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=error ${AZCPOD_NAME} "ip add | grep inet | grep eth0" | awk '{print $2}' | cut -d "/" -f 1)
+
 NSXFQDN="nsx.${CPOD_NAME_LOWER}.${ROOT_DOMAIN}"
 echo ${NSXFQDN}
 
@@ -412,7 +414,7 @@ then
         echo "EDGE IP : ${EDGE_IP}"
         FQDN="edge-${AZNAME_LOWER}.${CPOD_NAME_LOWER}.${ROOT_DOMAIN}"
         echo "EDGE FQDN : ${FQDN}"
-        create_edge_node "edge-${AZNAME_LOWER}" "${UPLINKPROFILEID}" "${IPPOOLID}" "${OVLYTZID}" "${VLANTZID}" "${CLUSTERCCID}" "${COMPUTE_ID}" "${STORAGE_ID}" "${MANAGEMENT_NETWORK_ID}" "${EDGE_IP}" "${FQDN}"
+        create_edge_node "edge-${AZNAME_LOWER}" "${UPLINKPROFILEID}" "${IPPOOLID}" "${OVLYTZID}" "${VLANTZID}" "${CLUSTERCCID}" "${COMPUTE_ID}" "${STORAGE_ID}" "${MANAGEMENT_NETWORK_ID}" "${EDGE_IP}" "${FQDN}" "${AZCPODROUTERIP}"
 else
         echo "  edge-${AZNAME_LOWER} is present"
 fi

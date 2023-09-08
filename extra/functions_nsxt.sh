@@ -1445,6 +1445,7 @@ create_edge_node() {
         MANAGEMENT_NETWORK_ID=$9
         EDGE_IP=${10}
         FQDN=${11}
+        CPODROUTERIP=${12}
 
         EDGE_JSON='{
         "display_name": "'${EDGENAME}'",

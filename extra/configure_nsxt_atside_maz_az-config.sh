@@ -278,7 +278,7 @@ echo Configuring NSX on ESX hosts
 echo
 
 CLUSTERCCID=$(get_compute_collection_external_id "${AZCPOD_NAME_LOWER}")
-echo "  Cluster CCID : ${CLUSTERCCID}" 
+#echo "  Cluster CCID : ${CLUSTERCCID}" 
 
 if  [[ "${CLUSTERCCID}" == *"error"* ]] || [[ "${CLUSTERCCID}" == "" ]] ;then
         echo "  problem getting Cluster ID : ${AZCPOD_NAME_LOWER}"
@@ -292,11 +292,14 @@ fi
 echo "  get_host-transport-nodes"
 echo
 get_host-transport-nodes
+echo
+echo "Check Transport Node Collections"
 TNC=$(check_transport_node_collections)
 
 if [[ "${TNC}" != *"error"* ]] || [[ "${TNC}" == "" ]]
 then
         TNCID=$(echo ${TNC} |jq -r '.results[] | select (.compute_collection_id == "'${CLUSTERCCID}'") | .id ' )
+        echo "TNCID : ${TNCID}"
         if [[ "${TNCID}" != *"error"* ]] || [[ "${TNCID}" == "" ]]
         then
                 echo "  Configuring NSX on hosts"

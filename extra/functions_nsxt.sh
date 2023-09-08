@@ -1099,11 +1099,11 @@ get_host_transport_node_profile_id() {
                 echo $HTNPROFILESINFO > /tmp/htnp-json 
                 if [[ ${HTNPROFILESCOUNT} -gt 0 ]]
                 then
-                        EXISTINGTNPROFILES=$(echo $HTNPROFILESINFO| jq -r .results[0].display_name)
+                        EXISTINGTNPROFILES=$(echo $HTNPROFILESINFO | jq -r '.results[]  | select ( .display_name == "'${HTNPROFILENAME}'") | .display_name')
                         if [[ "${EXISTINGTNPROFILES}" == "${HTNPROFILENAME}" ]]
                         then
                                 #echo "  host transport node profile set correctly : ${EXISTINGTNPROFILES}"
-                                HTNPROFILEID=$(echo $HTNPROFILESINFO| jq -r .results[0].id)
+                                HTNPROFILEID=$(echo $HTNPROFILESINFO | jq -r '.results[]  | select ( .display_name == "'${HTNPROFILENAME}'") | .id')
                                 echo "${HTNPROFILEID}"
                         fi
                 fi

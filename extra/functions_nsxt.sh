@@ -1446,6 +1446,7 @@ create_edge_node() {
         EDGE_IP=${10}
         FQDN=${11}
         CPODROUTERIP=${12}
+        EDGEUPLINKTRUNK=${13}
 
         EDGE_JSON='{
         "display_name": "'${EDGENAME}'",
@@ -1523,8 +1524,8 @@ create_edge_node() {
                         "'${CPODROUTERIP}'"
                         ],
                         "data_network_ids": [
-                        "/infra/segments/edge-uplink-trunk-1",
-                        "/infra/segments/edge-uplink-trunk-2"
+                        "/infra/segments/'${EDGEUPLINKTRUNK}'-1",
+                        "/infra/segments/'${EDGEUPLINKTRUNK}'-2"
                         ],
                         "reservation_info": {
                         "memory_reservation": {

@@ -382,6 +382,7 @@ fi
 # Datastore ID
 # govc datastore.info -json=true vsanDatastore |jq -r .Datastores[].Self.Value
 STORAGE_ID=$(govc datastore.info -json=true "${AZCPOD_NAME_LOWER}-vsanDatastore" |jq -r .Datastores[].Self.Value)
+echo " STORAGE_ID : ${STORAGE_ID}"
 
 # Portgroup ID
 # govc ls -json=true network |jq -r '.elements[].Object.Summary | select (.Name =="vlan-0-mgmt") | .Network.Value'
@@ -414,7 +415,7 @@ then
         echo "EDGE IP : ${EDGE_IP}"
         FQDN="edge-${AZNAME_LOWER}.${CPOD_NAME_LOWER}.${ROOT_DOMAIN}"
         echo "EDGE FQDN : ${FQDN}"
-        create_edge_node "edge-${AZNAME_LOWER}" "${UPLINKPROFILEID}" "${IPPOOLID}" "${OVLYTZID}" "${VLANTZID}" "${CLUSTERCCID}" "${COMPUTE_ID}" "${STORAGE_ID}" "${MANAGEMENT_NETWORK_ID}" "${EDGE_IP}" "${FQDN}" "${AZCPODROUTERIP}"
+        create_edge_node "edge-${AZNAME_LOWER}" "${UPLINKPROFILEID}" "${IPPOOLID}" "${OVLYTZID}" "${VLANTZID}" "${CLUSTERCCID}" "${COMPUTE_ID}" "${STORAGE_ID}" "${MANAGEMENT_NETWORK_ID}" "${EDGE_IP}" "${FQDN}" "${AZCPODROUTERIP}" "${AZNAME_LOWER}-edge-uplink-trunk"
 else
         echo "  edge-${AZNAME_LOWER} is present"
 fi

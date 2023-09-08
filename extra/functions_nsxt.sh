@@ -818,7 +818,8 @@ create_transport_node_profile() {
         OVERLAYTZID=$4
         IPPOOLID=$5
         HOSTPROFILEID=$6
-
+        UPLINK1="${7}"
+        UPLINK2="${8}"
         TNPROFILE_JSON='{
         "host_switch_spec": {
         "host_switches": [
@@ -835,11 +836,11 @@ create_transport_node_profile() {
                 ],
                 "uplinks": [
                 {
-                "vds_uplink_name": "uplink-1",
+                "vds_uplink_name": "'${UPLINK1}'",
                 "uplink_name": "uplink-1"
                 },
                 {
-                "vds_uplink_name": "uplink-2",
+                "vds_uplink_name": "'${UPLINK2}'",
                 "uplink_name": "uplink-2"
                 }
                 ],

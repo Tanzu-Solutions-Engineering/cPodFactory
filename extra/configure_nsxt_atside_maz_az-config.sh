@@ -288,20 +288,27 @@ echo "  get_host-transport-nodes"
 echo
 get_host-transport-nodes
 TNC=$(check_transport_node_collections)
+
 if [[ "${TNC}" != *"error"* ]] || [[ "${TNC}" == "" ]]
 then
         TNCID=$(echo ${TNC} |jq -r '.results[] | select (.compute_collection_id == "'${CLUSTERCCID}'") | .id ' )
-        echo
-        echo "  TNCID: $TNCID"
-        echo "  Cluster Collection State :  $(get_transport_node_collections_state ${TNCID})"
-        echo
-        loop_wait_host_state
+        if [[ "${TNCID}" != *"error"* ]] || [[ "${TNCID}" == "" ]]
+        then
+                echo "  Configuring NSX on hosts"
+                echo
+                create_transport_node_collections "${CLUSTERCCID}" "${HTNPROFILEID}"
+                sleep 30
+                loop_wait_host_state
+        else
+                echo
+                echo "  TNCID: $TNCID"
+                echo "  Cluster Collection State :  $(get_transport_node_collections_state ${TNCID})"
+                echo
+                loop_wait_host_state
+        fi
 else
-        echo "  Configuring NSX on hosts"
-        echo
-        create_transport_node_collections "${CLUSTERCCID}" "${HTNPROFILEID}"
-        sleep 30
-        loop_wait_host_state
+        echo "  Issue get_host-transport-nodes"
+        exit
 fi
 
 

@@ -325,7 +325,7 @@ echo "Processing segments"
 echo
 GETSEGMENT=$(get_segment "${AZNAME_LOWER}-edge-uplink-trunk-1")
 
-if [[ "${GETSEGMENT}" == *"error"* ]]
+if [[ "${GETSEGMENT}" == *"error"* ]] || [[ "${GETSEGMENT}" == "" ]]
 then
         TZID=$(get_transport_zone_id "${AZNAME_LOWER}-host-vlan-tz")
         create_edge_segment "${AZNAME_LOWER}-edge-uplink-trunk-1" "$TZID" "${AZNAME_LOWER}-host-profile-uplink-1"
@@ -335,7 +335,7 @@ fi
 
 echo
 GETSEGMENT=$(get_segment "${AZNAME_LOWER}-edge-uplink-trunk-2")
-if [[ "${GETSEGMENT}" == *"error"* ]]
+if [[ "${GETSEGMENT}" == *"error"* ]] || [[ "${GETSEGMENT}" == "" ]]
 then
         TZID=$(get_transport_zone_id "${AZNAME_LOWER}-host-vlan-tz")
         create_edge_segment "${AZNAME_LOWER}-edge-uplink-trunk-2" "$TZID" "${AZNAME_LOWER}-host-profile-uplink-2"
@@ -374,7 +374,7 @@ fi
 
 # Datastore ID
 # govc datastore.info -json=true vsanDatastore |jq -r .Datastores[].Self.Value
-STORAGE_ID=$(govc datastore.info -json=true "${CPOD_NAME_LOWER}-vsanDatastore" |jq -r .Datastores[].Self.Value)
+STORAGE_ID=$(govc datastore.info -json=true "${AZCPOD_NAME_LOWER}-vsanDatastore" |jq -r .Datastores[].Self.Value)
 
 # Portgroup ID
 # govc ls -json=true network |jq -r '.elements[].Object.Summary | select (.Name =="vlan-0-mgmt") | .Network.Value'

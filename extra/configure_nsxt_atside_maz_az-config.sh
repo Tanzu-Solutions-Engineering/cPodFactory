@@ -288,7 +288,7 @@ echo "  get_host-transport-nodes"
 echo
 get_host-transport-nodes
 TNC=$(check_transport_node_collections)
-if [[ "${TEST}" != *"error"* ]]
+if [[ "${TNC}" != *"error"* ]] || [[ "${TNC}" == "" ]]
 then
         TNCID=$(echo ${TNC} |jq -r '.results[] | select (.compute_collection_id == "'${CLUSTERCCID}'") | .id ' )
         echo

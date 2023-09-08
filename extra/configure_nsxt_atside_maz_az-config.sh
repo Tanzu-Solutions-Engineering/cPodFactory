@@ -91,7 +91,7 @@ echo "processing uplink profiles"
 echo
 
 EDGE=$(check_uplink_profile "${AZNAME_LOWER}-edge-profile")
-echo "uplink profile edge : ${EDGE}" 
+#echo "uplink profile edge : ${EDGE}" 
 if [[ "${EDGE}" == *"error"* ]] || [[ "${EDGE}" == "" ]] 
 then
         echo "  create ${AZNAME_LOWER}-edge-profile"
@@ -102,7 +102,7 @@ else
 fi
 
 HOST=$(check_uplink_profile "${AZNAME_LOWER}-host-profile")
-echo "uplink profile edge : ${HOST}" 
+#echo "uplink profile edge : ${HOST}" 
 if [[ "${HOST}" == *"error"* ]] || [[ "${HOST}" == "" ]] 
 then
         echo "  create ${AZNAME_LOWER}-host-profile"
@@ -194,7 +194,7 @@ fi
 #Check if subnets present
 echo
 POOL=$(check_ip_pool "${AZNAME_LOWER}-TEP-pool")
-echo "${POOL}"
+#echo "${POOL}"
 if [[ "${POOL}" == *"error"* ]] || [[ "${POOL}" == "" ]] 
 then
         echo "  create ${AZNAME_LOWER}- TEP IP pool"
@@ -344,7 +344,7 @@ COMPUTE_ID=$(govc ls -json=true host |jq -r '.elements[].Object.Self.Value')
 
 # Datastore ID
 # govc datastore.info -json=true vsanDatastore |jq -r .Datastores[].Self.Value
-STORAGE_ID=$(govc datastore.info -json=true vsanDatastore |jq -r .Datastores[].Self.Value)
+STORAGE_ID=$(govc datastore.info -json=true "${CPOD_NAME_LOWER}-vsanDatastore" |jq -r .Datastores[].Self.Value)
 
 # Portgroup ID
 # govc ls -json=true network |jq -r '.elements[].Object.Summary | select (.Name =="vlan-0-mgmt") | .Network.Value'

@@ -240,7 +240,13 @@ HTNPROFILENAME="${AZNAME_LOWER}-cluster-transport-node-profile"
 
 ## need to add check that vcenter inventory completed in NSX Manager
 
-get_host_transport_node_profile_id "${HTNPROFILENAME}" "${VDSUUID}" "${HOSTTZID}" "${OVERLAYTZID}" "${IPPOOLID}" "${HOSTPROFILEID}"
+get_host_transport_node_profile_id "${HTNPROFILENAME}"
+
+if [ "${HTNPROFILEID}" == "" ] || [  $? -ne 0 ];then
+        echo "Creating Transport Nodes Profile : ${HTNPROFILENAME}"
+        create_transport_node_profile "${HTNPROFILENAME}" "${VDSUUID}" "${HOSTTZID}" "${OVERLAYTZID}" "${IPPOOLID}" "${HOSTPROFILEID}"
+fi
+
 
 # ===== Configure NSX on ESX hosts =====
 echo

@@ -961,7 +961,7 @@ create_transport_node_profile_maz() {
 
 }
 
-get_host_transport_node_profile_id() {
+get_host_transport_node_profile_id_old() {
         #$1 transport zone name string
         #returns json and profile id
         HTNPROFILENAME=$1
@@ -989,6 +989,38 @@ get_host_transport_node_profile_id() {
                 else
                         echo "  adding transport node profile"
                         create_transport_node_profile "${HTNPROFILENAME}" "${VDSUUID}" "${HOSTTZID}" "${OVERLAYTZID}" "${IPPOOLID}" "${HOSTPROFILEID}"
+                fi
+        else
+                echo "  error getting transport node profile"
+                echo ${HTTPSTATUS}
+                echo ${RESPONSE}
+                exit
+        fi
+}
+
+get_host_transport_node_profile_id() {
+        #$1 transport zone name string
+        #returns json and profile id
+        HTNPROFILENAME=$1
+        HTNPROFILEID=""
+        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/policy/api/v1/infra/host-transport-node-profiles)
+        HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+
+        if [ $HTTPSTATUS -eq 200 ]
+        then
+                HTNPROFILESINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+                HTNPROFILESCOUNT=$(echo $HTNPROFILESINFO | jq .result_count)
+                echo $HTNPROFILESINFO > /tmp/htnp-json 
+                if [[ ${HTNPROFILESCOUNT} -gt 0 ]]
+                then
+                        EXISTINGTNPROFILES=$(echo $HTNPROFILESINFO| jq -r .results[0].display_name)
+                        if [[ "${EXISTINGTNPROFILES}" == "${HTNPROFILENAME}" ]]
+                        then
+                                echo "  host transport node profile set correctly : ${EXISTINGTNPROFILES}"
+                                HTNPROFILEID=$(echo $HTNPROFILESINFO| jq -r .results[0].id)
+                                export HTNPROFILEID
+                                echo "  host transport node profile ID : ${HTNPROFILEID}"
+                        fi
                 fi
         else
                 echo "  error getting transport node profile"

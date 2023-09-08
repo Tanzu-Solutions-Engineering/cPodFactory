@@ -300,7 +300,7 @@ if [[ "${TNC}" != *"error"* ]] || [[ "${TNC}" == "" ]]
 then
         TNCID=$(echo ${TNC} |jq -r '.results[] | select (.compute_collection_id == "'${CLUSTERCCID}'") | .id ' )
         echo "TNCID : ${TNCID}"
-        if [[ "${TNCID}" != *"error"* ]] || [[ "${TNCID}" == "" ]]
+        if [[ "${TNCID}" == *"error"* ]] || [[ "${TNCID}" == "" ]]
         then
                 echo "  Configuring NSX on hosts"
                 echo

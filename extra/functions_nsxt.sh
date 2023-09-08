@@ -1166,6 +1166,32 @@ get_compute_collection_origin_id() {
         fi
 }
 
+get_compute_collection_local_id() {
+        #$1 transport zone name string
+        #returns json
+        CLUSTERNAME=$1
+
+        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/api/v1/fabric/compute-collections)
+        HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+
+        if [ $HTTPSTATUS -eq 200 ]
+        then
+                CCINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+                echo ${CCINFO} > /tmp/ccinfo_eid_json
+                CCCOUNT=$(echo ${CCINFO} | jq .result_count)
+                if [[ ${CCCOUNT} -gt 0 ]]
+                then
+                        echo $CCINFO|  jq -r '.results[] | select ( .display_name == "'$CLUSTERNAME'" ) | .cm_local_id' 
+                fi
+        else
+                echo "  error getting compute-collections"
+                echo ${HTTPSTATUS}
+                echo ${RESPONSE}
+                exit
+        fi
+}
+
+
 check_transport_node_collections() {
         #returns json
         RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/policy/api/v1/infra/sites/default/enforcement-points/${EXISTINGEPRP}/transport-node-collections)

@@ -336,11 +336,21 @@ fi
 #get vCenter objects details
 
 # Cluster ID
-CLUSTERCCID=$(get_compute_collection_origin_id "${AZNAME_LOWER}")
+CLUSTERCCID=$(get_compute_collection_origin_id "${AZCPOD_NAME_LOWER}")
+if  [[ "${CLUSTERCCID}" == *"error"* ]] || [[ "${CLUSTERCCID}" == "" ]] ;then
+        echo "  problem getting Cluster ID : ${AZCPOD_NAME_LOWER}"
+        exit  
+else   
+        echo " CLUSTERCCID : ${CLUSTERCCID}"
+fi
 
-# govc ls -json=true host |jq -r '.elements[].Object.Self.Value'
-COMPUTE_ID=$(govc ls -json=true host |jq -r '.elements[].Object.Self.Value')
-#COMPUTE_ID=$(get_compute_manager_id "${MGRNAME}")
+COMPUTE_ID=$(get_compute_collection_local_id "${AZCPOD_NAME_LOWER}")
+if  [[ "${COMPUTE_ID}" == *"error"* ]] || [[ "${COMPUTE_ID}" == "" ]] ;then
+        echo "  problem getting Cluster ID : ${AZCPOD_NAME_LOWER}"
+        exit  
+else   
+        echo " COMPUTE_ID : ${COMPUTE_ID}"
+fi
 
 # Datastore ID
 # govc datastore.info -json=true vsanDatastore |jq -r .Datastores[].Self.Value
@@ -349,11 +359,12 @@ STORAGE_ID=$(govc datastore.info -json=true "${CPOD_NAME_LOWER}-vsanDatastore" |
 # Portgroup ID
 # govc ls -json=true network |jq -r '.elements[].Object.Summary | select (.Name =="vlan-0-mgmt") | .Network.Value'
 # 
-MANAGEMENT_NETWORK_ID=$(govc ls -json=true network |jq -r '.elements[].Object.Summary | select (.Name =="vlan-0-mgmt") | .Network.Value')
+MANAGEMENT_NETWORK_ID=$(govc ls -json=true network |jq -r '.elements[].Object.Summary | select (.Name =="'${CPOD_NAME_LOWER}'-mgmt") | .Network.Value')
 if [ "${MANAGEMENT_NETWORK_ID}" == "" ]
 then
         MANAGEMENT_NETWORK_ID=$(govc ls -json=true network |jq -r '.elements[].Object.Summary | select (.Name =="VM Network") | .Network.Value')
 fi
+echo " MANAGEMENT_NETWORK_ID : ${MANAGEMENT_NETWORK_ID}"
 
 OVLYTZID=$(get_transport_zone_uniqueid "overlay-tz")
 VLANTZID=$(get_transport_zone_uniqueid "${AZNAME_LOWER}-edge-vlan-tz")
@@ -370,13 +381,13 @@ IPPOOLID=$(get_ip_pool_id "${AZNAME_LOWER}-TEP-pool")
 # deploy edge code here
 echo "edge-${AZNAME_LOWER}"
 EDGEID=$(get_transport_node "edge-${AZNAME_LOWER}")
-if [ "${EDGEID}" == "" ]
+if  [[ "${EDGEID}" == *"error"* ]] || [[ "${EDGEID}" == "" ]] 
 then
         EDGE_IP="${SUBNET}.54"
         FQDN="edge-${AZNAME_LOWER}.${CPOD_NAME_LOWER}.${ROOT_DOMAIN}"
-        create_edge_node "edge-1" "${UPLINKPROFILEID}" "${IPPOOLID}" "${OVLYTZID}" "${VLANTZID}" "${CLUSTERCCID}" "${COMPUTE_ID}" "${STORAGE_ID}" "${MANAGEMENT_NETWORK_ID}" "${EDGE_IP}" "${FQDN}"
+        create_edge_node "edge-${AZNAME_LOWER}" "${UPLINKPROFILEID}" "${IPPOOLID}" "${OVLYTZID}" "${VLANTZID}" "${CLUSTERCCID}" "${COMPUTE_ID}" "${STORAGE_ID}" "${MANAGEMENT_NETWORK_ID}" "${EDGE_IP}" "${FQDN}"
 else
-        echo "  edge-${AZNAME_LOWER}- is present"
+        echo "  edge-${AZNAME_LOWER} is present"
 fi
 
 # check edge node status - Not Available -> ready  in "configuration state" - "Registration Pending" - Success

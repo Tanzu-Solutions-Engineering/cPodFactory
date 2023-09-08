@@ -262,8 +262,11 @@ echo "test if TNP ${HTNPROFILENAME} exists"
 TEST=$(get_host_transport_node_profile_id "${HTNPROFILENAME}")
 echo "${TEST}"
 if  [[ "${TEST}" == *"error"* ]] || [[ "${TEST}" == "" ]] ;then
+        HTNPROFILEID="${TEST}"
         echo "Creating Transport Nodes Profile : ${HTNPROFILENAME}"
         create_transport_node_profile "${HTNPROFILENAME}" "${VDSUUID}" "${HOSTTZID}" "${OVERLAYTZID}" "${IPPOOLID}" "${HOSTPROFILEID}" "${VDSUPLINKS[0]}" "${VDSUPLINKS[1]}"
+else
+        echo "HTN = ${HTNPROFILENAME} = ID : ${HTNPROFILEID}"
 fi
 
 

@@ -170,7 +170,7 @@ HOST=$(check_transport_zone "${AZNAME_LOWER}-host-vlan-tz")
 if [ "${HOST}" == "" ]
 then
         echo "  create check_transport_zone "${AZNAME_LOWER}-host-vlan-tz""
-        create_transport_zone "${AZNAME_LOWER}-host-vlan-tz" "VLAN_BACKED" "${AZNAME_LOWER}-host-profile"
+        "create_transport_zone" "${AZNAME_LOWER}-host-vlan-tz" "VLAN_BACKED" "${AZNAME_LOWER}-host-profile"
 else 
         echo "  ${AZNAME_LOWER}-host-vlan-tz exists"
         #echo $HOST
@@ -193,7 +193,7 @@ fi
 #Check if subnets present
 echo
 POOL=$(check_ip_pool "${AZNAME_LOWER}-TEP-pool")
-if [ "${POOL}" == "" ]
+if [ "${POOL}" == "" ] || [  $? -ne 0 ]
 then
         echo "  create ${AZNAME_LOWER}- TEP IP pool"
         create_ip_pool "${AZNAME_LOWER}-TEP-pool" "${AZNAME_LOWER}-TEP-pool-subnet"  "10.${AZVLAN}.3.2" "10.${AZVLAN}.3.200" "10.${AZVLAN}.3.0/24"  "10.${AZVLAN}.3.1" 

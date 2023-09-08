@@ -169,8 +169,8 @@ fi
 HOST=$(check_transport_zone "${AZNAME_LOWER}-host-vlan-tz")
 if [[ "${HOST}" == *"error"* ]]
 then
-        echo "  create check_transport_zone "${AZNAME_LOWER}-host-vlan-tz""
-        "create_transport_zone" "${AZNAME_LOWER}-host-vlan-tz" "VLAN_BACKED" "${AZNAME_LOWER}-host-profile"
+        echo "  create check_transport_zone ${AZNAME_LOWER}-host-vlan-tz"
+        create_transport_zone "${AZNAME_LOWER}-host-vlan-tz" "VLAN_BACKED" "${AZNAME_LOWER}-host-profile"
 else 
         echo "  ${AZNAME_LOWER}-host-vlan-tz exists"
         #echo $HOST

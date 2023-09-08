@@ -382,7 +382,7 @@ STORAGE_ID=$(govc datastore.info -json=true "${AZCPOD_NAME_LOWER}-vsanDatastore"
 # Portgroup ID
 # govc ls -json=true network |jq -r '.elements[].Object.Summary | select (.Name =="vlan-0-mgmt") | .Network.Value'
 # 
-MANAGEMENT_NETWORK_ID=$(govc ls -json=true network |jq -r '.elements[].Object.Summary | select (.Name =="'${CPOD_NAME_LOWER}'-mgmt") | .Network.Value')
+MANAGEMENT_NETWORK_ID=$(govc ls -json=true network |jq -r '.elements[].Object.Summary | select (.Name =="'${AZCPOD_NAME_LOWER}'-mgmt") | .Network.Value')
 if [ "${MANAGEMENT_NETWORK_ID}" == "" ]
 then
         MANAGEMENT_NETWORK_ID=$(govc ls -json=true network |jq -r '.elements[].Object.Summary | select (.Name =="VM Network") | .Network.Value')

@@ -92,7 +92,7 @@ echo
 
 EDGE=$(check_uplink_profile "${AZNAME_LOWER}-edge-profile")
 echo "${EDGE}" 
-if [ "${EDGE}" == "" ]
+if [[ "${EDGE}" == *"error"* ]]
 then
         echo "  create ${AZNAME_LOWER}-edge-profile"
         create_uplink_profile "${AZNAME_LOWER}-edge-profile" $TEPVLANID
@@ -102,7 +102,7 @@ else
 fi
 
 HOST=$(check_uplink_profile "${AZNAME_LOWER}-host-profile")
-if [ "${HOST}" == "" ]
+if [[ "${HOST}" == *"error"* ]]
 then
         echo "  create ${AZNAME_LOWER}-host-profile"
         create_uplink_profile "${AZNAME_LOWER}-host-profile" $TEPVLANID
@@ -157,7 +157,7 @@ else
 fi
 
 EDGE=$(check_transport_zone "${AZNAME_LOWER}-edge-vlan-tz")
-if [ "${EDGE}" == "" ]
+if [[ "${EDGE}" == *"error"* ]]
 then
         echo "  create check_transport_zone "${AZNAME_LOWER}-edge-vlan-tz""
         create_transport_zone "${AZNAME_LOWER}-edge-vlan-tz" "VLAN_BACKED" "${AZNAME_LOWER}-edge-profile"
@@ -167,7 +167,7 @@ else
 fi
 
 HOST=$(check_transport_zone "${AZNAME_LOWER}-host-vlan-tz")
-if [ "${HOST}" == "" ]
+if [[ "${HOST}" == *"error"* ]]
 then
         echo "  create check_transport_zone "${AZNAME_LOWER}-host-vlan-tz""
         "create_transport_zone" "${AZNAME_LOWER}-host-vlan-tz" "VLAN_BACKED" "${AZNAME_LOWER}-host-profile"
@@ -177,7 +177,7 @@ else
 fi
 
 OVERLAY=$(check_transport_zone "overlay-tz")
-if [ "${OVERLAY}" == "" ]
+if [[ "${OVERLAY}" == *"error"* ]]
 then
         echo "  create check_transport_zone "overlay-tz""
         create_transport_zone "overlay-tz" "OVERLAY_STANDARD"
@@ -240,9 +240,9 @@ HTNPROFILENAME="${AZNAME_LOWER}-cluster-transport-node-profile"
 
 ## need to add check that vcenter inventory completed in NSX Manager
 
-get_host_transport_node_profile_id "${HTNPROFILENAME}"
+TEST=$(get_host_transport_node_profile_id "${HTNPROFILENAME}")
 
-if [ "${HTNPROFILEID}" == "" ] || [  $? -ne 0 ];then
+if  [[ "${TEST}" == *"error"* ]];then
         echo "Creating Transport Nodes Profile : ${HTNPROFILENAME}"
         create_transport_node_profile "${HTNPROFILENAME}" "${VDSUUID}" "${HOSTTZID}" "${OVERLAYTZID}" "${IPPOOLID}" "${HOSTPROFILEID}"
 fi
@@ -261,7 +261,7 @@ echo "  get_host-transport-nodes"
 echo
 get_host-transport-nodes
 TNC=$(check_transport_node_collections)
-if [ "${TNC}" != ""  ]
+if [[ "${TEST}" != *"error"* ]]
 then
         TNCID=$(echo ${TNC} |jq -r '.results[] | select (.compute_collection_id == "'${CLUSTERCCID}'") | .id ' )
         echo
@@ -282,16 +282,21 @@ fi
 # edge-uplink-trunk-1 - tz = host-vlan-tz - teaming policy : host-profile-uplink-1 - vlan : 0-4094
 # edge-uplink-trunk-2 - tz = host-vlan-tz - teaming policy : host-profile-uplink-2 - vlan : 0-4094
 echo "Processing segments"
+
 echo
-if [ "$(get_segment "${AZNAME_LOWER}-edge-uplink-trunk-1")" == "" ]
+GETSEGMENT=$(get_segment "${AZNAME_LOWER}-edge-uplink-trunk-1")
+
+if [[ "${GETSEGMENT}" == *"error"* ]]
 then
         TZID=$(get_transport_zone_id "${AZNAME_LOWER}-host-vlan-tz")
         create_edge_segment "${AZNAME_LOWER}-edge-uplink-trunk-1" "$TZID" "${AZNAME_LOWER}-host-profile-uplink-1"
 else
         echo "  ${AZNAME_LOWER}-edge-uplink-trunk-1 - present"
 fi
+
 echo
-if [ "$(get_segment "${AZNAME_LOWER}-edge-uplink-trunk-2")" == "" ]
+GETSEGMENT=$(get_segment "${AZNAME_LOWER}-edge-uplink-trunk-2")
+if [[ "${GETSEGMENT}" == *"error"* ]]
 then
         TZID=$(get_transport_zone_id "${AZNAME_LOWER}-host-vlan-tz")
         create_edge_segment "${AZNAME_LOWER}-edge-uplink-trunk-2" "$TZID" "${AZNAME_LOWER}-host-profile-uplink-2"

@@ -239,9 +239,9 @@ echo "Checking Transport Nodes Profile"
 HTNPROFILENAME="${AZNAME_LOWER}-cluster-transport-node-profile"
 
 ## need to add check that vcenter inventory completed in NSX Manager
-
+echo "test if TNP ${HTNPROFILENAME} exists"
 TEST=$(get_host_transport_node_profile_id "${HTNPROFILENAME}")
-
+echo "${TEST}"
 if  [[ "${TEST}" == *"error"* ]];then
         echo "Creating Transport Nodes Profile : ${HTNPROFILENAME}"
         create_transport_node_profile "${HTNPROFILENAME}" "${VDSUUID}" "${HOSTTZID}" "${OVERLAYTZID}" "${IPPOOLID}" "${HOSTPROFILEID}"

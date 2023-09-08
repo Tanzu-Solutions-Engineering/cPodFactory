@@ -77,12 +77,14 @@ cpodctl create ${AZ3CPOD} 4 $3
 
 ./extra/deploy_vcsa_only.sh ${MGMTCPOD} $3
 ./extra/configure_vcsa_maz-nsxt.sh ${MGMTCPOD} ${AZ1CPOD} ${AZ2CPOD} ${AZ3CPOD}
-./extra/deploy_nsxt_mgr_v4.sh ${MGMTCPOD} $3
-./extra/configure_nsxt_atside_maz_init ${MGMTCPOD} $3
-./extra/configure_nsxt_atside_maz_az-config ${MGMTCPOD} ${AZ1CPOD}
-./extra/configure_nsxt_atside_maz_az-config ${MGMTCPOD} ${AZ2CPOD}
-./extra/configure_nsxt_atside_maz_az-config ${MGMTCPOD} ${AZ3CPOD}
 
+./extra/deploy_nsxt_mgr_v4.sh ${MGMTCPOD} $3
+./extra/configure_nsxt_atside_maz_init.sh ${MGMTCPOD} $3
+./extra/info_nsxt_cpod.sh ${MGMTCPOD} $3
+./extra/configure_nsxt_atside_maz_az-config.sh ${MGMTCPOD} ${AZ1CPOD}
+./extra/configure_nsxt_atside_maz_az-config.sh ${MGMTCPOD} ${AZ2CPOD}
+./extra/configure_nsxt_atside_maz_az-config.sh ${MGMTCPOD} ${AZ3CPOD}
+#./extra/configure_nsxt_atside_maz_az-tier0.sh ${MGMTCPOD} ${AZ1CPOD} ${AZ2CPOD} ${AZ3CPOD} 
 
 END=$( date +%s )
 TIME=$( expr ${END} - ${START} )

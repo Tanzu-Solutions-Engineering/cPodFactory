@@ -1,0 +1,294 @@
+#!/bin/bash
+#edewitte@vmware.com
+
+. ./env
+
+[ "${1}" == "" ] && echo "usage: ${0} <cPod MAZ Mgmt Name>  <cPod MAZ AZ1 Name> <cPod MAZ AZ2 Name> <cPod MAZ AZ3 Name> <owner email>" && exit 1
+
+if [ -f "${1}" ]; then
+        . ./${COMPUTE_DIR}/"${1}"
+else
+        SUBNET=$( ./${COMPUTE_DIR}/cpod_ip.sh ${1} )
+
+        [ $? -ne 0 ] && echo "error: file or env '${1}' does not exist" && exit 1
+
+        CPOD=${1}
+	unset DATASTORE
+        . ./${COMPUTE_DIR}/cpod-xxx_env
+fi
+
+### Local vars ####
+
+###################
+
+### functions ####
+
+source ./extra/functions.sh
+source ./extra/functions_nsxt.sh
+
+###################
+
+echo
+echo "============================"
+echo "=== Checking CPODs exist ==="
+echo "============================"
+echo
+
+SUBNET=$( ./${COMPUTE_DIR}/cpod_ip.sh ${1} )
+[ $? -ne 0 ] && echo "error: cpod '${1}' does not exist" && exit 1
+SUBNET=$( ./${COMPUTE_DIR}/cpod_ip.sh ${2} )
+[ $? -ne 0 ] && echo "error: cpod '${2}' does not exist" && exit 1
+SUBNET=$( ./${COMPUTE_DIR}/cpod_ip.sh ${3} )
+[ $? -ne 0 ] && echo "error: cpod '${3}' does not exist" && exit 1
+SUBNET=$( ./${COMPUTE_DIR}/cpod_ip.sh ${4} )
+[ $? -ne 0 ] && echo "error: cpod '${4}' does not exist" && exit 1
+SUBNET=""
+
+
+###################
+#MGMT CPOD
+CPOD_NAME="cpod-$1"
+NAME_HIGHER=$( echo ${1} | tr '[:lower:]' '[:upper:]' )
+NAME_LOWER=$( echo ${1} | tr '[:upper:]' '[:lower:]' )
+
+CPOD_NAME_LOWER=$( echo ${CPOD_NAME} | tr '[:upper:]' '[:lower:]' )
+CPOD_PORTGROUP="${CPOD_NAME_LOWER}"
+
+#AZ1 CPOD
+AZ1CPOD_NAME="cpod-$2"
+AZ1NAME_HIGHER=$( echo ${2} | tr '[:lower:]' '[:upper:]' )
+AZ1NAME_LOWER=$( echo ${2} | tr '[:upper:]' '[:lower:]' )
+
+AZ1CPOD_NAME_LOWER=$( echo ${AZ1CPOD_NAME} | tr '[:upper:]' '[:lower:]' )
+AZ1CPOD_PORTGROUP="${AZ1CPOD_NAME_LOWER}"
+
+AZ1SUBNET=$( ./${COMPUTE_DIR}/cpod_ip.sh ${2} )
+
+AZ1CPODROUTERIP=$(ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=error ${AZ1CPOD_NAME} "ip add | grep inet | grep eth0" | awk '{print $2}' | cut -d "/" -f 1)
+
+#AZ2 CPOD
+AZ2CPOD_NAME="cpod-$3"
+AZ2NAME_HIGHER=$( echo ${3} | tr '[:lower:]' '[:upper:]' )
+AZ2NAME_LOWER=$( echo ${3} | tr '[:upper:]' '[:lower:]' )
+
+AZ2CPOD_NAME_LOWER=$( echo ${AZ2CPOD_NAME} | tr '[:upper:]' '[:lower:]' )
+AZ2CPOD_PORTGROUP="${AZ2CPOD_NAME_LOWER}"
+
+AZ2SUBNET=$( ./${COMPUTE_DIR}/cpod_ip.sh ${3} )
+
+AZ2CPODROUTERIP=$(ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=error ${AZ2CPOD_NAME} "ip add | grep inet | grep eth0" | awk '{print $2}' | cut -d "/" -f 1)
+
+#AZ3 CPOD
+AZ3CPOD_NAME="cpod-$4"
+AZ3NAME_HIGHER=$( echo ${4} | tr '[:lower:]' '[:upper:]' )
+AZ3NAME_LOWER=$( echo ${4} | tr '[:upper:]' '[:lower:]' )
+
+AZ3CPOD_NAME_LOWER=$( echo ${AZ3CPOD_NAME} | tr '[:upper:]' '[:lower:]' )
+AZ3CPOD_PORTGROUP="${AZ3CPOD_NAME_LOWER}"
+
+AZ3SUBNET=$( ./${COMPUTE_DIR}/cpod_ip.sh ${4} )
+
+AZ3CPODROUTERIP=$(ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=error ${AZ3CPOD_NAME} "ip add | grep inet | grep eth0" | awk '{print $2}' | cut -d "/" -f 1)
+
+
+NSXFQDN="nsx.${CPOD_NAME_LOWER}.${ROOT_DOMAIN}"
+echo ${NSXFQDN}
+
+AZ1VLAN=$( grep -m 1 "${AZ1CPOD_NAME_LOWER}\s" /etc/hosts | awk '{print $1}' | cut -d "." -f 4 )
+AZ2VLAN=$( grep -m 1 "${AZ2CPOD_NAME_LOWER}\s" /etc/hosts | awk '{print $1}' | cut -d "." -f 4 )
+AZ3VLAN=$( grep -m 1 "${AZ3CPOD_NAME_LOWER}\s" /etc/hosts | awk '{print $1}' | cut -d "." -f 4 )
+
+
+PASSWORD=$( ./${EXTRA_DIR}/passwd_for_cpod.sh ${1} )
+
+# get govc env for cpod
+./extra/govc_cpod.sh  ${NAME_LOWER}  2>&1 > /dev/null
+GOVCSCRIPT=/tmp/scripts/govc_${CPOD_NAME_LOWER}
+source ${GOVCSCRIPT}
+
+
+# ===== Start of code =====
+
+# ===== create edge cluster =====
+# create edge cluster and add nodes to it
+
+echo
+echo "Checking Edge Clusters"
+echo
+
+EDGECLUSTERS=$(get_edge_clusters)
+if [ "${EDGECLUSTERS}" != "" ];
+then
+        echo "  Edge Clusters exist"
+else
+        EDGEID1=$(get_transport_node "edge-${AZ1NAME_LOWER}")
+        EDGEID2=$(get_transport_node "edge-${AZ2NAME_LOWER}")
+        EDGEID3=$(get_transport_node "edge-${AZ3NAME_LOWER}")
+        create_edge_cluster_maz $EDGEID1 $EDGEID2 $EDGEID3
+fi
+
+# ===== create nsx segments for T0 =====
+# name: t0-uplink-1 - no gw - tz : edge-vlan-tz - teaming : edge-uplink-1 - vlan id : VLAN#4 (uplinks)
+echo
+echo "Processing T0 segment"
+echo
+
+T0SEGMENTNAME="t0-uplink-1"
+
+if [ "$(get_segment "${T0SEGMENTNAME}")" == "" ]
+then
+        TZID=$(get_transport_zone_id "edge-vlan-tz")
+        create_t0_segment "${T0SEGMENTNAME}" "$TZID" "edge-profile-uplink-1" "${UPLINKSVLANID}"
+else
+        echo "  ${T0SEGMENTNAME} - present"
+fi
+
+# ===== create T0 =====
+# create TO in network - T0 gateways
+# name : Tier-0 - HA mode : active-active - edge cluster : edge-cluster
+# save
+echo
+echo "Processing T0 gateway"
+echo
+
+T0GWNAME="Tier-0"
+
+if [ "$(get_tier-0s "${T0GWNAME}")" == "" ]
+then
+        create_t0_gw "${T0GWNAME}"
+else
+        echo "  ${T0GWNAME} - present"
+fi
+
+echo
+echo "  Checking locale_services"
+echo 
+
+if [ "$(get_tier-0s_locale_services)" == "" ]
+then
+        EDGECLUSTERID=$(get_edge_clusters_id "edge-cluster")
+        create_t0_locale_service "${T0GWNAME}" "${EDGECLUSTERID}"
+else
+        echo "  locale_services present"
+fi
+
+# set interfaces
+# add interfce
+# name : edge-1-uplink-1 - type : external - ip : 10.vlan.4.11 - segment : t0-uplink-1 - edge node : edge-1
+# add interfce
+# name : edge-2-uplink-2 - type : external - ip : 10.vlan.4.12 - segment : t0-uplink-1 - edge node : edge-2
+
+echo
+echo "  Checinkg interfaces"
+echo
+
+T0IP01="10.${VLAN}.4.11"
+T0IP02="10.${VLAN}.4.12"
+
+INTERFACES=$(get_tier-0s_interfaces  "${T0GWNAME}")
+
+if [ "${INTERFACES}" == "" ]
+then
+        EDGECLUSTERID=$(get_edge_clusters_id "edge-cluster")
+        EDGEIDX01=$(get_edge_node_cluster_member_index "edge-cluster" "edge-1")
+        EDGEIDX02=$(get_edge_node_cluster_member_index "edge-cluster" "edge-2")
+        create_t0_interface "${T0GWNAME}" "${EDGECLUSTERID}" "${T0IP01}" "${T0SEGMENTNAME}" "${EDGEIDX01}" "edge-1-uplink-1"
+        create_t0_interface "${T0GWNAME}" "${EDGECLUSTERID}" "${T0IP02}" "${T0SEGMENTNAME}" "${EDGEIDX02}" "edge-1-uplink-2"
+else
+        echo "  interfaces present"
+fi
+
+# configure cpodrouter bgp:
+#
+echo
+echo checking bgp on cpodrouter
+echo
+
+ASNCPOD=$(get_cpod_asn ${CPOD_NAME_LOWER})
+ASNNSXT=$((ASNCPOD + 1000))
+CPODBGPTABLE=$(get_cpodrouter_bgp_neighbors_table ${CPOD_NAME_LOWER})
+#test if already configured
+IPTEST=$(echo "${CPODBGPTABLE}" |grep ${T0IP01})
+if [ "${IPTEST}" == "" ];
+then
+        echo "  adding ${T0IP01} bgp neighbor"
+        add_cpodrouter_bgp_neighbor "${T0IP01}" "${ASNNSXT}" "${CPOD_NAME_LOWER}"
+else
+        echo "  ${T0IP01} already defined as bgp neighbor"
+fi
+
+IPTEST=$(echo "${CPODBGPTABLE}" |grep ${T0IP02})
+if [ "${IPTEST}" == "" ];
+then
+        echo "  adding ${T0IP02} bgp neighbor"
+        add_cpodrouter_bgp_neighbor "${T0IP02}" "${ASNNSXT}" "${CPOD_NAME_LOWER}"
+else
+        echo "  ${T0IP02} already defined as bgp neighbor"
+fi
+
+# configure T0 bgp
+# set AS number = cpodrouter + 1000
+# save
+# set neighbors
+# add neighbor
+# ip address : 10.vlan.4.1 - remote as number : cpodrouter asn
+
+echo
+echo "  Checking Tier 0 BGP"
+echo
+
+TOASN=$(get_tier-0s_bgp "${T0GWNAME}"  | jq .local_as_num)
+
+if [ "${TOASN}" !=  "${ASNNSXT}" ]
+then
+        #set bgp
+        configure_tier-0s_bgp "${T0GWNAME}" "${ASNNSXT}"
+else
+        echo "  Tier-0 BGP ASN already Set"
+fi
+
+echo
+echo "  Checking BGP Neighbors"
+echo
+
+NEIGHBORS=$(get_tier-0s_bgp_neighbors  "${T0GWNAME}")
+
+if [ "${NEIGHBORS}" == "" ]
+then
+        CPODASNIP="10.${VLAN}.4.1"
+        configure_tier-0s_bgp_neighbor "${T0GWNAME}"  "${CPODASNIP}"  "${ASNCPOD}"  "${CPOD_NAME_LOWER}"
+else
+        echo "  BGP Neighbor present"
+fi
+
+# route redistribution
+# set redistribution
+# add route redistribution
+# name: default - set route redistribution:
+# T1 subnets : LB vip - nat ip - static routes - connected interfaces and segments
+
+echo 
+
+RULES=$(get_tier0_route_redistribution "${T0GWNAME}"  )
+TESTBGP=$(echo "${RULES}" | jq -r .bgp_enabled )
+if [ "${TESTBGP}" == "true" ]
+then
+        echo "  BGP redistribution already enabled"
+        echo "  verifying rules"
+        RULES=$(get_tier0_route_redistribution "${T0GWNAME}"  )
+        TESTBGP=$(echo "${RULES}" | jq -r .redistribution_rules[] )
+
+        if [ "${TESTBGP}" != "" ]
+        then
+                echo "  BGP redistribution rules are present"
+        else
+                echo "  enabling BGP redistribution and rules"
+                patch_tier0_route_redistribution  "${T0GWNAME}"
+        fi
+else
+        echo "  enabling BGP redistribution and rules"
+        patch_tier0_route_redistribution  "${T0GWNAME}"
+fi
+
+# ===== Script finished =====
+echo "Configuration done"

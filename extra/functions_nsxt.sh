@@ -1727,6 +1727,59 @@ create_edge_cluster() {
 
 }
 
+create_edge_cluster_maz() {
+        #$1 profile name string
+        #$2 VLAN ID
+        #returns json
+        EDGEID1=$1
+        EDGEID2=$2
+        EDGEID3=$3
+
+        EDGECLUSTER_JSON='{
+        "member_node_type": "EDGE_NODE",
+        "resource_type": "EdgeCluster",
+        "display_name": "edge-cluster",
+        "deployment_type": "VIRTUAL_MACHINE",
+        "members":  [
+        {
+                "transport_node_id": "'${EDGEID1}'"
+        },
+        {
+                "transport_node_id": "'${EDGEID2}'"
+        },
+        {
+                "transport_node_id": "'${EDGEID3}'"
+        }
+        ],
+        "cluster_profile_bindings": [
+                {
+                "resource_type": "EdgeHighAvailabilityProfile",
+                "profile_id": "91bcaa06-47a1-11e4-8316-17ffc770799b"
+                }
+        ]
+        }'
+
+        SCRIPT="/tmp/EDGECLUSTER_JSON"
+        echo ${EDGECLUSTER_JSON} > ${SCRIPT}
+        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD}  -H 'Content-Type: application/json' -X POST -d @${SCRIPT} https://${NSXFQDN}/api/v1/edge-clusters)
+        HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+        #echo $RESPONSE
+        #echo $HTTPSTATUS
+
+        if [ $HTTPSTATUS -eq 201 ]
+        then
+                EDGECLUSTERINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+                echo "  Edge-cluster created succesfully"
+                echo "${EDGECLUSTERINFO}" > /tmp/edge-cluster-created-json
+        else
+                echo "  error creating edge cluster  : ${EDGENAME}"
+                echo ${HTTPSTATUS}
+                echo ${RESPONSE}
+                exit
+        fi
+
+}
+
 get_edge_clusters_id(){
         #$1 segments name to look for
         #returns json

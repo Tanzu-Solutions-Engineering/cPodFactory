@@ -158,7 +158,7 @@ else
 fi
 
 EDGE=$(check_transport_zone "${AZNAME_LOWER}-edge-vlan-tz")
-if [[ "${EDGE}" == *"error"* ]]
+if [[ "${EDGE}" == *"error"* ]]  || [[ "${EDGE}" == "" ]] 
 then
         echo "  create check_transport_zone "${AZNAME_LOWER}-edge-vlan-tz""
         create_transport_zone "${AZNAME_LOWER}-edge-vlan-tz" "VLAN_BACKED" "${AZNAME_LOWER}-edge-profile"
@@ -168,7 +168,7 @@ else
 fi
 
 HOST=$(check_transport_zone "${AZNAME_LOWER}-host-vlan-tz")
-if [[ "${HOST}" == *"error"* ]]
+if [[ "${HOST}" == *"error"* ]]  || [[ "${HOST}" == "" ]] 
 then
         echo "  create check_transport_zone ${AZNAME_LOWER}-host-vlan-tz"
         create_transport_zone "${AZNAME_LOWER}-host-vlan-tz" "VLAN_BACKED" "${AZNAME_LOWER}-host-profile"
@@ -178,7 +178,7 @@ else
 fi
 
 OVERLAY=$(check_transport_zone "overlay-tz")
-if [[ "${OVERLAY}" == *"error"* ]]
+if [[ "${OVERLAY}" == *"error"* ]]  || [[ "${OVERLAY}" == "" ]] 
 then
         echo "  create check_transport_zone "overlay-tz""
         create_transport_zone "overlay-tz" "OVERLAY_STANDARD"
@@ -195,7 +195,7 @@ fi
 echo
 POOL=$(check_ip_pool "${AZNAME_LOWER}-TEP-pool")
 echo "${POOL}"
-if [[ "${POOL}" == *"error"* ]]
+if [[ "${POOL}" == *"error"* ]] || [[ "${POOL}" == "" ]] 
 then
         echo "  create ${AZNAME_LOWER}- TEP IP pool"
         create_ip_pool "${AZNAME_LOWER}-TEP-pool" "${AZNAME_LOWER}-TEP-pool-subnet"  "10.${AZVLAN}.3.2" "10.${AZVLAN}.3.200" "10.${AZVLAN}.3.0/24"  "10.${AZVLAN}.3.1" 
@@ -224,7 +224,7 @@ then
 fi
 #get Host Profile ID
 HOSTPROFILEID=$(get_uplink_profile_id "${AZNAME_LOWER}-host-profile")
-if [ "${HOSTPROFILEID}" == "" ]
+if [[ "${HOSTPROFILEID}" == *"error"* ]] || [ "${HOSTPROFILEID}" == "" ]
 then
         echo "  problem getting Host Profile ID : ${AZNAME_LOWER}-host-profile"
         exit

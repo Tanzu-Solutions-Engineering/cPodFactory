@@ -602,6 +602,11 @@ check_ip_pool() {
                         IPPOOLID=$(echo $IPPOOLINFO |jq -r '.results[] | select (.display_name =="'$IPPOOLNAME'") | .id')
                         echo $IPPOOLID
                         check_ip_pool_subnet ${IPPOOLID}
+                else
+                        echo "  error getting IP Pool : $IPPOOLNAME"
+                        echo ${HTTPSTATUS}
+                        echo ${RESPONSE}
+                        exit 1
                 fi
         else
                 echo "  error getting IP Pools"

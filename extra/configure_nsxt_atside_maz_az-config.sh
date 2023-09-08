@@ -193,6 +193,7 @@ fi
 #Check if subnets present
 echo
 POOL=$(check_ip_pool "${AZNAME_LOWER}-TEP-pool")
+echo "${POOL}"
 if [[ "${POOL}" == *"error"* ]]
 then
         echo "  create ${AZNAME_LOWER}- TEP IP pool"

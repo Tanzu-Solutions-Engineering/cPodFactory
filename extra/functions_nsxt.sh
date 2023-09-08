@@ -835,6 +835,86 @@ create_transport_node_profile() {
                 ],
                 "uplinks": [
                 {
+                "vds_uplink_name": "uplink-1",
+                "uplink_name": "uplink-1"
+                },
+                {
+                "vds_uplink_name": "uplink-2",
+                "uplink_name": "uplink-2"
+                }
+                ],
+                "is_migrate_pnics": false,
+                "ip_assignment_spec": {
+                "ip_pool_id": "'${IPPOOLID}'",
+                "resource_type": "StaticIpPoolSpec"
+                },
+                "transport_zone_endpoints": [
+                        {
+                        "transport_zone_id": "/infra/sites/default/enforcement-points/default/transport-zones/'${HOSTTZID}'"
+                        },
+                        {
+                        "transport_zone_id": "/infra/sites/default/enforcement-points/default/transport-zones/'${OVERLAYTZID}'"
+                        }
+                ],
+                "not_ready": false
+        }
+        ],
+        "resource_type": "StandardHostSwitchSpec"
+        },
+        "resource_type": "PolicyHostTransportNodeProfile",
+        "id": "'${TNPROFILENAME}'",
+        "display_name": "'${TNPROFILENAME}'"
+        }'
+
+        SCRIPT="/tmp/TNPROFILE_JSON"
+        echo ${TNPROFILE_JSON} > ${SCRIPT}
+        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD}  -H 'Content-Type: application/json' -X PUT -d @${SCRIPT} https://${NSXFQDN}/policy/api/v1/infra/host-transport-node-profiles/${TNPROFILENAME})
+        HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+        #echo $RESPONSE
+        #echo $HTTPSTATUS
+
+        if [ $HTTPSTATUS -eq 200 ]
+        then
+                PROFILESINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+                echo "${PROFILENAME} created succesfully"
+                #echo ${PROFILESINFO}
+        else
+                echo "  error creating transport node profile : ${TNPROFILENAME}"
+                echo ${HTTPSTATUS}
+                echo ${RESPONSE}
+                exit
+        fi
+
+}
+
+
+create_transport_node_profile_old() {
+        #$1 profile name string
+        #$2 VLAN ID
+        #returns json
+        TNPROFILENAME=$1
+        VDSUUID=$2
+        HOSTTZID=$3
+        OVERLAYTZID=$4
+        IPPOOLID=$5
+        HOSTPROFILEID=$6
+
+        TNPROFILE_JSON='{
+        "host_switch_spec": {
+        "host_switches": [
+        {
+                "host_switch_name": "nsxDefaultHostSwitch",
+                "host_switch_id": "'${VDSUUID}'",
+                "host_switch_type": "VDS",
+                "host_switch_mode": "STANDARD",
+                "host_switch_profile_ids": [
+                {
+                "key": "UplinkHostSwitchProfile",
+                "value": "/infra/host-switch-profiles/'${HOSTPROFILEID}'"
+                }
+                ],
+                "uplinks": [
+                {
                 "vds_uplink_name": "dvUplink1",
                 "uplink_name": "uplink-1"
                 },

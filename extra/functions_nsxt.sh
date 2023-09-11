@@ -477,6 +477,7 @@ get_transport_zone_id() {
         if [ $HTTPSTATUS -eq 200 ]
         then
                 TZINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+                echo "${TZINFO}" > /tmp/tz-json-$$
                 #TZCOUNT=$(echo ${TZINFO} | jq .result_count)                
                 echo $TZINFO |jq -r '.results[] | select (.display_name =="'$TZNAME'") | .id'
         else

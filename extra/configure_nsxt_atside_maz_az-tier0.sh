@@ -176,7 +176,10 @@ T0AZ2SEGMENTNAME="maz-t0-az2-ls"
 
 if [ "$(get_segment "${T0AZ2SEGMENTNAME}")" == "" ]
 then
+        echo "get_transport_zone_id : ${AZ2NAME_LOWER}-edge-vlan-tz"
         TZID=$(get_transport_zone_id "${AZ2NAME_LOWER}-edge-vlan-tz")
+        echo "TZID : ${TZID}"
+
         create_t0_segment "${T0AZ2SEGMENTNAME}" "$TZID" "${AZ2NAME_LOWER}-edge-profile-uplink-1 " "${AZ2UPLINKSVLANID}"
 else
         echo "  ${T0AZ2SEGMENTNAME} - present"

@@ -57,7 +57,7 @@ get_compute_manager() {
         if [ $HTTPSTATUS -eq 200 ]
         then
                 MANAGERSINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
-                echo "${MANAGERSINFO}" > /tmp/mgr_json
+                echo "${MANAGERSINFO}" > /tmp/mgr_json-$$
                 MANAGERSCOUNT=$(echo $MANAGERSINFO | jq .result_count)
                 if [[ ${MANAGERSCOUNT} -gt 0 ]]
                 then
@@ -92,7 +92,7 @@ get_compute_manager_id() {
         if [ $HTTPSTATUS -eq 200 ]
         then
                 MANAGERSINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
-                echo "${MANAGERSINFO}" > /tmp/mgrid_json
+                echo "${MANAGERSINFO}" > /tmp/mgrid_json-$$
                 MANAGERSCOUNT=$(echo $MANAGERSINFO | jq .result_count)
                 if [[ ${MANAGERSCOUNT} -gt 0 ]]
                 then
@@ -139,7 +139,7 @@ nsx_ceip_agreement() {
         "resource_type": "TelemetryAgreement",
         "telemetry_agreement_displayed": true
         }'
-        SCRIPT="/tmp/CEIP_JSON"
+        SCRIPT="/tmp/CEIP_JSON-$$"
         echo ${CEIP_JSON} > ${SCRIPT}
 
         RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} -H 'Content-Type: application/json' -X PUT -d @${SCRIPT} https://${NSXFQDN}/api/v1/telemetry/agreement)
@@ -160,7 +160,7 @@ nsx_ceip_telemetry() {
         #
 
         CEIP_JSON='{"ceip_acceptance" : false, "schedule_enabled": true, "_revision" : 0}'
-        SCRIPT="/tmp/CEIP_JSON"
+        SCRIPT="/tmp/CEIP_JSON-$$"
         echo ${CEIP_JSON} > ${SCRIPT}
 
         RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} -H 'Content-Type: application/json' -X PUT -d @${SCRIPT} https://${NSXFQDN}/api/v1/telemetry/config)
@@ -193,7 +193,7 @@ add_computer_manager() {
         "thumbprint": "'${VCENTERTP}'"
         }
         }'
-        SCRIPT="/tmp/CM_JSON"
+        SCRIPT="/tmp/CM_JSON-$$"
         echo ${CM_JSON} > ${SCRIPT}
 
         RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} -H 'Content-Type: application/json' -X POST -d @${SCRIPT} https://${NSXFQDN}/api/v1/fabric/compute-managers)
@@ -225,7 +225,7 @@ get_compute_manager_status() {
         if [ $HTTPSTATUS -eq 200 ]
         then
                 MGRINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
-                echo $MGRINFO > /tmp/mgrstatus-json 
+                echo $MGRINFO > /tmp/mgrstatus-json-$$ 
                 if [[ "${MGRINFO}" != "" ]]
                 then
                         echo "${MGRINFO}" #| jq -r '[.registration_status, .connection_status] |@tsv'
@@ -259,7 +259,7 @@ loop_wait_compute_manager_status(){
 
 add_nsx_license() {
         LIC_JSON='{ "license_key": "'${LIC_NSXT}'" }'
-        SCRIPT="/tmp/LIC_JSON"
+        SCRIPT="/tmp/LIC_JSON-$$"
         echo ${LIC_JSON} > ${SCRIPT}
 
         RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} -H 'Content-Type: application/json' -X POST -d @${SCRIPT} https://${NSXFQDN}/api/v1/licenses)
@@ -315,7 +315,7 @@ get_uplink_profile_id() {
         if [ $HTTPSTATUS -eq 200 ]
         then
                 PROFILESINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
-                echo "${PROFILESINFO}" > /tmp/profile-json
+                echo "${PROFILESINFO}" > /tmp/profile-json-$$
                 echo $PROFILESINFO |jq -r '.results[] | select (.display_name =="'$PROFILENAME'") | .id'
         else
                 echo "  error getting uplink profiles"
@@ -337,7 +337,7 @@ get_uplink_profile_uniqueid() {
         if [ $HTTPSTATUS -eq 200 ]
         then
                 PROFILESINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
-                echo "${PROFILESINFO}" > /tmp/profile-json
+                echo "${PROFILESINFO}" > /tmp/profile-json-$$
                 echo $PROFILESINFO |jq -r '.results[] | select (.display_name =="'$PROFILENAME'") | .unique_id'
         else
                 echo "  error getting uplink profiles"
@@ -359,7 +359,7 @@ get_uplink_profile_path() {
         if [ $HTTPSTATUS -eq 200 ]
         then
                 PROFILESINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
-                echo "${PROFILESINFO}" > /tmp/profile-json
+                echo "${PROFILESINFO}" > /tmp/profile-json-$$
                 echo $PROFILESINFO |jq -r '.results[] | select (.display_name =="'$PROFILENAME'") | .path'
         else
                 echo "  error getting uplink profiles"
@@ -422,7 +422,7 @@ create_uplink_profile() {
         "display_name": "'$PROFILENAME'"
         }'
 
-        SCRIPT="/tmp/PROFILE_JSON"
+        SCRIPT="/tmp/PROFILE_JSON-$$"
         echo ${PROFILE_JSON} > ${SCRIPT}
         RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD}  -H 'Content-Type: application/json' -X PUT -d @${SCRIPT} https://${NSXFQDN}/policy/api/v1/infra/host-switch-profiles/${PROFILENAME})
         HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
@@ -455,7 +455,7 @@ check_transport_zone() {
         then
                 TZINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
                 #TZCOUNT=$(echo ${TZINFO} | jq .result_count)           
-                echo "${TZINFO}" > /tmp/tz-json
+                echo "${TZINFO}" > /tmp/tz-json-$$
                 echo $TZINFO |jq '.results[] | select (.display_name =="'$TZNAME'")'
         else
                 echo "  error getting transport zones"
@@ -563,7 +563,7 @@ create_transport_zone() {
                 "display_name": "'${TZNAME}'"
                 }'
         fi
-        SCRIPT="/tmp/TZ_JSON"
+        SCRIPT="/tmp/TZ_JSON-$$"
         echo ${TZ_JSON} > ${SCRIPT}
         RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD}  -H 'Content-Type: application/json' -X PUT -d @${SCRIPT} https://${NSXFQDN}/policy/api/v1/infra/sites/default/enforcement-points/${EXISTINGEPRP}/transport-zones/${TZNAME})
         HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
@@ -593,7 +593,7 @@ check_ip_pool() {
         if [ $HTTPSTATUS -eq 200 ]
         then
                 IPPOOLINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
-                SCRIPT="/tmp/IPPOOL-${IPPOOLNAME}"
+                SCRIPT="/tmp/IPPOOL-${IPPOOLNAME}-$$"
                 echo "${IPPOOLINFO}" > ${SCRIPT}
                 IPPOOLCOUNT=$(echo ${IPPOOLINFO} | jq .result_count)                
                 if [[ ${IPPOOLCOUNT} -gt 0 ]]
@@ -673,7 +673,7 @@ get_ip_pool_all() {
                 IPPOOLCOUNT=$(echo ${IPPOOLINFO} | jq .result_count)                
                 if [[ ${IPPOOLCOUNT} -gt 0 ]]
                 then
-                        echo "${IPPOOLINFO}" > /tmp/ippoolall-json
+                        echo "${IPPOOLINFO}" > /tmp/ippoolall-json-$$
                         echo $IPPOOLINFO |jq .
                 fi
         else
@@ -768,7 +768,7 @@ create_ip_pool_subnet() {
         "cidr":"'${SUBNETCIDR}'"
         }'
 
-        SCRIPT="/tmp/SUBNET_JSON"
+        SCRIPT="/tmp/SUBNET_JSON-$$"
         echo ${SUBNET_JSON} > ${SCRIPT}
         RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD}  -H 'Content-Type: application/json' -X PATCH -d @${SCRIPT} https://${NSXFQDN}/policy/api/v1/infra/ip-pools/${IPPOOLID}/ip-subnets/${SUBNETNAME})
         HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
@@ -867,7 +867,7 @@ create_transport_node_profile() {
         "display_name": "'${TNPROFILENAME}'"
         }'
 
-        SCRIPT="/tmp/TNPROFILE_JSON"
+        SCRIPT="/tmp/TNPROFILE_JSON-$$"
         echo ${TNPROFILE_JSON} > ${SCRIPT}
         RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD}  -H 'Content-Type: application/json' -X PUT -d @${SCRIPT} https://${NSXFQDN}/policy/api/v1/infra/host-transport-node-profiles/${TNPROFILENAME})
         HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
@@ -947,7 +947,7 @@ create_transport_node_profile_old() {
         "display_name": "'${TNPROFILENAME}'"
         }'
 
-        SCRIPT="/tmp/TNPROFILE_JSON"
+        SCRIPT="/tmp/TNPROFILE_JSON-$$"
         echo ${TNPROFILE_JSON} > ${SCRIPT}
         RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD}  -H 'Content-Type: application/json' -X PUT -d @${SCRIPT} https://${NSXFQDN}/policy/api/v1/infra/host-transport-node-profiles/${TNPROFILENAME})
         HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
@@ -1026,7 +1026,7 @@ create_transport_node_profile_maz() {
         "display_name": "'${TNPROFILENAME}'"
         }'
 
-        SCRIPT="/tmp/TNPROFILE_JSON"
+        SCRIPT="/tmp/TNPROFILE_JSON-$$"
         echo ${TNPROFILE_JSON} > ${SCRIPT}
         RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD}  -H 'Content-Type: application/json' -X PUT -d @${SCRIPT} https://${NSXFQDN}/policy/api/v1/infra/host-transport-node-profiles/${TNPROFILENAME})
         HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
@@ -1058,7 +1058,7 @@ get_host_transport_node_profile_id_old() {
         then
                 HTNPROFILESINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
                 HTNPROFILESCOUNT=$(echo $HTNPROFILESINFO | jq .result_count)
-                echo $HTNPROFILESINFO > /tmp/htnp-json 
+                echo $HTNPROFILESINFO > /tmp/htnp-json-$$ 
                 if [[ ${HTNPROFILESCOUNT} -gt 0 ]]
                 then
                         EXISTINGTNPROFILES=$(echo $HTNPROFILESINFO| jq -r .results[0].display_name)
@@ -1096,7 +1096,7 @@ get_host_transport_node_profile_id() {
         then
                 HTNPROFILESINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
                 HTNPROFILESCOUNT=$(echo $HTNPROFILESINFO | jq .result_count)
-                echo $HTNPROFILESINFO > /tmp/htnp-json 
+                echo $HTNPROFILESINFO > /tmp/htnp-json-$$ 
                 if [[ ${HTNPROFILESCOUNT} -gt 0 ]]
                 then
                         EXISTINGTNPROFILES=$(echo $HTNPROFILESINFO | jq -r '.results[]  | select ( .display_name == "'${HTNPROFILENAME}'") | .display_name')
@@ -1126,7 +1126,7 @@ get_compute_collection_external_id() {
         if [ $HTTPSTATUS -eq 200 ]
         then
                 CCINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
-                echo ${CCINFO} > /tmp/ccinfo_id_json
+                echo ${CCINFO} > /tmp/ccinfo_id_json-$$
                 CCCOUNT=$(echo ${CCINFO} | jq .result_count)
                 if [[ ${CCCOUNT} -gt 0 ]]
                 then
@@ -1151,7 +1151,7 @@ get_compute_collection_origin_id() {
         if [ $HTTPSTATUS -eq 200 ]
         then
                 CCINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
-                echo ${CCINFO} > /tmp/ccinfo_eid_json
+                echo ${CCINFO} > /tmp/ccinfo_eid_json-$$
                 CCCOUNT=$(echo ${CCINFO} | jq .result_count)
                 if [[ ${CCCOUNT} -gt 0 ]]
                 then
@@ -1176,7 +1176,7 @@ get_compute_collection_local_id() {
         if [ $HTTPSTATUS -eq 200 ]
         then
                 CCINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
-                echo ${CCINFO} > /tmp/ccinfo_eid_json
+                echo ${CCINFO} > /tmp/ccinfo_eid_json-$$
                 CCCOUNT=$(echo ${CCINFO} | jq .result_count)
                 if [[ ${CCCOUNT} -gt 0 ]]
                 then
@@ -1199,7 +1199,7 @@ check_transport_node_collections() {
         then
                 TNCINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
                 TNCCOUNT=$(echo ${TNCINFO} | jq .result_count)     
-                echo $TNCINFO > /tmp/tnc-json 
+                echo $TNCINFO > /tmp/tnc-json-$$ 
                 if [[ ${TNCCOUNT} -gt 0 ]]
                 then
                         echo $TNCINFO
@@ -1243,7 +1243,7 @@ get_host-transport-nodes() {
         then
                 CCINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
                 CCCOUNT=$(echo ${CCINFO} | jq .result_count)
-                echo $CCINFO > /tmp/htn-json 
+                echo $CCINFO > /tmp/htn-json-$$ 
                 if [[ ${CCCOUNT} -gt 0 ]]
                 then
                         echo $CCINFO |jq -r '.results[] | [.display_name, .id] |@tsv'
@@ -1268,7 +1268,7 @@ get_host-transport-nodes-state() {
         then
                 CCINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
                 CCCOUNT=$(echo ${CCINFO} | jq .result_count)
-                echo $CCINFO > /tmp/state-json 
+                echo $CCINFO > /tmp/state-json-$$ 
                 if [[ ${CCCOUNT} -gt 0 ]]
                 then
                         echo $CCINFO | jq -r '.results[] | [.transport_node_id, .node_deployment_state.state] |@tsv'
@@ -1294,7 +1294,7 @@ create_transport_node_collections() {
         "transport_node_profile_id": "/infra/host-transport-node-profiles/'${HTNPROFILENAME}'"
         }'
 
-        SCRIPT="/tmp/TNC_JSON"
+        SCRIPT="/tmp/TNC_JSON-$$"
         echo ${TNC_JSON} > ${SCRIPT}
         RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD}  -H 'Content-Type: application/json' -X PUT -d @${SCRIPT} https://${NSXFQDN}/policy/api/v1/infra/sites/default/enforcement-points/${EXISTINGEPRP}/transport-node-collections/${HTNPROFILENAME})
         HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
@@ -1380,7 +1380,7 @@ create_edge_segment() {
         }
         }'
 
-        SCRIPT="/tmp/SEGMENT_JSON"
+        SCRIPT="/tmp/SEGMENT_JSON-$$"
         echo ${SEGMENT_JSON} > ${SCRIPT}
         RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD}  -H 'Content-Type: application/json' -X PUT -d @${SCRIPT} https://${NSXFQDN}/policy/api/v1/infra/segments/${SEGMENTNAME})
         HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
@@ -1410,7 +1410,7 @@ get_transport_node(){
         then
                 TNINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
                 TNCOUNT=$(echo ${TNINFO} | jq .result_count)
-                echo $TNINFO > /tmp/edgenodes-json 
+                echo $TNINFO > /tmp/edgenodes-json-$$ 
                 if [[ ${TNCOUNT} -gt 0 ]]
                 then
                         if [ "$EDGENODENAME" == "" ]
@@ -1566,7 +1566,7 @@ create_edge_node() {
         }
         }'
 
-        SCRIPT="/tmp/EDGE_JSON"
+        SCRIPT="/tmp/EDGE_JSON-$$"
         echo ${EDGE_JSON} > ${SCRIPT}
         RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD}  -H 'Content-Type: application/json' -X POST -d @${SCRIPT} https://${NSXFQDN}/api/v1/transport-nodes)
         HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
@@ -1603,7 +1603,7 @@ loop_get_edge_nodes_state(){
                 NODESINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
                 EDGENODESIDS=$(echo "${NODESINFO}" | jq -r '.results[] | select (.node_deployment_info.resource_type =="EdgeNode") | .id')
                 EDGENODESCOUNT=$(echo "${EDGENODESIDS}" | wc -l)
-                echo $NODESINFO > /tmp/edgenodes-list-json 
+                echo $NODESINFO > /tmp/edgenodes-list-json-$$ 
                 if [[ ${EDGENODESCOUNT} -gt 0 ]]
                 then
                         EDGESTATUSREADYCOUNT=0
@@ -1663,7 +1663,7 @@ get_edge_clusters(){
         then
                 EDGECLUSTERSINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
                 EDGECLUSTERSCOUNT=$(echo ${EDGECLUSTERSINFO} | jq .result_count)
-                echo $EDGECLUSTERSINFO > /tmp/edge-clusters-json 
+                echo $EDGECLUSTERSINFO > /tmp/edge-clusters-json-$$ 
                 if [[ ${EDGECLUSTERSCOUNT} -gt 0 ]]
                 then
                         echo "${EDGECLUSTERSINFO}" |jq -r '.results[]'
@@ -1706,7 +1706,7 @@ create_edge_cluster() {
         ]
         }'
 
-        SCRIPT="/tmp/EDGECLUSTER_JSON"
+        SCRIPT="/tmp/EDGECLUSTER_JSON-$$"
         echo ${EDGECLUSTER_JSON} > ${SCRIPT}
         RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD}  -H 'Content-Type: application/json' -X POST -d @${SCRIPT} https://${NSXFQDN}/api/v1/edge-clusters)
         HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
@@ -1759,7 +1759,7 @@ create_edge_cluster_maz() {
         ]
         }'
 
-        SCRIPT="/tmp/EDGECLUSTER_JSON"
+        SCRIPT="/tmp/EDGECLUSTER_JSON-$$"
         echo ${EDGECLUSTER_JSON} > ${SCRIPT}
         RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD}  -H 'Content-Type: application/json' -X POST -d @${SCRIPT} https://${NSXFQDN}/api/v1/edge-clusters)
         HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
@@ -1770,7 +1770,7 @@ create_edge_cluster_maz() {
         then
                 EDGECLUSTERINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
                 echo "  Edge-cluster created succesfully"
-                echo "${EDGECLUSTERINFO}" > /tmp/edge-cluster-created-json
+                echo "${EDGECLUSTERINFO}" > /tmp/edge-cluster-created-json-$$
         else
                 echo "  error creating edge cluster  : ${EDGENAME}"
                 echo ${HTTPSTATUS}
@@ -1792,7 +1792,7 @@ get_edge_clusters_id(){
         then
                 EDGECLUSTERSINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
                 EDGECLUSTERSCOUNT=$(echo ${EDGECLUSTERSINFO} | jq .result_count)
-                echo $EDGECLUSTERSINFO > /tmp/edge-clusters-json 
+                echo $EDGECLUSTERSINFO > /tmp/edge-clusters-json-$$ 
                 if [[ ${EDGECLUSTERSCOUNT} -gt 0 ]]
                 then
                         echo "${EDGECLUSTERSINFO}" |jq -r '.results[] | select (.display_name == "'${EDGECLUSTERNAME}'") | .id'
@@ -1833,7 +1833,7 @@ create_t0_segment() {
         then
                 SEGMENTINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
                 echo "  ${SEGMENTNAME} created succesfully"
-                echo ${SEGMENTINFO} > /tmp/t0-segment-create.json
+                echo ${SEGMENTINFO} > /tmp/t0-segment-create.json-$$
         else
                 echo "  error creating t0 segment : ${SEGMENTNAME}"
                 echo ${HTTPSTATUS}
@@ -1853,7 +1853,7 @@ get_tier-0s(){
         then
                 T0INFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
                 T0COUNT=$(echo ${T0INFO} | jq .result_count)
-                echo $T0INFO > /tmp/t0-json 
+                echo $T0INFO > /tmp/t0-json-$$ 
                 if [[ ${T0COUNT} -gt 0 ]]
                 then
                         echo "${T0INFO}" |jq -r '.results[]'
@@ -1889,7 +1889,7 @@ create_t0_gw() {
         then
                 T0GWINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
                 echo "  ${T0NAME} created succesfully"
-                echo ${T0GWINFO} > /tmp/t0-gw-create.json
+                echo ${T0GWINFO} > /tmp/t0-gw-create.json-$$
 
         else
                 echo "  error creating T0 GW : ${T0NAME}"
@@ -1908,7 +1908,7 @@ get_tier-0s_locale_services(){
         then
                 T0INFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
                 T0COUNT=$(echo ${T0INFO} | jq .result_count)
-                echo $T0INFO > /tmp/t0-local_services-json 
+                echo $T0INFO > /tmp/t0-local_services-json-$$ 
                 if [[ ${T0COUNT} -gt 0 ]]
                 then
                         echo "${T0INFO}" |jq -r .
@@ -1932,7 +1932,7 @@ create_t0_locale_service() {
         T0_LS_JSON='{
         "edge_cluster_path": "'${EDGECLUSTERPATH}'"
         }'
-        SCRIPT="/tmp/T0_LS_JSON"
+        SCRIPT="/tmp/T0_LS_JSONDEPS_ID-$$"
         echo ${T0_LS_JSON} > ${SCRIPT}
 
         RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} -H 'Content-Type: application/json' -X PUT -d @${SCRIPT} https://${NSXFQDN}/policy/api/v1/infra/tier-0s/${T0NAME}/locale-services/default)
@@ -1942,7 +1942,7 @@ create_t0_locale_service() {
         then
                 T0GWINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
                 echo "  ${T0NAME} created succesfully"
-                echo ${T0GWINFO} > /tmp/t0-ls-create.json
+                echo ${T0GWINFO} > /tmp/t0-ls-create.json-$$
 
         else
                 echo "  error creating T0 locale_service : default"
@@ -1963,7 +1963,7 @@ get_tier-0s_interfaces(){
         then
                 T0INTINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
                 T0INTCOUNT=$(echo ${T0INTINFO} | jq .result_count)
-                echo $T0INTINFO > /tmp/t0-interfaces-json 
+                echo $T0INTINFO > /tmp/t0-interfaces-json-$$ 
                 if [[ ${T0INTCOUNT} -gt 0 ]]
                 then
                         echo "${T0INTINFO}" |jq -r .
@@ -1991,7 +1991,7 @@ get_edge_node_cluster_member_index(){
         then
                 EDGECLUSTERSINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
                 EDGECLUSTERSCOUNT=$(echo ${EDGECLUSTERSINFO} | jq .result_count)
-                echo $EDGECLUSTERSINFO > /tmp/edge-clusters-json 
+                echo $EDGECLUSTERSINFO > /tmp/edge-clusters-json-$$ 
                 if [[ ${EDGECLUSTERSCOUNT} -gt 0 ]]
                 then
                         CLUSTER=$(echo "${EDGECLUSTERSINFO}" |jq '.results[] | select (.display_name =="'${EDGECLUSTERNAME}'")' )
@@ -2029,7 +2029,7 @@ create_t0_interface() {
         "edge_path": "'${EDGECLUSTERPATH}'",
         "type": "EXTERNAL"
         }'
-        SCRIPT="/tmp/T0_INT_JSON"
+        SCRIPT="/tmp/T0_INT_JSON-$$"
         echo ${T0_INT_JSON} > ${SCRIPT}
 
         RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} -H 'Content-Type: application/json' -X PUT -d @${SCRIPT} https://${NSXFQDN}/policy/api/v1/infra/tier-0s/${T0NAME}/locale-services/default/interfaces/${INTNAME})
@@ -2039,7 +2039,7 @@ create_t0_interface() {
         then
                 T0INTINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
                 echo "  ${INTNAME} created succesfully"
-                echo ${T0INTINFO} > /tmp/t0-int-create.json
+                echo ${T0INTINFO} > /tmp/t0-int-create.json-$$
 
         else
                 echo "  error creating T0 interface : ${INTNAME} "
@@ -2060,7 +2060,7 @@ get_tier-0s_bgp(){
         if [ $HTTPSTATUS -eq 200 ]
         then
                 BGPINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
-                echo $BGPINFO > /tmp/t0-bgp-json 
+                echo $BGPINFO > /tmp/t0-bgp-json-$$ 
                 echo "${BGPINFO}" 
         else
                 echo "  error getting Tier-0s"
@@ -2082,7 +2082,7 @@ configure_tier-0s_bgp(){
         "local_as_num": "'${ASNNUMBER}'",
         "enabled": true
         }'
-        SCRIPT="/tmp/T0_BGP_JSON"
+        SCRIPT="/tmp/T0_BGP_JSON-$$"
         echo ${T0_BGP_JSON} > ${SCRIPT}
 
         RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} -H 'Content-Type: application/json' -X PUT -d @${SCRIPT} https://${NSXFQDN}/policy/api/v1/infra/tier-0s/${T0NAME}/locale-services/default/bgp)
@@ -2091,7 +2091,7 @@ configure_tier-0s_bgp(){
         if [ $HTTPSTATUS -eq 200 ]
         then
                 BGPINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
-                echo $BGPINFO > /tmp/t0-bgp-configured-json 
+                echo $BGPINFO > /tmp/t0-bgp-configured-json-$$ 
                 echo "  BGP Enabled succesfully with ASN : ${ASNNUMBER}" 
         else
                 echo "  error configuring Tier-0s BGP"
@@ -2113,7 +2113,7 @@ get_tier-0s_bgp_neighbors(){
         if [ $HTTPSTATUS -eq 200 ]
         then
                 BGPINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
-                echo $BGPINFO > /tmp/t0-bgp-neighbors-json 
+                echo $BGPINFO > /tmp/t0-bgp-neighbors-json-$$ 
                 echo "${BGPINFO}" | jq .results[]
         else
                 echo "  error getting Tier-0s"
@@ -2144,7 +2144,7 @@ configure_tier-0s_bgp_neighbor(){
         if [ $HTTPSTATUS -eq 200 ]
         then
                 NBINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
-                echo $NBINFO > /tmp/t0-bgp-nb-configured-json 
+                echo $NBINFO > /tmp/t0-bgp-nb-configured-json-$$ 
                 echo "  BGP Neighbor ${NBNAME} added successully" 
         else
                 echo "  error configuring Tier-0s BGP Neighbor ${$NBNAME}"
@@ -2164,7 +2164,7 @@ get_logical_router_id(){
         if [ $HTTPSTATUS -eq 200 ]
         then
                 LRINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
-                echo $LRINFO > /tmp/logical-routers-json 
+                echo $LRINFO > /tmp/logical-routers-json-$$ 
                 ROUTER=$(echo "${LRINFO}" | jq -r '.results[] | select (.display_name == "'${T0NAME}'")')
                 if [ "${ROUTER}" != "" ]
                 then
@@ -2194,7 +2194,7 @@ get_logical_router_redistribution_bgp(){
         if [ $HTTPSTATUS -eq 200 ]
         then
                 LRINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
-                echo $LRINFO > /tmp/logical-routers-redist-json 
+                echo $LRINFO > /tmp/logical-routers-redist-json-$$ 
                 ROUTER=$(echo "${LRINFO}" | jq -r '.bgp_enabled')
         else
                 echo "  error getting Tier-0s routing redistribution"
@@ -2214,7 +2214,7 @@ get_logical_router_redistribution_bgp_revision(){
         if [ $HTTPSTATUS -eq 200 ]
         then
                 LRINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
-                echo $LRINFO > /tmp/logical-routers-redist-json 
+                echo $LRINFO > /tmp/logical-routers-redist-json-$$ 
                 echo "${LRINFO}" | jq -r '._revision'
         else
                 echo "  error getting Tier-0s routing redistribution"
@@ -2235,7 +2235,7 @@ configure_tier-0s_bgp_redistribution(){
         "bgp_enabled": true,
         "_revision": '${REVISION}'
         }'
-        SCRIPT="/tmp/T0_LR_JSON"
+        SCRIPT="/tmp/T0_LR_JSON-$$"
         echo ${T0_LR_JSON} > ${SCRIPT}
 
         RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} -H 'Content-Type: application/json' -X PUT -d @${SCRIPT} https://${NSXFQDN}/api/v1/logical-routers/${LRID}/routing/redistribution )
@@ -2244,7 +2244,7 @@ configure_tier-0s_bgp_redistribution(){
         if [ $HTTPSTATUS -eq 200 ]
         then
                 NBINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
-                echo $NBINFO > /tmp/t0-bgp-redist-configured-json 
+                echo $NBINFO > /tmp/t0-bgp-redist-configured-json-$$ 
                 echo "  BGP route redistribution set successully" 
         else
                 echo "  error configuring Tier-0s BGP redistribution"
@@ -2264,7 +2264,7 @@ get_logical_router_redistribution_bgp_revision_rules(){
         if [ $HTTPSTATUS -eq 200 ]
         then
                 LRINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
-                echo $LRINFO > /tmp/logical-routers-redist-rules-json 
+                echo $LRINFO > /tmp/logical-routers-redist-rules-json-$$ 
                 ROUTER=$(echo "${LRINFO}" | jq -r '.rules[]')
         else
                 echo "  error getting Tier-0s routing redistribution"
@@ -2284,7 +2284,7 @@ get_logical_router_redistribution_bgp_rules_reivision(){
         if [ $HTTPSTATUS -eq 200 ]
         then
                 LRINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
-                echo $LRINFO > /tmp/logical-routers-redist-rules-json 
+                echo $LRINFO > /tmp/logical-routers-redist-rules-json-$$ 
                 ROUTER=$(echo "${LRINFO}" | jq -r '._revision')
         else
                 echo "  error getting Tier-0s routing redistribution"
@@ -2310,7 +2310,7 @@ configure_tier-0s_bgp_redistribution_rules(){
         }
         ]
         }'
-        SCRIPT="/tmp/T0_RDST_RULES_JSON"
+        SCRIPT="/tmp/T0_RDST_RULES_JSON-$$"
         echo ${T0_RDST_RULES_JSON} > ${SCRIPT}
 
         RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} -H 'Content-Type: application/json' -X PUT -d @${SCRIPT} https://${NSXFQDN}/api/v1/logical-routers/${LRID}/routing/redistribution/rules )
@@ -2319,7 +2319,7 @@ configure_tier-0s_bgp_redistribution_rules(){
         if [ $HTTPSTATUS -eq 200 ]
         then
                 NBINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
-                echo $NBINFO > /tmp/t0-bgp-redist-rules-configured-json 
+                echo $NBINFO > /tmp/t0-bgp-redist-rules-configured-json-$$ 
                 echo "  BGP route redistribution rules set successully" 
         else
                 echo "  error configuring Tier-0s BGP redistribution rules"
@@ -2363,7 +2363,7 @@ patch_tier0_route_redistribution() {
         } ]
         }
         }'
-        SCRIPT="/tmp/T0_RULES_JSON"
+        SCRIPT="/tmp/T0_RULES_JSON-$$"
         echo ${T0_RULES_JSON} > ${SCRIPT}
 
         RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} -H 'Content-Type: application/json' -X PATCH -d @${SCRIPT} https://${NSXFQDN}/policy/api/v1/infra/tier-0s/${T0NAME}/locale-services/default)
@@ -2372,7 +2372,7 @@ patch_tier0_route_redistribution() {
         if [ $HTTPSTATUS -eq 200 ]
         then
                 NBINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
-                echo $NBINFO > /tmp/t0-bgp-nb-configured-json 
+                echo $NBINFO > /tmp/t0-bgp-nb-configured-json-$$ 
                 echo "  BGP Neighbor ${NBNAME} added successully" 
         else
                 echo "  error configuring Tier-0s BGP Neighbor ${NBNAME}"

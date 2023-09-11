@@ -81,10 +81,23 @@ cpodctl create ${AZ3CPOD} 4 $3
 ./extra/deploy_nsxt_mgr_v4.sh ${MGMTCPOD} $3
 ./extra/configure_nsxt_atside_maz_init.sh ${MGMTCPOD} $3
 ./extra/info_nsxt_cpod.sh ${MGMTCPOD} $3
-./extra/configure_nsxt_atside_maz_az-config.sh ${MGMTCPOD} ${AZ1CPOD}
-./extra/configure_nsxt_atside_maz_az-config.sh ${MGMTCPOD} ${AZ2CPOD}
-./extra/configure_nsxt_atside_maz_az-config.sh ${MGMTCPOD} ${AZ3CPOD}
+./extra/configure_nsxt_atside_maz_az-config.sh ${MGMTCPOD} ${AZ1CPOD} &> /tmp/$$-az1.log &
+AZ1PID=$!
+sleep 10
+./extra/configure_nsxt_atside_maz_az-config.sh ${MGMTCPOD} ${AZ2CPOD} &> /tmp/$$-az2.log &
+AZ2PID=$!
+sleep 10
+./extra/configure_nsxt_atside_maz_az-config.sh ${MGMTCPOD} ${AZ3CPOD} &> /tmp/$$-az3.log &
+AZ3PID=$!
 #./extra/configure_nsxt_atside_maz_az-tier0.sh ${MGMTCPOD} ${AZ1CPOD} ${AZ2CPOD} ${AZ3CPOD} 
+
+while [ -f "/proc/$AZ1PID" ] && [ -f "/proc/$AZ2PID" ] && [ -f "/proc/$AZ3PID" ]; do
+  tail -n 20 /tmp/$$-az1.log
+  tail -n 20 /tmp/$$-az2.log
+  tail -n 20 /tmp/$$-az3.log 
+  sleep 60
+done
+
 
 END=$( date +%s )
 TIME=$( expr ${END} - ${START} )

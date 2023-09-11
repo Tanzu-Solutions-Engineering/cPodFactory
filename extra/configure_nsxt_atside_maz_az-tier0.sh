@@ -160,7 +160,10 @@ T0AZ1SEGMENTNAME="maz-t0-az1-ls"
 
 if [ "$(get_segment "${T0AZ1SEGMENTNAME}")" == "" ]
 then
+        echo "get_transport_zone_id : ${AZ1NAME_LOWER}-edge-vlan-tz"
         TZID=$(get_transport_zone_id "${AZ1NAME_LOWER}-edge-vlan-tz")
+        echo "TZID : ${TZID}"
+
         if [ "${TZID}" != "" ];
         then
                 create_t0_segment "${T0AZ1SEGMENTNAME}" "$TZID" "${AZ1NAME_LOWER}-edge-profile-uplink-1 " "${AZ1UPLINKSVLANID}"
@@ -179,8 +182,14 @@ then
         echo "get_transport_zone_id : ${AZ2NAME_LOWER}-edge-vlan-tz"
         TZID=$(get_transport_zone_id "${AZ2NAME_LOWER}-edge-vlan-tz")
         echo "TZID : ${TZID}"
+        if [ "${TZID}" != "" ];
+        then
+                create_t0_segment "${T0AZ2SEGMENTNAME}" "$TZID" "${AZ2NAME_LOWER}-edge-profile-uplink-1 " "${AZ2UPLINKSVLANID}"
+        else
+                echo " error getting transport_zone_id ${AZ2NAME_LOWER}-edge-vlan-tz"
+                exit 1
+        fi
 
-        create_t0_segment "${T0AZ2SEGMENTNAME}" "$TZID" "${AZ2NAME_LOWER}-edge-profile-uplink-1 " "${AZ2UPLINKSVLANID}"
 else
         echo "  ${T0AZ2SEGMENTNAME} - present"
 fi
@@ -189,8 +198,16 @@ T0AZ3SEGMENTNAME="maz-t0-az3-ls"
 
 if [ "$(get_segment "${T0AZ3SEGMENTNAME}")" == "" ]
 then
+        echo "get_transport_zone_id : ${AZ3NAME_LOWER}-edge-vlan-tz"
         TZID=$(get_transport_zone_id "${AZ3NAME_LOWER}-edge-vlan-tz")
-        create_t0_segment "${T0AZ3SEGMENTNAME}" "$TZID" "${AZ3NAME_LOWER}-edge-profile-uplink-1 " "${AZ3UPLINKSVLANID}"
+        echo "TZID : ${TZID}"
+        if [ "${TZID}" != "" ];
+        then
+                create_t0_segment "${T0AZ2SEGMENTNAME}" "$TZID" "${AZ3NAME_LOWER}-edge-profile-uplink-1 " "${AZ3UPLINKSVLANID}"
+        else
+                echo " error getting transport_zone_id ${AZ3NAME_LOWER}-edge-vlan-tz"
+                exit 1
+        fi
 
 else
         echo "  ${T0AZ3SEGMENTNAME} - present"

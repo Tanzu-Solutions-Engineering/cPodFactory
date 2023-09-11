@@ -156,6 +156,41 @@ echo
 echo "Processing T0 segment"
 echo
 
+echo "  get enforcement points"
+echo
+
+RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/policy/api/v1/infra/sites/default/enforcement-points)
+HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+
+if [ $HTTPSTATUS -eq 200 ]
+then
+        EPINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+        EPCOUNT=$(echo ${EPINFO} | jq .result_count)
+        if [[ ${EPCOUNT} -gt 0 ]]
+        then
+                EXISTINGEP=$(echo $EPINFO| jq -r '.results[].display_name')
+                #echo $EXISTINGEP
+                EXISTINGEPRP=$(echo $EPINFO| jq -r '.results[].relative_path')
+                #echo $EXISTINGEPRP
+                
+                if [[ "${EXISTINGEP}" == "default" ]]
+                then
+                        echo "  existing EP is default"
+                else
+                        echo "  ${EXISTINGEP} does not match default"
+                fi
+        else
+                echo "TODO : what when no EP ?"
+                exit
+        fi
+else
+        echo "  error getting enforcement-points"
+        echo ${HTTPSTATUS}
+        echo ${RESPONSE}
+        exit
+fi
+
+
 T0AZ1SEGMENTNAME="maz-t0-az1-ls"
 
 if [ "$(get_segment "${T0AZ1SEGMENTNAME}")" == "" ]
@@ -163,8 +198,7 @@ then
         echo "get_transport_zone_id : ${AZ1NAME_LOWER}-edge-vlan-tz"
         TZID=$(get_transport_zone_id "${AZ1NAME_LOWER}-edge-vlan-tz")
         echo "TZID : ${TZID}"
-
-        if [ "${TZID}" != "" ];
+        if [[ "${TZID}" != *"error"* ]] || [ "${TZID}" != "" ];
         then
                 create_t0_segment "${T0AZ1SEGMENTNAME}" "$TZID" "${AZ1NAME_LOWER}-edge-profile-uplink-1 " "${AZ1UPLINKSVLANID}"
         else
@@ -182,7 +216,7 @@ then
         echo "get_transport_zone_id : ${AZ2NAME_LOWER}-edge-vlan-tz"
         TZID=$(get_transport_zone_id "${AZ2NAME_LOWER}-edge-vlan-tz")
         echo "TZID : ${TZID}"
-        if [ "${TZID}" != "" ];
+        if [[ "${TZID}" != *"error"* ]] || [ "${TZID}" != "" ];
         then
                 create_t0_segment "${T0AZ2SEGMENTNAME}" "$TZID" "${AZ2NAME_LOWER}-edge-profile-uplink-1 " "${AZ2UPLINKSVLANID}"
         else
@@ -201,7 +235,7 @@ then
         echo "get_transport_zone_id : ${AZ3NAME_LOWER}-edge-vlan-tz"
         TZID=$(get_transport_zone_id "${AZ3NAME_LOWER}-edge-vlan-tz")
         echo "TZID : ${TZID}"
-        if [ "${TZID}" != "" ];
+        if [[ "${TZID}" != *"error"* ]] || [ "${TZID}" != "" ];
         then
                 create_t0_segment "${T0AZ2SEGMENTNAME}" "$TZID" "${AZ3NAME_LOWER}-edge-profile-uplink-1 " "${AZ3UPLINKSVLANID}"
         else

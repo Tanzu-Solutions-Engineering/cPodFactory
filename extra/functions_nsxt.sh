@@ -1731,14 +1731,15 @@ create_edge_cluster_maz() {
         #$1 profile name string
         #$2 VLAN ID
         #returns json
-        EDGEID1=$1
-        EDGEID2=$2
-        EDGEID3=$3
-
+        EDGECLUSTERNAME=$1
+        EDGEID1=$2
+        EDGEID2=$3
+        EDGEID3=$4
+        
         EDGECLUSTER_JSON='{
         "member_node_type": "EDGE_NODE",
         "resource_type": "EdgeCluster",
-        "display_name": "edge-cluster",
+        "display_name": "'${EDGECLUSTERNAME}'",
         "deployment_type": "VIRTUAL_MACHINE",
         "members":  [
         {
@@ -1769,10 +1770,17 @@ create_edge_cluster_maz() {
         if [ $HTTPSTATUS -eq 201 ]
         then
                 EDGECLUSTERINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
-                echo "  Edge-cluster created succesfully"
                 echo "${EDGECLUSTERINFO}" > /tmp/edge-cluster-created-json-$$
+                EDGECLUSTERINFONAME=$(echo "${EDGECLUSTERINFO}" | jq -r '.results[] | select (.display_name == "'${EDGECLUSTERNAME}'") | .display_name')
+                if [[ "${EDGECLUSTERINFONAME}" == "${EDGECLUSTERNAME}" ]]
+                then
+                        echo "  ${EDGECLUSTERNAME} created succesfully"
+                else
+                        echo "  ${EDGECLUSTERINFONAME} does not match ${EDGECLUSTERNAME}"
+                        exit 1
+                fi
         else
-                echo "  error creating edge cluster  : ${EDGENAME}"
+                echo "  error creating edge cluster  : ${EDGECLUSTERNAME}"
                 echo ${HTTPSTATUS}
                 echo ${RESPONSE}
                 exit
@@ -2135,7 +2143,7 @@ configure_tier-0s_bgp_neighbor(){
         "neighbor_address": "'${NBIP}'",
         "remote_as_num": "'${NBASN}'"
         }'
-        SCRIPT="/tmp/T0_NB_JSON"
+        SCRIPT="/tmp/T0_NB_JSON-$$"
         echo ${T0_NB_JSON} > ${SCRIPT}
 
         RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} -H 'Content-Type: application/json' -X PUT -d @${SCRIPT} https://${NSXFQDN}/policy/api/v1/infra/tier-0s/${T0NAME}/locale-services/default/bgp/neighbors/${NBNAME})

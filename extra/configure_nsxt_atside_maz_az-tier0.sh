@@ -90,13 +90,36 @@ AZ3SUBNET=$( ./${COMPUTE_DIR}/cpod_ip.sh ${4} )
 
 AZ3CPODROUTERIP=$(ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=error ${AZ3CPOD_NAME} "ip add | grep inet | grep eth0" | awk '{print $2}' | cut -d "/" -f 1)
 
-
 NSXFQDN="nsx.${CPOD_NAME_LOWER}.${ROOT_DOMAIN}"
 echo ${NSXFQDN}
 
 AZ1VLAN=$( grep -m 1 "${AZ1CPOD_NAME_LOWER}\s" /etc/hosts | awk '{print $1}' | cut -d "." -f 4 )
 AZ2VLAN=$( grep -m 1 "${AZ2CPOD_NAME_LOWER}\s" /etc/hosts | awk '{print $1}' | cut -d "." -f 4 )
 AZ3VLAN=$( grep -m 1 "${AZ3CPOD_NAME_LOWER}\s" /etc/hosts | awk '{print $1}' | cut -d "." -f 4 )
+
+if [ ${AZ1VLAN} -gt 40 ]; then
+	AZ1TEPVLANID=${AZ1VLAN}3
+        AZ1UPLINKSVLANID=${AZ1VLAN}4
+else
+	AZ1TEPVLANID=${AZ1VLAN}03
+        AZ1UPLINKSVLANID=${AZ1VLAN}04
+fi
+
+if [ ${AZ2VLAN} -gt 40 ]; then
+	AZ2TEPVLANID=${AZ2VLAN}3
+        AZ2UPLINKSVLANID=${AZ2VLAN}4
+else
+	AZ2TEPVLANID=${AZ2VLAN}03
+        AZ2UPLINKSVLANID=${AZ2VLAN}04
+fi
+
+if [ ${AZ3VLAN} -gt 40 ]; then
+	AZ3TEPVLANID=${AZ3VLAN}3
+        AZ3UPLINKSVLANID=${AZ3VLAN}4
+else
+	AZ3TEPVLANID=${AZ3VLAN}03
+        AZ3UPLINKSVLANID=${AZ3VLAN}04
+fi
 
 
 PASSWORD=$( ./${EXTRA_DIR}/passwd_for_cpod.sh ${1} )
@@ -115,7 +138,7 @@ source ${GOVCSCRIPT}
 echo
 echo "Checking Edge Clusters"
 echo
-
+MAZEDGECLUSTERNAME="maz-edgecluster"
 EDGECLUSTERS=$(get_edge_clusters)
 if [ "${EDGECLUSTERS}" != "" ];
 then
@@ -124,7 +147,7 @@ else
         EDGEID1=$(get_transport_node "edge-${AZ1NAME_LOWER}")
         EDGEID2=$(get_transport_node "edge-${AZ2NAME_LOWER}")
         EDGEID3=$(get_transport_node "edge-${AZ3NAME_LOWER}")
-        create_edge_cluster_maz $EDGEID1 $EDGEID2 $EDGEID3
+        create_edge_cluster_maz "${MAZEDGECLUSTERNAME}" $EDGEID1 $EDGEID2 $EDGEID3
 fi
 
 # ===== create nsx segments for T0 =====
@@ -133,14 +156,36 @@ echo
 echo "Processing T0 segment"
 echo
 
-T0SEGMENTNAME="t0-uplink-1"
+T0AZ1SEGMENTNAME="maz-t0-az1-ls"
 
-if [ "$(get_segment "${T0SEGMENTNAME}")" == "" ]
+if [ "$(get_segment "${T0AZ1SEGMENTNAME}")" == "" ]
 then
-        TZID=$(get_transport_zone_id "edge-vlan-tz")
-        create_t0_segment "${T0SEGMENTNAME}" "$TZID" "edge-profile-uplink-1" "${UPLINKSVLANID}"
+        TZID=$(get_transport_zone_id "maz-az1-edge-vlan-tz")
+        create_t0_segment "${T0AZ1SEGMENTNAME}" "$TZID" "maz-az1-edge-profile-uplink-1 " "${AZ1UPLINKSVLANID}"
+
 else
-        echo "  ${T0SEGMENTNAME} - present"
+        echo "  ${T0AZ1SEGMENTNAME} - present"
+fi
+
+T0AZ2SEGMENTNAME="maz-t0-az2-ls"
+
+if [ "$(get_segment "${T0AZ2SEGMENTNAME}")" == "" ]
+then
+        TZID=$(get_transport_zone_id "maz-az2-edge-vlan-tz")
+        create_t0_segment "${T0AZ2SEGMENTNAME}" "$TZID" "maz-az2-edge-profile-uplink-1 " "${AZ2UPLINKSVLANID}"
+else
+        echo "  ${T0AZ2SEGMENTNAME} - present"
+fi
+
+T0AZ3SEGMENTNAME="maz-t0-az3-ls"
+
+if [ "$(get_segment "${T0AZ3SEGMENTNAME}")" == "" ]
+then
+        TZID=$(get_transport_zone_id "maz-az3-edge-vlan-tz")
+        create_t0_segment "${T0AZ3SEGMENTNAME}" "$TZID" "maz-az3-edge-profile-uplink-1 " "${AZ3UPLINKSVLANID}"
+
+else
+        echo "  ${T0AZ3SEGMENTNAME} - present"
 fi
 
 # ===== create T0 =====
@@ -151,7 +196,7 @@ echo
 echo "Processing T0 gateway"
 echo
 
-T0GWNAME="Tier-0"
+T0GWNAME="MAZ-Tier-0"
 
 if [ "$(get_tier-0s "${T0GWNAME}")" == "" ]
 then
@@ -166,7 +211,7 @@ echo
 
 if [ "$(get_tier-0s_locale_services)" == "" ]
 then
-        EDGECLUSTERID=$(get_edge_clusters_id "edge-cluster")
+        EDGECLUSTERID=$(get_edge_clusters_id "${MAZEDGECLUSTERNAME}")
         create_t0_locale_service "${T0GWNAME}" "${EDGECLUSTERID}"
 else
         echo "  locale_services present"
@@ -182,18 +227,23 @@ echo
 echo "  Checinkg interfaces"
 echo
 
-T0IP01="10.${VLAN}.4.11"
-T0IP02="10.${VLAN}.4.12"
+T0IP01="10.${AZ1VLAN}.4.11"
+T0IP02="10.${AZ2VLAN}.4.11"
+T0IP03="10.${AZ3VLAN}.4.11"
 
 INTERFACES=$(get_tier-0s_interfaces  "${T0GWNAME}")
 
 if [ "${INTERFACES}" == "" ]
 then
-        EDGECLUSTERID=$(get_edge_clusters_id "edge-cluster")
-        EDGEIDX01=$(get_edge_node_cluster_member_index "edge-cluster" "edge-1")
-        EDGEIDX02=$(get_edge_node_cluster_member_index "edge-cluster" "edge-2")
-        create_t0_interface "${T0GWNAME}" "${EDGECLUSTERID}" "${T0IP01}" "${T0SEGMENTNAME}" "${EDGEIDX01}" "edge-1-uplink-1"
-        create_t0_interface "${T0GWNAME}" "${EDGECLUSTERID}" "${T0IP02}" "${T0SEGMENTNAME}" "${EDGEIDX02}" "edge-1-uplink-2"
+        EDGECLUSTERID=$(get_edge_clusters_id "${MAZEDGECLUSTERNAME}")
+        EDGEIDX01=$(get_edge_node_cluster_member_index "${MAZEDGECLUSTERNAME}" "edge-${AZ1NAME_LOWER}")
+        EDGEIDX02=$(get_edge_node_cluster_member_index "${MAZEDGECLUSTERNAME}" "edge-${AZ2NAME_LOWER}")
+        EDGEIDX03=$(get_edge_node_cluster_member_index "${MAZEDGECLUSTERNAME}" "edge-${AZ2NAME_LOWER}")
+
+        create_t0_interface "${T0GWNAME}" "${EDGECLUSTERID}" "${T0IP01}" "${T0AZ1SEGMENTNAME}" "${EDGEIDX01}" "edge-az1-uplink-1"
+        create_t0_interface "${T0GWNAME}" "${EDGECLUSTERID}" "${T0IP02}" "${T0AZ2SEGMENTNAME}" "${EDGEIDX02}" "edge-az2-uplink-1"
+        create_t0_interface "${T0GWNAME}" "${EDGECLUSTERID}" "${T0IP03}" "${T0AZ3SEGMENTNAME}" "${EDGEIDX03}" "edge-az3-uplink-1"
+        
 else
         echo "  interfaces present"
 fi
@@ -206,22 +256,39 @@ echo
 
 ASNCPOD=$(get_cpod_asn ${CPOD_NAME_LOWER})
 ASNNSXT=$((ASNCPOD + 1000))
-CPODBGPTABLE=$(get_cpodrouter_bgp_neighbors_table ${CPOD_NAME_LOWER})
+
+#Configure AZ1
+CPODBGPTABLE=$(get_cpodrouter_bgp_neighbors_table ${AZ1CPOD_NAME_LOWER})
 #test if already configured
 IPTEST=$(echo "${CPODBGPTABLE}" |grep ${T0IP01})
 if [ "${IPTEST}" == "" ];
 then
         echo "  adding ${T0IP01} bgp neighbor"
-        add_cpodrouter_bgp_neighbor "${T0IP01}" "${ASNNSXT}" "${CPOD_NAME_LOWER}"
+        add_cpodrouter_bgp_neighbor "${T0IP01}" "${ASNNSXT}" "${AZ1CPOD_NAME_LOWER}"
 else
         echo "  ${T0IP01} already defined as bgp neighbor"
 fi
 
+#Configure AZ2
+CPODBGPTABLE=$(get_cpodrouter_bgp_neighbors_table ${AZ2CPOD_NAME_LOWER})
+#test if already configured
 IPTEST=$(echo "${CPODBGPTABLE}" |grep ${T0IP02})
 if [ "${IPTEST}" == "" ];
 then
         echo "  adding ${T0IP02} bgp neighbor"
-        add_cpodrouter_bgp_neighbor "${T0IP02}" "${ASNNSXT}" "${CPOD_NAME_LOWER}"
+        add_cpodrouter_bgp_neighbor "${T0IP02}" "${ASNNSXT}" "${AZ2CPOD_NAME_LOWER}"
+else
+        echo "  ${T0IP02} already defined as bgp neighbor"
+fi
+
+#Configure AZ3
+CPODBGPTABLE=$(get_cpodrouter_bgp_neighbors_table ${AZ3CPOD_NAME_LOWER})
+#test if already configured
+IPTEST=$(echo "${CPODBGPTABLE}" |grep ${T0IP03})
+if [ "${IPTEST}" == "" ];
+then
+        echo "  adding ${T0IP02} bgp neighbor"
+        add_cpodrouter_bgp_neighbor "${T0IP03}" "${ASNNSXT}" "${AZ2CPOD_NAME_LOWER}"
 else
         echo "  ${T0IP02} already defined as bgp neighbor"
 fi
@@ -255,10 +322,21 @@ NEIGHBORS=$(get_tier-0s_bgp_neighbors  "${T0GWNAME}")
 
 if [ "${NEIGHBORS}" == "" ]
 then
-        CPODASNIP="10.${VLAN}.4.1"
-        configure_tier-0s_bgp_neighbor "${T0GWNAME}"  "${CPODASNIP}"  "${ASNCPOD}"  "${CPOD_NAME_LOWER}"
+        #AZ1
+        AZ1CPODASNIP="10.${AZ1VLAN}.4.1"
+        AZ1ASNCPOD=$(get_cpod_asn ${AZ1CPOD_NAME_LOWER})
+        configure_tier-0s_bgp_neighbor "${T0GWNAME}"  "${AZ1CPODASNIP}"  "${AZ1ASNCPOD}"  "${AZ1CPOD_NAME_LOWER}"
+        #AZ2
+        AZ2CPODASNIP="10.${AZ2VLAN}.4.1"
+        AZ2ASNCPOD=$(get_cpod_asn ${AZ2CPOD_NAME_LOWER})
+        configure_tier-0s_bgp_neighbor "${T0GWNAME}"  "${AZ2CPODASNIP}"  "${AZ2ASNCPOD}"  "${AZ2CPOD_NAME_LOWER}"
+        #AZ3
+        AZ3CPODASNIP="10.${AZ3VLAN}.4.1"
+        AZ3ASNCPOD=$(get_cpod_asn ${AZ1CPOD_NAME_LOWER})
+        configure_tier-0s_bgp_neighbor "${T0GWNAME}"  "${AZ3CPODASNIP}"  "${AZ3ASNCPOD}"  "${AZ3CPOD_NAME_LOWER}"
+
 else
-        echo "  BGP Neighbor present"
+        echo "  BGP Neighbors present on ${T0GWNAME}"
 fi
 
 # route redistribution

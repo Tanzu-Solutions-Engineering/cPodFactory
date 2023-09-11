@@ -1833,7 +1833,7 @@ create_t0_segment() {
         }
         }'
 
-        SCRIPT="/tmp/SEGMENT_JSON"
+        SCRIPT="/tmp/SEGMENT_JSON-$$"
         echo ${SEGMENT_JSON} > ${SCRIPT}
         RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD}  -H 'Content-Type: application/json' -X PUT -d @${SCRIPT} https://${NSXFQDN}/policy/api/v1/infra/segments/${SEGMENTNAME})
         HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')

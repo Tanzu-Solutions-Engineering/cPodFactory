@@ -427,11 +427,11 @@ then
                 echo "  BGP redistribution rules are present"
         else
                 echo "  enabling BGP redistribution and rules"
-                patch_tier0_route_redistribution  "${T0GWNAME}" "${LOCALESERVICE}"
+                patch_tier0_route_redistribution_v2  "${T0GWNAME}" "${LOCALESERVICE}"
         fi
 else
         echo "  enabling BGP redistribution and rules"
-        patch_tier0_route_redistribution  "${T0GWNAME}" "${LOCALESERVICE}"
+        patch_tier0_route_redistribution_v2  "${T0GWNAME}" "${LOCALESERVICE}"
 fi
 
 # ===== Script finished =====

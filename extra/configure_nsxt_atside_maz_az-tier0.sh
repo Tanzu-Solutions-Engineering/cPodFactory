@@ -237,7 +237,7 @@ then
         echo "TZID : ${TZID}"
         if [[ "${TZID}" != *"error"* ]] || [ "${TZID}" != "" ];
         then
-                create_t0_segment "${T0AZ2SEGMENTNAME}" "$TZID" "${AZ3NAME_LOWER}-edge-profile-uplink-1" "${AZ3UPLINKSVLANID}"
+                create_t0_segment "${T0AZ3SEGMENTNAME}" "$TZID" "${AZ3NAME_LOWER}-edge-profile-uplink-1" "${AZ3UPLINKSVLANID}"
         else
                 echo " error getting transport_zone_id ${AZ3NAME_LOWER}-edge-vlan-tz"
                 exit 1

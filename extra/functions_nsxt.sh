@@ -1772,13 +1772,14 @@ create_edge_cluster_maz() {
         then
                 EDGECLUSTERINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
                 echo "${EDGECLUSTERINFO}" > /tmp/edge-cluster-created-json-$$
-                EDGECLUSTERINFONAME=$(echo "${EDGECLUSTERINFO}" | jq -r '.results[] | select (.display_name == "'${EDGECLUSTERNAME}'") | .display_name')
+                EDGECLUSTERINFONAME=$(echo "${EDGECLUSTERINFO}" | jq -r '.display_name')
                 if [[ "${EDGECLUSTERINFONAME}" == "${EDGECLUSTERNAME}" ]]
                 then
                         echo "  ${EDGECLUSTERNAME} created succesfully"
                 else
                         echo "  ${EDGECLUSTERINFONAME} does not match ${EDGECLUSTERNAME}"
                         echo "HTTP RESPONSE : ${EDGECLUSTERINFO}"
+                        echo "/tmp/edge-cluster-created-json-$$"
                         exit 1
                 fi
         else

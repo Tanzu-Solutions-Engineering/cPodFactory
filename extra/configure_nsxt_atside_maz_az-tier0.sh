@@ -269,12 +269,14 @@ echo
 echo "  Checking locale_services"
 echo 
 
-if [ "$(get_tier-0s_locale_services)" == "" ]
+TESTLOCALESERVICE=$(get_tier-0s_locale_services)
+
+if [[ "${TESTLOCALESERVICE}" == *"error"* ]] || [ "${TESTLOCALESERVICE}" == "" ]
 then
         EDGECLUSTERID=$(get_edge_clusters_id "${MAZEDGECLUSTERNAME}")
         create_t0_locale_service "${T0GWNAME}" "${EDGECLUSTERID}"
 else
-        echo "  locale_services present"
+        echo "  locale_services present : ${TESTLOCALESERVICE}"
 fi
 
 

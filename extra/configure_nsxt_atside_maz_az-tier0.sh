@@ -356,10 +356,10 @@ CPODBGPTABLE=$(get_cpodrouter_bgp_neighbors_table ${AZ3CPOD_NAME_LOWER})
 IPTEST=$(echo "${CPODBGPTABLE}" |grep ${T0IP03})
 if [ "${IPTEST}" == "" ];
 then
-        echo "  adding ${T0IP02} bgp neighbor"
-        add_cpodrouter_bgp_neighbor "${T0IP03}" "${ASNNSXT}" "${AZ2CPOD_NAME_LOWER}"
+        echo "  adding ${T0IP03} bgp neighbor"
+        add_cpodrouter_bgp_neighbor "${T0IP03}" "${ASNNSXT}" "${AZ3CPOD_NAME_LOWER}"
 else
-        echo "  ${T0IP02} already defined as bgp neighbor"
+        echo "  ${T0IP03} already defined as bgp neighbor"
 fi
 
 # configure T0 bgp

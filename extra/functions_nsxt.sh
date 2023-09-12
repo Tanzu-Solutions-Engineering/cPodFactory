@@ -2277,9 +2277,11 @@ configure_tier-0s_bgp_neighbor_v2(){
         NBASN=$3
         NBNAME=$4
         LOCALESERVICE=$5
+        SOURCEADDRESS=$6
 
         T0_NB_JSON='{
         "neighbor_address": "'${NBIP}'",
+        "source_addresses": "'${SOURCEADDRESS}'",
         "remote_as_num": "'${NBASN}'"
         }'
         SCRIPT="/tmp/T0_NB_JSON-$$"

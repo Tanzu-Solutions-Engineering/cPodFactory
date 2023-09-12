@@ -372,7 +372,6 @@ else
         exit
 fi
 
-
 TOASN=$(get_tier-0s_bgp_v2 "${T0GWNAME}" "${LOCALESERVICE}" | jq .local_as_num)
 
 if [ "${TOASN}" !=  "${ASNNSXT}" ]
@@ -393,15 +392,15 @@ then
         #AZ1
         AZ1CPODASNIP="10.${AZ1VLAN}.4.1"
         AZ1ASNCPOD=$(get_cpod_asn ${AZ1CPOD_NAME_LOWER})
-        configure_tier-0s_bgp_neighbor_v2 "${T0GWNAME}"  "${AZ1CPODASNIP}"  "${AZ1ASNCPOD}"  "${AZ1CPOD_NAME_LOWER}" "${LOCALESERVICE}"
+        configure_tier-0s_bgp_neighbor_v2 "${T0GWNAME}"  "${AZ1CPODASNIP}"  "${AZ1ASNCPOD}"  "${AZ1CPOD_NAME_LOWER}" "${LOCALESERVICE}" "${T0IP01}" 
         #AZ2
         AZ2CPODASNIP="10.${AZ2VLAN}.4.1"
         AZ2ASNCPOD=$(get_cpod_asn ${AZ2CPOD_NAME_LOWER})
-        configure_tier-0s_bgp_neighbor_v2 "${T0GWNAME}"  "${AZ2CPODASNIP}"  "${AZ2ASNCPOD}"  "${AZ2CPOD_NAME_LOWER}" "${LOCALESERVICE}"
+        configure_tier-0s_bgp_neighbor_v2 "${T0GWNAME}"  "${AZ2CPODASNIP}"  "${AZ2ASNCPOD}"  "${AZ2CPOD_NAME_LOWER}" "${LOCALESERVICE}" "${T0IP02}" 
         #AZ3
         AZ3CPODASNIP="10.${AZ3VLAN}.4.1"
         AZ3ASNCPOD=$(get_cpod_asn ${AZ1CPOD_NAME_LOWER})
-        configure_tier-0s_bgp_neighbor_v2 "${T0GWNAME}"  "${AZ3CPODASNIP}"  "${AZ3ASNCPOD}"  "${AZ3CPOD_NAME_LOWER}" "${LOCALESERVICE}"
+        configure_tier-0s_bgp_neighbor_v2 "${T0GWNAME}"  "${AZ3CPODASNIP}"  "${AZ3ASNCPOD}"  "${AZ3CPOD_NAME_LOWER}" "${LOCALESERVICE}" "${T0IP03}" 
 
 else
         echo "  BGP Neighbors present on ${T0GWNAME}"

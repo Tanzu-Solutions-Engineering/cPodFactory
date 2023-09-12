@@ -2296,7 +2296,7 @@ configure_tier-0s_bgp_neighbor_v2(){
                 echo $NBINFO > /tmp/t0-bgp-nb-configured-json-$$ 
                 echo "  BGP Neighbor ${NBNAME} added successully" 
         else
-                echo "  error configuring Tier-0s BGP Neighbor ${$NBNAME}"
+                echo "  error configuring Tier-0s BGP Neighbor ${NBNAME}"
                 echo ${HTTPSTATUS}
                 echo ${RESPONSE}
                 exit

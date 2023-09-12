@@ -399,7 +399,7 @@ then
         configure_tier-0s_bgp_neighbor_v2 "${T0GWNAME}"  "${AZ2CPODASNIP}"  "${AZ2ASNCPOD}"  "${AZ2CPOD_NAME_LOWER}" "${LOCALESERVICE}" "${T0IP02}" 
         #AZ3
         AZ3CPODASNIP="10.${AZ3VLAN}.4.1"
-        AZ3ASNCPOD=$(get_cpod_asn ${AZ1CPOD_NAME_LOWER})
+        AZ3ASNCPOD=$(get_cpod_asn ${AZ3CPOD_NAME_LOWER})
         configure_tier-0s_bgp_neighbor_v2 "${T0GWNAME}"  "${AZ3CPODASNIP}"  "${AZ3ASNCPOD}"  "${AZ3CPOD_NAME_LOWER}" "${LOCALESERVICE}" "${T0IP03}" 
 
 else

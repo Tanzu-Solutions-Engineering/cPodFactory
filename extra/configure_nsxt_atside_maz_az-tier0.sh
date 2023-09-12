@@ -413,13 +413,13 @@ fi
 
 echo 
 
-RULES=$(get_tier0_route_redistribution "${T0GWNAME}"  )
+RULES=$(get_tier0_route_redistribution_v2 "${T0GWNAME}"  "${LOCALESERVICE}" )
 TESTBGP=$(echo "${RULES}" | jq -r .bgp_enabled )
 if [ "${TESTBGP}" == "true" ]
 then
         echo "  BGP redistribution already enabled"
         echo "  verifying rules"
-        RULES=$(get_tier0_route_redistribution "${T0GWNAME}"  )
+        RULES=$(get_tier0_route_redistribution_v2 "${T0GWNAME}" "${LOCALESERVICE}" )
         TESTBGP=$(echo "${RULES}" | jq -r .redistribution_rules[] )
 
         if [ "${TESTBGP}" != "" ]
@@ -427,11 +427,11 @@ then
                 echo "  BGP redistribution rules are present"
         else
                 echo "  enabling BGP redistribution and rules"
-                patch_tier0_route_redistribution  "${T0GWNAME}"
+                patch_tier0_route_redistribution  "${T0GWNAME}" "${LOCALESERVICE}"
         fi
 else
         echo "  enabling BGP redistribution and rules"
-        patch_tier0_route_redistribution  "${T0GWNAME}"
+        patch_tier0_route_redistribution  "${T0GWNAME}" "${LOCALESERVICE}"
 fi
 
 # ===== Script finished =====

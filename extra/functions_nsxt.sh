@@ -2412,12 +2412,33 @@ get_tier0_route_redistribution() {
                 ROUTEINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
                 ROUTEREDIST=$(echo ${ROUTEINFO} | jq .route_redistribution_config)
         else
-                echo "  error configuring Tier-0s BGP Neighbor ${$NBNAME}"
+                echo "  error getting Tier-0s ${T0NAME} route_redistribution_config"
                 echo ${HTTPSTATUS}
                 echo ${RESPONSE}
                 exit
         fi
 }
+
+get_tier0_route_redistribution_v2() {
+ #/infra/tier-0s/Tier-0/locale-services/default/bgp/neighbors/071971c8-4229-439f-bcdb-6f0378510b11
+        T0NAME=$1
+        LOCALESERVICE=$2
+
+        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/policy/api/v1/infra/tier-0s/${T0NAME}/locale-services/${LOCALESERVICE})
+        HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+
+        if [ $HTTPSTATUS -eq 200 ]
+        then
+                ROUTEINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+                ROUTEREDIST=$(echo ${ROUTEINFO} | jq .route_redistribution_config)
+        else
+                echo "  error getting Tier-0s ${T0NAME} route_redistribution_config"
+                echo ${HTTPSTATUS}
+                echo ${RESPONSE}
+                exit
+        fi
+}
+
 
 patch_tier0_route_redistribution() {
         #/infra/tier-0s/Tier-0/locale-services/default/bgp/neighbors/071971c8-4229-439f-bcdb-6f0378510b11
@@ -2444,9 +2465,45 @@ patch_tier0_route_redistribution() {
         then
                 NBINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
                 echo $NBINFO > /tmp/t0-bgp-nb-configured-json-$$ 
-                echo "  BGP Neighbor ${NBNAME} added successully" 
+                echo "  patch_tier0_route_redistribution ${T0NAME} successul" 
         else
-                echo "  error configuring Tier-0s BGP Neighbor ${NBNAME}"
+                echo "  error patch_tier0_route_redistribution ${T0NAME}"
+                echo ${HTTPSTATUS}
+                echo ${RESPONSE}
+                exit
+        fi
+        
+}
+
+patch_tier0_route_redistribution_v2() {
+        #/infra/tier-0s/Tier-0/locale-services/default/bgp/neighbors/071971c8-4229-439f-bcdb-6f0378510b11
+        T0NAME=$1
+        LOCALESERVICE=$2
+
+        T0_RULES_JSON='{
+        "route_redistribution_config" : {
+        "bgp_enabled" : true,
+        "ospf_enabled" : false,
+        "redistribution_rules" : [ {
+        "name" : "default",
+        "route_redistribution_types" : [ "TIER1_LB_VIP", "TIER1_NAT", "TIER1_CONNECTED", "TIER1_STATIC" ],
+        "destinations" : [ "BGP" ]
+        } ]
+        }
+        }'
+        SCRIPT="/tmp/T0_RULES_JSON-$$"
+        echo ${T0_RULES_JSON} > ${SCRIPT}
+
+        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} -H 'Content-Type: application/json' -X PATCH -d @${SCRIPT} https://${NSXFQDN}/policy/api/v1/infra/tier-0s/${T0NAME}/locale-services/${LOCALESERVICE})
+        HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+
+        if [ $HTTPSTATUS -eq 200 ]
+        then
+                NBINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+                echo $NBINFO > /tmp/t0-bgp-nb-configured-json-$$ 
+                echo "  patch_tier0_route_redistribution_v2 ${T0NAME} successul " 
+        else
+                echo "  error patch_tier0_route_redistribution_v2 ${T0NAME}"
                 echo ${HTTPSTATUS}
                 echo ${RESPONSE}
                 exit

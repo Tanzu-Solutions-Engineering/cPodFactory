@@ -2216,6 +2216,28 @@ get_tier-0s_bgp_neighbors(){
         fi
 }
 
+get_tier-0s_bgp_neighbors_v2(){
+        
+        #/infra/tier-0s/Tier-0/locale-services/default/bgp/neighbors/071971c8-4229-439f-bcdb-6f0378510b11
+        T0NAME=$1
+        LOCALESERVICE=$2
+        
+        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/policy/api/v1/infra/tier-0s/${T0NAME}/locale-services/${LOCALESERVICE}/bgp/neighbors)
+        HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+
+        if [ $HTTPSTATUS -eq 200 ]
+        then
+                BGPINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+                echo $BGPINFO > /tmp/t0-bgp-neighbors-json-$$ 
+                echo "${BGPINFO}" | jq .results[]
+        else
+                echo "  error getting Tier-0s"
+                echo ${HTTPSTATUS}
+                echo ${RESPONSE}
+                exit
+        fi
+}
+
 configure_tier-0s_bgp_neighbor(){
         
         #/infra/tier-0s/Tier-0/locale-services/default/bgp/neighbors/071971c8-4229-439f-bcdb-6f0378510b11

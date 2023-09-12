@@ -386,9 +386,9 @@ echo
 echo "  Checking BGP Neighbors"
 echo
 
-NEIGHBORS=$(get_tier-0s_bgp_neighbors  "${T0GWNAME}")
+NEIGHBORS=$(get_tier-0s_bgp_neighbors_v2  "${T0GWNAME}" "${LOCALESERVICE}")
 
-if [ "${NEIGHBORS}" == "" ]
+if [[ "${NEIGHBORS}" == *"error"* ]] || [ "${NEIGHBORS}" == "" ]
 then
         #AZ1
         AZ1CPODASNIP="10.${AZ1VLAN}.4.1"

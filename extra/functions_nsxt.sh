@@ -2113,6 +2113,49 @@ create_t0_interface() {
         fi
 }
 
+create_t0_interface_v2() {
+        #
+        T0NAME=$1
+        EDGECLUSTERID=$2
+        INTIP=$3
+        SEGMENT=$4
+        EDGENODEIDX=$5
+        INTNAME=$6
+        LOCALESERVICE=$7
+
+        EDGECLUSTERPATH="/infra/sites/default/enforcement-points/default/edge-clusters/${EDGECLUSTERID}/edge-nodes/${EDGENODEIDX}"
+
+        T0_INT_JSON='{
+        "segment_path": "/infra/segments/'${SEGMENT}'",
+        "subnets": [
+        {
+        "ip_addresses": [ "'${INTIP}'" ],
+        "prefix_len": 24
+        }
+        ],
+        "edge_path": "'${EDGECLUSTERPATH}'",
+        "type": "EXTERNAL"
+        }'
+        SCRIPT="/tmp/T0_INT_JSON-$$"
+        echo ${T0_INT_JSON} > ${SCRIPT}
+
+        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} -H 'Content-Type: application/json' -X PUT -d @${SCRIPT} https://${NSXFQDN}/policy/api/v1/infra/tier-0s/${T0NAME}/locale-services/${LOCALESERVICE}/interfaces/${INTNAME})
+        HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+
+        if [ $HTTPSTATUS -eq 200 ]
+        then
+                T0INTINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+                echo "  ${INTNAME} created succesfully"
+                echo ${T0INTINFO} > /tmp/t0-int-create.json-$$
+
+        else
+                echo "  error creating T0 interface : ${INTNAME} "
+                echo ${HTTPSTATUS}
+                echo ${RESPONSE}
+                exit
+        fi
+}
+
 get_tier-0s_bgp(){
         
         #/infra/tier-0s/Tier-0/locale-services/default/bgp/neighbors/071971c8-4229-439f-bcdb-6f0378510b11

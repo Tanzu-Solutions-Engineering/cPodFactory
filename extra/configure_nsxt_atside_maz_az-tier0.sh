@@ -368,7 +368,14 @@ TOASN=$(get_tier-0s_bgp "${T0GWNAME}"  | jq .local_as_num)
 if [ "${TOASN}" !=  "${ASNNSXT}" ]
 then
         #set bgp
-        configure_tier-0s_bgp "${T0GWNAME}" "${ASNNSXT}"
+        LOCALESERVICE=$(get_tier-0s_locale_services_name "${T0GWNAME}")
+        if  [[ "${LOCALESERVICE}" == *"error"* ]] || [ "${LOCALESERVICE}" !=  "" ]
+        then
+                configure_tier-0s_bgp_v2 "${T0GWNAME}" "${ASNNSXT}" "${LOCALESERVICE}"
+        else
+                echo " error getting get_tier-0s_locale_services_name ${T0GWNAME}"
+                exit
+        fi
 else
         echo "  Tier-0 BGP ASN already Set"
 fi

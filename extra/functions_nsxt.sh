@@ -1909,8 +1909,10 @@ create_t0_gw() {
 }
 
 get_tier-0s_locale_services(){
-        
-        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/policy/api/v1/infra/tier-0s/Tier-0/locale-services)
+                #
+        T0NAME=$1
+
+        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/policy/api/v1/infra/tier-0s/${T0NAME}/locale-services)
         HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
 
         if [ $HTTPSTATUS -eq 200 ]
@@ -1931,6 +1933,33 @@ get_tier-0s_locale_services(){
                 exit
         fi
 }
+
+get_tier-0s_locale_services_name(){
+                #
+        T0NAME=$1
+
+        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/policy/api/v1/infra/tier-0s/${T0NAME}/locale-services)
+        HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+
+        if [ $HTTPSTATUS -eq 200 ]
+        then
+                T0INFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+                T0COUNT=$(echo ${T0INFO} | jq .result_count)
+                echo $T0INFO > /tmp/t0-local_services-json-$$ 
+                if [[ ${T0COUNT} -gt 0 ]]
+                then
+                        echo "${T0INFO}" |jq -r .results[].display_name
+                else
+                        echo ""
+                fi
+        else
+                echo "  error getting Tier-0s : ${T0NAME} locale_services"
+                echo ${HTTPSTATUS}
+                echo ${RESPONSE}
+                exit
+        fi
+}
+
 
 create_t0_locale_service() {
         #
@@ -2109,6 +2138,39 @@ configure_tier-0s_bgp(){
                 exit
         fi
 }
+
+
+configure_tier-0s_bgp_v2(){
+        
+        #/infra/tier-0s/Tier-0/locale-services/default/bgp/neighbors/071971c8-4229-439f-bcdb-6f0378510b11
+        T0NAME=$1
+        ASNNUMBER=$2
+        LOCALSERVICE=$3
+
+        T0_BGP_JSON='{
+        "local_as_num": "'${ASNNUMBER}'",
+        "enabled": true
+        }'
+        SCRIPT="/tmp/T0_BGP_JSON-$$"
+        echo ${T0_BGP_JSON} > ${SCRIPT}
+
+        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} -H 'Content-Type: application/json' -X PUT -d @${SCRIPT} https://${NSXFQDN}/policy/api/v1/infra/tier-0s/${T0NAME}/locale-services/${LOCALSERVICE}/bgp)
+        HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+
+        if [ $HTTPSTATUS -eq 200 ]
+        then
+                BGPINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+                echo $BGPINFO > /tmp/t0-bgp-configured-json-$$ 
+                echo "  BGP Enabled succesfully with ASN : ${ASNNUMBER}" 
+        else
+                echo "  error configuring Tier-0s BGP"
+                echo ${HTTPSTATUS}
+                echo ${RESPONSE}
+                exit
+        fi
+}
+
+
 # /policy/api/v1/infra/tier-0s/Tier-0/locale-services/default/bgp/neighbors
 
 get_tier-0s_bgp_neighbors(){

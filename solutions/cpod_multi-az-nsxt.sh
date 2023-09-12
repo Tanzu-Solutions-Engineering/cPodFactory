@@ -86,14 +86,6 @@ cpodctl create ${AZ3CPOD} 4 $3
 ./extra/configure_nsxt_atside_maz_az-config.sh ${MGMTCPOD} ${AZ3CPOD} 
 ./extra/configure_nsxt_atside_maz_az-tier0.sh ${MGMTCPOD} ${AZ1CPOD} ${AZ2CPOD} ${AZ3CPOD} 
 
-while [ -f "/proc/$AZ1PID" ] && [ -f "/proc/$AZ2PID" ] && [ -f "/proc/$AZ3PID" ]; do
-  tail -n 20 /tmp/$$-az1.log
-  tail -n 20 /tmp/$$-az2.log
-  tail -n 20 /tmp/$$-az3.log 
-  sleep 60
-done
-
-
 END=$( date +%s )
 TIME=$( expr ${END} - ${START} )
 

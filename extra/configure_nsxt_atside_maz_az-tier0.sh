@@ -307,7 +307,7 @@ then
         EDGECLUSTERID=$(get_edge_clusters_id "${MAZEDGECLUSTERNAME}")
         EDGEIDX01=$(get_edge_node_cluster_member_index "${MAZEDGECLUSTERNAME}" "edge-${AZ1NAME_LOWER}")
         EDGEIDX02=$(get_edge_node_cluster_member_index "${MAZEDGECLUSTERNAME}" "edge-${AZ2NAME_LOWER}")
-        EDGEIDX03=$(get_edge_node_cluster_member_index "${MAZEDGECLUSTERNAME}" "edge-${AZ2NAME_LOWER}")
+        EDGEIDX03=$(get_edge_node_cluster_member_index "${MAZEDGECLUSTERNAME}" "edge-${AZ3NAME_LOWER}")
 
         create_t0_interface_v2 "${T0GWNAME}" "${EDGECLUSTERID}" "${T0IP01}" "${T0AZ1SEGMENTNAME}" "${EDGEIDX01}" "edge-az1-uplink-1" "${LOCALESERVICE}"
         create_t0_interface_v2 "${T0GWNAME}" "${EDGECLUSTERID}" "${T0IP02}" "${T0AZ2SEGMENTNAME}" "${EDGEIDX02}" "edge-az2-uplink-1" "${LOCALESERVICE}"

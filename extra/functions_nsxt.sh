@@ -1778,6 +1778,7 @@ create_edge_cluster_maz() {
                         echo "  ${EDGECLUSTERNAME} created succesfully"
                 else
                         echo "  ${EDGECLUSTERINFONAME} does not match ${EDGECLUSTERNAME}"
+                        echo "HTTP RESPONSE : ${EDGECLUSTERINFO}"
                         exit 1
                 fi
         else

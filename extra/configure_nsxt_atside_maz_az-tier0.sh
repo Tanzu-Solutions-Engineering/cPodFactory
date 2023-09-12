@@ -144,6 +144,7 @@ if [ "${EDGECLUSTERS}" != "" ];
 then
         echo "  Edge Clusters exist"
 else
+        echo "Creating edge cluster : ${MAZEDGECLUSTERNAME} "
         EDGEID1=$(get_transport_node "edge-${AZ1NAME_LOWER}")
         EDGEID2=$(get_transport_node "edge-${AZ2NAME_LOWER}")
         EDGEID3=$(get_transport_node "edge-${AZ3NAME_LOWER}")

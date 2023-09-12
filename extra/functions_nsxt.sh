@@ -2016,6 +2016,32 @@ get_tier-0s_interfaces(){
         fi
 }
 
+get_tier-0s_interfaces_v2(){
+        #https://${NSXFQDN}/policy/api/v1/infra/tier-0s/Tier-0/locale-services/default/interfaces
+        T0NAME=$1
+        LOCALESERVICE=$2
+        
+        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://${NSXFQDN}/policy/api/v1/infra/tier-0s/${T0NAME}/locale-services/${LOCALESERVICE}/interfaces)
+        HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+
+        if [ $HTTPSTATUS -eq 200 ]
+        then
+                T0INTINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+                T0INTCOUNT=$(echo ${T0INTINFO} | jq .result_count)
+                echo $T0INTINFO > /tmp/t0-interfaces-json-$$ 
+                if [[ ${T0INTCOUNT} -gt 0 ]]
+                then
+                        echo "${T0INTINFO}" |jq -r .
+                else
+                        echo ""
+                fi
+        else
+                echo "  error getting Tier-0s interfaces"
+                echo ${HTTPSTATUS}
+                echo ${RESPONSE}
+                exit
+        fi
+}
 get_edge_node_cluster_member_index(){
         #$1 segments name to look for
         #returns json

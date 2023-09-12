@@ -276,6 +276,16 @@ else
         echo "  locale_services present"
 fi
 
+
+LOCALESERVICE=$(get_tier-0s_locale_services_name "${T0GWNAME}")
+if  [[ "${LOCALESERVICE}" == *"error"* ]] || [ "${LOCALESERVICE}" !=  "" ]
+then
+        echo "LocaleService : ${LOCALESERVICE}"
+else
+        echo " error getting get_tier-0s_locale_services_name ${T0GWNAME}"
+        exit
+fi
+
 # set interfaces
 # add interfce
 # name : edge-1-uplink-1 - type : external - ip : 10.vlan.4.11 - segment : t0-uplink-1 - edge node : edge-1
@@ -290,9 +300,9 @@ T0IP01="10.${AZ1VLAN}.4.11"
 T0IP02="10.${AZ2VLAN}.4.11"
 T0IP03="10.${AZ3VLAN}.4.11"
 
-INTERFACES=$(get_tier-0s_interfaces  "${T0GWNAME}")
+INTERFACES=$(get_tier-0s_interfaces_v2  "${T0GWNAME}" "${LOCALESERVICE}")
 
-if [ "${INTERFACES}" == "" ]
+if [[ "${INTERFACES}" == *"error"* ]] ||  [ "${INTERFACES}" == "" ]
 then
         EDGECLUSTERID=$(get_edge_clusters_id "${MAZEDGECLUSTERNAME}")
         EDGEIDX01=$(get_edge_node_cluster_member_index "${MAZEDGECLUSTERNAME}" "edge-${AZ1NAME_LOWER}")
@@ -362,16 +372,6 @@ fi
 echo
 echo "  Checking Tier 0 BGP"
 echo
-
-LOCALESERVICE=$(get_tier-0s_locale_services_name "${T0GWNAME}")
-if  [[ "${LOCALESERVICE}" == *"error"* ]] || [ "${LOCALESERVICE}" !=  "" ]
-then
-        echo "LocaleService : ${LOCALESERVICE}"
-else
-        echo " error getting get_tier-0s_locale_services_name ${T0GWNAME}"
-        exit
-fi
-
 TOASN=$(get_tier-0s_bgp_v2 "${T0GWNAME}" "${LOCALESERVICE}" | jq .local_as_num)
 
 if [ "${TOASN}" !=  "${ASNNSXT}" ]

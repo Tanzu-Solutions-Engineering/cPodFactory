@@ -397,7 +397,7 @@ HTNPROFILENAME="cluster-transport-node-profile"
 
 get_host_transport_node_profile_id "${HTNPROFILENAME}"
 
-if [ "${HTNPROFILEID}" == "" ] || [  $? -ne 0 ];then
+if  [[ "${TEST}" == *"error"* ]] || [[ "${TEST}" == "" ]];then
         echo "Creating Transport Nodes Profile : ${HTNPROFILENAME}"
         create_transport_node_profile "${HTNPROFILENAME}" "${VDSUUID}" "${HOSTTZID}" "${OVERLAYTZID}" "${IPPOOLID}" "${HOSTPROFILEID}" "${VDSUPLINKS[0]}" "${VDSUPLINKS[1]}"
 fi
@@ -414,30 +414,42 @@ echo "  Cluster CCID : ${CLUSTERCCID}"
 echo "  get_host-transport-nodes"
 echo
 get_host-transport-nodes
+echo
+echo "Check Transport Node Collections"
 TNC=$(check_transport_node_collections)
-if [ "${TNC}" != ""  ]
+
+if [[ "${TNC}" != *"error"* ]] || [[ "${TNC}" == "" ]]
 then
         TNCID=$(echo ${TNC} |jq -r '.results[] | select (.compute_collection_id == "'${CLUSTERCCID}'") | .id ' )
-        echo
-        echo "  TNCID: $TNCID"
-        echo "  Cluster Collection State :  $(get_transport_node_collections_state ${TNCID})"
-        echo
-        loop_wait_host_state
+        echo "TNCID : ${TNCID}"
+        if [[ "${TNCID}" == *"error"* ]] || [[ "${TNCID}" == "" ]]
+        then
+                echo "  Configuring NSX on hosts"
+                echo
+                create_transport_node_collections "${CLUSTERCCID}" "${HTNPROFILEID}"
+                sleep 30
+                loop_wait_host_state
+        else
+                echo
+                echo "  TNCID: $TNCID"
+                echo "  Cluster Collection State :  $(get_transport_node_collections_state ${TNCID})"
+                echo
+                loop_wait_host_state
+        fi
 else
-        echo "  Configuring NSX on hosts"
-        echo
-        create_transport_node_collections "${CLUSTERCCID}" "${HTNPROFILEID}"
-        sleep 30
-        loop_wait_host_state
+        echo "  Issue get_host-transport-nodes"
+        exit
 fi
-
 
 # ===== create nsx segments for edge vms =====
 # edge-uplink-trunk-1 - tz = host-vlan-tz - teaming policy : host-profile-uplink-1 - vlan : 0-4094
 # edge-uplink-trunk-2 - tz = host-vlan-tz - teaming policy : host-profile-uplink-2 - vlan : 0-4094
 echo "Processing segments"
 echo
-if [ "$(get_segment "edge-uplink-trunk-1")" == "" ]
+
+GETSEGMENT=$(get_segment "edge-uplink-trunk-1")
+
+if [[ "${GETSEGMENT}" == *"error"* ]] || [[ "${GETSEGMENT}" == "" ]]
 then
         TZID=$(get_transport_zone_id "host-vlan-tz")
         create_edge_segment "edge-uplink-trunk-1" "$TZID" "host-profile-uplink-1"
@@ -500,7 +512,7 @@ IPPOOLID=$(get_ip_pool_id "TEP-pool")
 # deploy edge code here
 echo "edge-1"
 EDGEID=$(get_transport_node "edge-1")
-if [ "${EDGEID}" == "" ]
+if  [[ "${EDGEID}" == *"error"* ]] || [[ "${EDGEID}" == "" ]] 
 then
         EDGE_IP="${SUBNET}.54"
         FQDN="edge-1.${CPOD_NAME_LOWER}.${ROOT_DOMAIN}"
@@ -512,7 +524,7 @@ fi
 echo "edge-2"
 
 EDGEID=$(get_transport_node "edge-2")
-if [ "${EDGEID}" == "" ]
+if  [[ "${EDGEID}" == *"error"* ]] || [[ "${EDGEID}" == "" ]] 
 then
         EDGE_IP="${SUBNET}.55"
         FQDN="edge-2.${CPOD_NAME_LOWER}.${ROOT_DOMAIN}"
@@ -580,7 +592,9 @@ echo
 echo "  Checking locale_services"
 echo 
 
-if [ "$(get_tier-0s_locale_services)" == "" ]
+TESTLOCALESERVICE=$(get_tier-0s_locale_services)
+
+if [[ "${TESTLOCALESERVICE}" == *"error"* ]] || [ "${TESTLOCALESERVICE}" == "" ]
 then
         EDGECLUSTERID=$(get_edge_clusters_id "edge-cluster")
         create_t0_locale_service "${T0GWNAME}" "${EDGECLUSTERID}"
@@ -603,7 +617,7 @@ T0IP02="10.${VLAN}.4.12"
 
 INTERFACES=$(get_tier-0s_interfaces  "${T0GWNAME}")
 
-if [ "${INTERFACES}" == "" ]
+if  [[ "${INTERFACES}" == *"error"* ]] || [ "${INTERFACES}" == "" ]
 then
         EDGECLUSTERID=$(get_edge_clusters_id "edge-cluster")
         EDGEIDX01=$(get_edge_node_cluster_member_index "edge-cluster" "edge-1")

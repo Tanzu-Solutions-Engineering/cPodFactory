@@ -522,7 +522,7 @@ if  [[ "${EDGEID}" == *"error"* ]] || [[ "${EDGEID}" == "" ]]
 then
         EDGE_IP="${SUBNET}.54"
         FQDN="edge-1.${CPOD_NAME_LOWER}.${ROOT_DOMAIN}"
-        create_edge_node "edge-1" "${UPLINKPROFILEID}" "${IPPOOLID}" "${OVLYTZID}" "${VLANTZID}" "${CLUSTERCCID}" "${COMPUTE_ID}" "${STORAGE_ID}" "${MANAGEMENT_NETWORK_ID}" "${EDGE_IP}" "${FQDN}" "${CPODROUTERIP}" "edge-uplink-trunk-1"
+        create_edge_node "edge-1" "${UPLINKPROFILEID}" "${IPPOOLID}" "${OVLYTZID}" "${VLANTZID}" "${CLUSTERCCID}" "${COMPUTE_ID}" "${STORAGE_ID}" "${MANAGEMENT_NETWORK_ID}" "${EDGE_IP}" "${FQDN}" "${CPODROUTERIP}" "edge-uplink-trunk"
 else
         echo "  edge-1 is present"
 fi
@@ -534,7 +534,7 @@ if  [[ "${EDGEID}" == *"error"* ]] || [[ "${EDGEID}" == "" ]]
 then
         EDGE_IP="${SUBNET}.55"
         FQDN="edge-2.${CPOD_NAME_LOWER}.${ROOT_DOMAIN}"
-        create_edge_node "edge-2" "${UPLINKPROFILEID}" "${IPPOOLID}" "${OVLYTZID}" "${VLANTZID}" "${CLUSTERCCID}" "${COMPUTE_ID}" "${STORAGE_ID}" "${MANAGEMENT_NETWORK_ID}" "${EDGE_IP}" "${FQDN}"  "${CPODROUTERIP}" "edge-uplink-trunk-1"
+        create_edge_node "edge-2" "${UPLINKPROFILEID}" "${IPPOOLID}" "${OVLYTZID}" "${VLANTZID}" "${CLUSTERCCID}" "${COMPUTE_ID}" "${STORAGE_ID}" "${MANAGEMENT_NETWORK_ID}" "${EDGE_IP}" "${FQDN}"  "${CPODROUTERIP}" "edge-uplink-trunk"
 else
         echo "  edge-2 is present"
 fi

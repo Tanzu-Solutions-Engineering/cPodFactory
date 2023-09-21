@@ -395,7 +395,8 @@ HTNPROFILENAME="cluster-transport-node-profile"
 
 ## need to add check that vcenter inventory completed in NSX Manager
 
-get_host_transport_node_profile_id "${HTNPROFILENAME}"
+TEST=$(get_host_transport_node_profile_id "${HTNPROFILENAME}")
+echo "${TEST}"
 
 if  [[ "${TEST}" == *"error"* ]] || [[ "${TEST}" == "" ]];then
         echo "Creating Transport Nodes Profile : ${HTNPROFILENAME}"

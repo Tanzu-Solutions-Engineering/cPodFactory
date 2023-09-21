@@ -364,6 +364,17 @@ then
         echo "  problem getting VDS UUID"
         exit
 fi
+
+echo "Getting VDS uplinks"
+readarray -t VDSUPLINKS < <(govc ls -json=true network |jq -r '.elements[] | select ( .Object.Summary.ProductInfo.Name == "DVS") |  .Object.Config.UplinkPortPolicy.UplinkPortName[]')
+echo "  VDS UPLINKS : " 
+echo "${VDSUPLINKS[@]}"
+if [ "${VDSUPLINKS}" == "" ]
+then
+        echo "  problem getting VDS uplinks"
+        exit
+fi
+
 #get Host Profile ID
 HOSTPROFILEID=$(get_uplink_profile_id "host-profile")
 echo "  HOST Profile ID: ${HOSTPROFILEID}"
@@ -388,7 +399,7 @@ get_host_transport_node_profile_id "${HTNPROFILENAME}"
 
 if [ "${HTNPROFILEID}" == "" ] || [  $? -ne 0 ];then
         echo "Creating Transport Nodes Profile : ${HTNPROFILENAME}"
-        create_transport_node_profile "${HTNPROFILENAME}" "${VDSUUID}" "${HOSTTZID}" "${OVERLAYTZID}" "${IPPOOLID}" "${HOSTPROFILEID}"
+        create_transport_node_profile "${HTNPROFILENAME}" "${VDSUUID}" "${HOSTTZID}" "${OVERLAYTZID}" "${IPPOOLID}" "${HOSTPROFILEID}" "${VDSUPLINKS[0]}" "${VDSUPLINKS[1]}"
 fi
 
 # ===== Configure NSX on ESX hosts =====

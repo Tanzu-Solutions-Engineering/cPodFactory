@@ -334,7 +334,7 @@ fi
 #Check if subnets present
 echo
 POOL=$(check_ip_pool "TEP-pool")
-if [ "${POOL}" == "" ]
+if [[ "${POOL}" == *"error"* ]] || [[ "${POOL}" == "" ]] 
 then
         echo "  create TEP IP pool"
         create_ip_pool "TEP-pool" "TEP-pool-subnet"  "10.${VLAN}.3.2" "10.${VLAN}.3.200" "10.${VLAN}.3.0/24"  "10.${VLAN}.3.1" 
@@ -453,7 +453,6 @@ echo "Processing segments"
 echo
 
 GETSEGMENT=$(get_segment "edge-uplink-trunk-1")
-
 if [[ "${GETSEGMENT}" == *"error"* ]] || [[ "${GETSEGMENT}" == "" ]]
 then
         TZID=$(get_transport_zone_id "host-vlan-tz")
@@ -461,8 +460,10 @@ then
 else
         echo "  edge-uplink-trunk-1 - present"
 fi
+
 echo
-if [ "$(get_segment "edge-uplink-trunk-2")" == "" ]
+GETSEGMENT=$(get_segment "edge-uplink-trunk-2")
+if [[ "${GETSEGMENT}" == *"error"* ]] || [[ "${GETSEGMENT}" == "" ]]
 then
         TZID=$(get_transport_zone_id "host-vlan-tz")
         create_edge_segment "edge-uplink-trunk-2" "$TZID" "host-profile-uplink-2"
@@ -484,6 +485,12 @@ fi
 
 # Cluster ID
 CLUSTERCCID=$(get_compute_collection_origin_id "Cluster")
+if  [[ "${CLUSTERCCID}" == *"error"* ]] || [[ "${CLUSTERCCID}" == "" ]] ;then
+        echo "  problem getting Cluster ID : Cluster"
+        exit  
+else   
+        echo " CLUSTERCCID : ${CLUSTERCCID}"
+fi
 
 # govc ls -json=true host |jq -r '.elements[].Object.Self.Value'
 COMPUTE_ID=$(govc ls -json=true host |jq -r '.elements[].Object.Self.Value')

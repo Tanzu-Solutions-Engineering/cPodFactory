@@ -58,7 +58,7 @@ apply_license_vcenter() {
 	echo 
 	echo "Applying vCenter license"
 	echo 
-	govc license.assign  $VCENTER_KEY
+	govc license.assign -host="vcsa.${POD_FQDN}" $VCENTER_KEY
 }
 
 apply_licenses_hosts() {
@@ -66,7 +66,7 @@ apply_licenses_hosts() {
 	echo "Applying hosts licenses"
 	echo 
 	NUM_ESX=$(govc datacenter.info "${POD_NAME}" | grep "Hosts" | cut -d : -f 2 | cut -d " " -f 14)
-	for (( i=1; i<=$NUM_ESX; i++ ));
+	for (( i = 1; i <= NUM_ESX; i++ ));
 	do
 		HOST="esx0${i}.${POD_FQDN}"
 		govc license.assign -host ${HOST,,} ${ESX_KEY}

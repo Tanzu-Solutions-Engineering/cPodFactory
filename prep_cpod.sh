@@ -42,6 +42,9 @@ main() {
 
 # main $1 $2
 
+CPODROUTER=$( echo "${HEADER}-${1}" | tr '[:upper:]' '[:lower:]' )
+NAME_UPPER=$( echo "${1}" | tr '[:lower:]' '[:upper:]' )
+
 NUM_ESX="${2}"
 STARTNUMESX=1
 SUBNET=$( ./"${COMPUTE_DIR}"/cpod_ip.sh "${1}" )

@@ -88,8 +88,8 @@ for ((i=1; i<=NUM_ESX; i++)); do
 	sshpass -p "${ROOT_PASSWD}" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=error root@"${DHCPIP}" "esxcli network ip dns server add -s ${TRANSIT_IP}"
 	sshpass -p "${ROOT_PASSWD}" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=error root@"${DHCPIP}" "esxcli network ip dns search add -d ${DOMAIN}"
 	echo "$ESXHOST --- setting ssd with ssdcript in ./install/ssd_esx_tag.sh ---"
-	sshpass -p "${ROOT_PASSWD}" scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=error ./install/ssd_esx_tag.sh root@"${DHCPIP}":/tmp/ssd_esx_tag.sh
-	sshpass -p "${ROOT_PASSWD}" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=error root@"${DHCPIP}" "/tmp/ssd_esx_tag.sh"
+	sshpass -p "${ROOT_PASSWD}" scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=error ./install/ssd_esx_tag.sh root@"${DHCPIP}":/root/ssd_esx_tag.sh
+	sshpass -p "${ROOT_PASSWD}" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=error root@"${DHCPIP}" "/root/ssd_esx_tag.sh"
 	echo "$ESXHOST --- setting password ---"
 	sshpass -p "${ROOT_PASSWD}" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=error root@"${DHCPIP}" "printf \"${GEN_PASSWORD}\n${GEN_PASSWORD}\n\" | passwd root "
 	echo "$ESXHOST --- setting host IP to final IP: $IP ---"

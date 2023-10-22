@@ -49,6 +49,7 @@ NAME_UPPER=$( echo "${1}" | tr '[:lower:]' '[:upper:]' )
 
 NUM_ESX="${2}"
 STARTNUMESX=1
+LASTNUMESX=21
 SUBNET=$( ./"${COMPUTE_DIR}"/cpod_ip.sh "${1}" )
 #PORTGROUP_NAME="${CPODROUTER}"
 TRANSIT_IP=$( grep "${CPODROUTER}" "/etc/hosts" | awk '{print $1}' )

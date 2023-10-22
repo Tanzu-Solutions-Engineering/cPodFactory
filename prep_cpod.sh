@@ -1,7 +1,9 @@
 #!/bin/bash
 #bdereims@vmware.com
 
+# source helper functions
 . ./env
+source ./extra/functions.sh
 
 [ "$1" == "" ] && echo "usage: $0 <name_of_cpod> <#_of_esx>" && exit 1 
 
@@ -71,6 +73,16 @@ for ((i=1; i<=NUM_ESX; i++)); do
   SSHOK=1
   TIMEOUT=0
   
+  #debug
+  echo "debug"
+  echo "i: ${i}"
+  echo "octet : ${OCTET}"
+  echo "IP : ${IP}"
+  echo "HOST : ${HOST}"
+  echo "ESXHOST : ${ESXHOST}"
+  echo "VMNAME: ${VMNAME}"
+  echo "DHCPIP : ${DHCPIP}"
+
   #wait for DHCPIP to become available 
 
   while [ -z "$DHCPIP" ]

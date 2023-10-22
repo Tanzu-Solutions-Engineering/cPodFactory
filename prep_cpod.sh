@@ -157,7 +157,7 @@ for ((i=1; i<=NUM_ESX; i++)); do
 	sshpass -p "${GEN_PASSWORD}" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=error root@"${IP}" "/sbin/generate-certificates ; /etc/init.d/hostd restart && /etc/init.d/vpxa restart"
 
   #we want to SSH once from the cpodrouter to save the fingerprint
-  ssh -o LogLevel=error root@"$CPODROUTER" "sshpass -p ${GEN_PASSWORD} ssh -o StrictHostKeyChecking=no -o ConnectTimeout=5 -o LogLevel=error root@${IP} exit"
+  ssh -o LogLevel=error -o StrictHostKeyChecking=no root@"$CPODROUTER" "sshpass -p ${GEN_PASSWORD} ssh -o StrictHostKeyChecking=no -o ConnectTimeout=5 -o LogLevel=error root@${IP} exit"
   
   #update DNS
   echo "adding IP $IP for host $ESXHOST on $CPODROUTER"

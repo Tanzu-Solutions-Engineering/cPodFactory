@@ -219,7 +219,7 @@ echo
 # govc ls -json=true network |jq -r '.elements[] | select ( .Object.Summary.ProductInfo.Name == "DVS") |  .Object.Summary.Uuid'
 
 #VDSUUID=$(govc find / -type DistributedVirtualSwitch | xargs -n1 govc dvs.portgroup.info | grep DvsUuid | uniq | cut -d":" -f2 | awk '{$1=$1;print}')
-VDSUUID=$(govc ls -json=true network |jq -r '.elements[] | select ( .Object.Summary.ProductInfo.Name == "DVS" and .Object.Summary.Name == "dvs-'${AZCPOD_NAME_LOWER}'") |  .Object.Summary.Uuid')
+VDSUUID=$(govc ls -json=true network |jq -r '.elements[] | select ( .Object.Summary.ProductInfo.Name == "DVS" and .Object.Summary.Name == "dvs-maz") |  .Object.Summary.Uuid')
 echo "  VDS UUID : ${VDSUUID}"
 if [ "${VDSUUID}" == "" ]
 then
@@ -228,7 +228,7 @@ then
 fi
 
 echo "Getting VDS uplinks"
-readarray -t VDSUPLINKS < <(govc ls -json=true network |jq -r '.elements[] | select ( .Object.Summary.ProductInfo.Name == "DVS" and .Object.Summary.Name == "dvs-'${AZCPOD_NAME_LOWER}'") |  .Object.Config.UplinkPortPolicy.UplinkPortName[]')
+readarray -t VDSUPLINKS < <(govc ls -json=true network |jq -r '.elements[] | select ( .Object.Summary.ProductInfo.Name == "DVS" and .Object.Summary.Name == "dvs-maz") |  .Object.Config.UplinkPortPolicy.UplinkPortName[]')
 echo "  VDS UPLINKS : " 
 echo "${VDSUPLINKS[@]}"
 if [ "${VDSUPLINKS}" == "" ]

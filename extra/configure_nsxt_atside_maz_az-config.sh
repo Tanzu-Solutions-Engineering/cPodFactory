@@ -201,7 +201,7 @@ POOL=$(check_ip_pool "${AZNAME_LOWER}-TEP-pool")
 #echo "${POOL}"
 if [[ "${POOL}" == *"error"* ]] || [[ "${POOL}" == "" ]] 
 then
-        echo "  create ${AZNAME_LOWER}- TEP IP pool"
+        echo "  create ${AZNAME_LOWER}-TEP IP pool"
         create_ip_pool "${AZNAME_LOWER}-TEP-pool" "${AZNAME_LOWER}-TEP-pool-subnet"  "10.${AZVLAN}.3.2" "10.${AZVLAN}.3.200" "10.${AZVLAN}.3.0/24"  "10.${AZVLAN}.3.1" 
 else 
         echo "  ${AZNAME_LOWER}-TEP-pool exists"
@@ -219,6 +219,8 @@ echo
 # govc ls -json=true network |jq -r '.elements[] | select ( .Object.Summary.ProductInfo.Name == "DVS") |  .Object.Summary.Uuid'
 
 #VDSUUID=$(govc find / -type DistributedVirtualSwitch | xargs -n1 govc dvs.portgroup.info | grep DvsUuid | uniq | cut -d":" -f2 | awk '{$1=$1;print}')
+echo "govc test"
+govc env
 VDSUUID=$(govc ls -json=true network |jq -r '.elements[] | select ( .Object.Summary.ProductInfo.Name == "DVS" and .Object.Summary.Name == "dvs-maz") |  .Object.Summary.Uuid')
 echo "  VDS UUID : ${VDSUUID}"
 if [ "${VDSUUID}" == "" ]

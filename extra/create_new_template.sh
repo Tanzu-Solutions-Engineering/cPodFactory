@@ -24,7 +24,7 @@ collect_info(){
         break
     done
     ISONAMECODE=$(echo ${ISO} |sed 's/VMware-VMvisor-Installer-//' | sed 's/.x86_64.iso//')
-    TEMPLATENAME="template-${ISONAMECODE}"
+    TEMPLATENAME="template-ESX-${ISONAMECODE}"
 
     test_network=$(govc ls network |grep "cpod-services")
 

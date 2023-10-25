@@ -54,6 +54,11 @@ fi
 
 
 FinalIsoFileName="ks-${shortIsoFileName}"
+echo $TEMPLATENAME
+echo $shortIsoFileName
+echo $PORTGROUP
+echo "scp ${LongIsoFileName} root@forty-two:/tmp/cpod-template"
+
 #using vm forty-two to generate iso file
 echo
 echo "============================================"

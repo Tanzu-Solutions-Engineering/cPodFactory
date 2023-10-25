@@ -8,11 +8,50 @@
 source ./env
 source ./govc_env
 
-[ "$1" == "" -o "$2" == "" -o "$3" == "" ] && echo "usage: $0 <name_of_template> <name_of_ISO_file> <temp_cpod_network>"  && echo "usage example: $0 template-ESX70u3f /data/nfs/ISO/VMware-VMvisor-Installer-7.0U3f-20036589.x86_64.iso cpod-services" && exit 1
+
+collect_info(){
+
+    ISOSLIST=$(ls /data/BITS/VMware-VMvisor-Installer* | sed 's/.*\///')
+    ISOSLIST=${ISOSLIST}" Quit"
+
+    select ISO in ${ISOSLIST}; do 
+        if [ "${ISO}" = "Quit" ]; then 
+            exit
+        fi
+        echo "you selected ISO : ${ISO}"
+        shortIsoFileName="${ISO}"
+        break
+    done
+    ISONAMECODE=$(echo ${ISO} |sed 's/VMware-VMvisor-Installer-//' | sed 's/.x86_64.iso//')
+    TEMPLATENAME="template-${ISONAMECODE}"
+
+    test_network=$(govc ls network |grep "cpod-services")
+
+    if [ "${test_network}" == "" ];
+    then
+        echo "cpod-services not present."
+        echo "check your setup."
+        exit
+    else
+        PORTGROUP="cpod-services"
+    fi
+
+}
 
 START=$( date +%s ) 
 
-shortIsoFileName=$(echo $2 | sed 's/.*\///')
+if [ "$1" == "" -o "$2" == "" -o "$3" == "" ];
+then
+    echo "usage: $0 <name_of_template> <name_of_ISO_file> <temp_cpod_network>"
+    echo "usage example: $0 template-ESX70u3f /data/nfs/ISO/VMware-VMvisor-Installer-7.0U3f-20036589.x86_64.iso cpod-services"
+    collect_info
+else
+    TEMPLATENAME="${1}"
+    shortIsoFileName=$(echo $2 | sed 's/.*\///')
+    PORTGROUP=${3}
+fi
+
+
 FinalIsoFileName="ks-${shortIsoFileName}"
 #using vm forty-two to generate iso file
 echo
@@ -55,14 +94,14 @@ sed -i -e "s/###VCENTER###/${VCENTER}/" ${SCRIPT}
 sed -i -e "s/###VCENTER_ADMIN###/${VCENTER_ADMIN}/" ${SCRIPT}
 sed -i -e "s/###VCENTER_PASSWD###/${VCENTER_PASSWD}/" ${SCRIPT}
 sed -i -e "s=###ISO_FILE###=${isofile}=" ${SCRIPT}
-sed -i -e "s/###TEMPLATE_NAME###/${1}/" ${SCRIPT}
-sed -i -e "s/###PORTGROUP###/${3}/" ${SCRIPT}
+sed -i -e "s/###TEMPLATE_NAME###/${TEMPLATENAME}/" ${SCRIPT}
+sed -i -e "s/###PORTGROUP###/${PORTGROUP}/" ${SCRIPT}
 sed -i -e "s/###FOLDERNAME###/${TEMPLATE_FOLDER}/" ${SCRIPT}
 sed -i -e "s/###RESOURCEPOOLNAME###/${TEMPLATE_RESOURCEPOOL}/" ${SCRIPT}
 sed -i -e "s/###DATASTORE###/${DATASTORE}/" ${SCRIPT}
 
 
-echo "Creating new template '${1}'"
+echo "Creating new template '${TEMPLATENAME}'"
 echo ${SCRIPT}
 
 docker run --interactive --tty --dns=${DNS} --entrypoint="/usr/bin/pwsh" -v /tmp/scripts:/tmp/scripts vmware/powerclicore:12.4 ${SCRIPT}
@@ -74,7 +113,7 @@ sleep 120
 
 while true; do
     echo Checing template vm started
-    TEMPLATE_VM=$(govc vm.info ${1} | grep -i "poweredon" | wc -l)
+    TEMPLATE_VM=$(govc vm.info ${TEMPLATENAME} | grep -i "poweredon" | wc -l)
     if [ ${TEMPLATE_VM} -eq 1 ]; then
         IP=$(govc vm.info -r ${1} | grep -i "ip" | awk '{print $3}')
         echo Template IP : ${IP}
@@ -87,13 +126,13 @@ while true; do
             echo "Waiting for UI to start"
         fi
     else
-        echo Waiting for IP address for ${1}
+        echo Waiting for IP address for ${TEMPLATENAME}
     fi
     sleep 30
 done
 sleep 30
 
-echo finalising configuration of ${1}
+echo finalising configuration of ${TEMPLATENAME}
 
 PASSWORD=VMware1!
 
@@ -125,11 +164,18 @@ sed -i -e "s/###VCENTER_ADMIN###/${VCENTER_ADMIN}/" ${SCRIPT}
 sed -i -e "s/###VCENTER_PASSWD###/${VCENTER_PASSWD}/" ${SCRIPT}
 sed -i -e "s/###TEMPLATE_NAME###/${1}/" ${SCRIPT}
 
-echo "Removing cdrom from '${1}'"
+echo "Removing cdrom from '${TEMPLATENAME}'"
 echo ${SCRIPT}
 
 #docker run --rm --it --tty --dns=${DNS} --entrypoint="/usr/bin/pwsh" -v /tmp/scripts:/tmp/scripts vmware/powerclicore:12.4 ${SCRIPT} #2>&1 > /dev/null
 docker run --interactive --tty --dns=${DNS} --entrypoint="/usr/bin/pwsh" -v /tmp/scripts:/tmp/scripts vmware/powerclicore:12.4 ${SCRIPT} #2>&1 > /dev/null
+
+#govc remove cd-rom
+
+#govc change network
+
+govc vm.network.change -vm /intel-DC/vm/Templates/testme -net Dummy ethernet-0
+govc vm.network.change -vm /intel-DC/vm/Templates/testme -net Dummy ethernet-1
 
 #rm -fr ${SCRIPT}
 echo

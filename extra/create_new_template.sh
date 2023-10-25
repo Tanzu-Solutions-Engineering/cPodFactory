@@ -19,6 +19,7 @@ collect_info(){
             exit
         fi
         echo "you selected ISO : ${ISO}"
+        LongIsoFileName=$(ls /data/BITS/VMware-VMvisor-Installer* |grep ${ISO})
         shortIsoFileName="${ISO}"
         break
     done
@@ -59,7 +60,7 @@ echo "============================================"
 echo "generating ESXi iso file with kickstart file"
 echo "============================================"
 
-scp $2 root@forty-two:/tmp/cpod-template
+scp ${LongIsoFileName} root@forty-two:/tmp/cpod-template
 scp ./extra/create_new_template_ks.cfg root@forty-two:/tmp/cpod-template/ks.cfg
 ssh root@forty-two "./esxi_ks_iso.sh -i /tmp/cpod-template/${shortIsoFileName} -k /tmp/cpod-template/ks.cfg -w /tmp/cpod-template"
 scp root@forty-two:/tmp/cpod-template/esxi-ks.iso ${CPODEDGE_DATASTORE}/${FinalIsoFileName}

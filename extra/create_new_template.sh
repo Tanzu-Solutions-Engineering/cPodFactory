@@ -121,7 +121,7 @@ while true; do
     echo Checing template vm started
     TEMPLATE_VM=$(govc vm.info ${TEMPLATENAME} | grep -i "poweredon" | wc -l)
     if [ ${TEMPLATE_VM} -eq 1 ]; then
-        IP=$(govc vm.info -r ${1} | grep -i "ip" | awk '{print $3}')
+        IP=$(govc vm.info -r ${TEMPLATENAME} | grep -i "ip" | awk '{print $3}')
         echo Template IP : ${IP}
         test=$(curl -s -k https://${IP})
         if [ $? -eq 0 ]

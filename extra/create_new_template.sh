@@ -165,12 +165,12 @@ printf "Checking template vm status"
 while [ "${STATUS}" != "READY" ]
 do
     POWERSTATUS=$(govc vm.info ${TEMPLATENAME} | grep -i "poweredon" | wc -l)
-    if [ "${POWERSTATUS}" != ""];
+    if [ "${POWERSTATUS}" != "" ];
     then
         STATUS="POWEREDON"
         STAGE="Waiting for Template IP"
         IP=$(govc vm.info -r ${TEMPLATENAME} | grep -i "ip" | awk '{print $3}')
-        if [ "${IP}" != ""];
+        if [ "${IP}" != "" ];
         then
             STAGE="Got IP : ${IP}. Waiting for UI to start"
             test=$(curl -s -k https://${IP})

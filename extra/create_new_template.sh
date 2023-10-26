@@ -161,6 +161,8 @@ ONCE=0
 STATUS=""
 PREVIOUSSTAGE=""
 POWERSTATUS=""
+PASSWORD=VMware1!
+
 printf "Checking template vm status"
 while [ "${STATUS}" != "READY" ]
 do
@@ -176,8 +178,14 @@ do
             test=$(curl -s -k https://${IP})
             if [ $? -eq 0 ]
             then
-                STAGE="Template VM is up and running"
-                STATUS="READY"
+                STAGE="Template VM is up and running. testing ssh."
+                STATUS="SSH"
+                test=$(sshpass -p ${PASSWORD} ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=error root@${IP} "hostname")
+                if [ $? -eq 0 ]
+                then
+                    STAGE="SSH Answer: ${test}"
+                    STATUS="READY"
+                fi
             fi
         fi
     fi
@@ -194,7 +202,6 @@ echo
 
 echo finalising configuration of ${TEMPLATENAME}
 
-PASSWORD=VMware1!
 
 #remove uuid
 sshpass -p ${PASSWORD} ssh -o StrictHostKeyChecking=no root@${IP} "esxcli system settings advanced set -o /Net/FollowHardwareMac -i 1"
@@ -234,8 +241,8 @@ docker run --interactive --tty --dns=${DNS} --entrypoint="/usr/bin/pwsh" -v /tmp
 
 #govc change network
 
-govc vm.network.change -vm /intel-DC/vm/Templates/testme -net Dummy ethernet-0
-govc vm.network.change -vm /intel-DC/vm/Templates/testme -net Dummy ethernet-1
+#govc vm.network.change -vm /intel-DC/vm/Templates/testme -net Dummy ethernet-0
+#govc vm.network.change -vm /intel-DC/vm/Templates/testme -net Dummy ethernet-1
 
 #rm -fr ${SCRIPT}
 echo

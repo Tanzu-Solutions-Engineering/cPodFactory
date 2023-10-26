@@ -131,7 +131,7 @@ docker run --interactive --tty --dns=${DNS} --entrypoint="/usr/bin/pwsh" -v /tmp
 
 echo Waiting for template VM to be created
 
-sleep 120
+sleep 5
 
 
 #while true; do
@@ -176,7 +176,7 @@ do
             test=$(curl -s -k https://${IP})
             if [ $? -eq 0 ]
             then
-                echo "Template VM is up and running"
+                STAGE="Template VM is up and running"
                 STATUS="READY"
             fi
         fi
@@ -222,7 +222,7 @@ cp ${EXTRA_DIR}/${PS_SCRIPT} ${SCRIPT}
 sed -i -e "s/###VCENTER###/${VCENTER}/" ${SCRIPT}
 sed -i -e "s/###VCENTER_ADMIN###/${VCENTER_ADMIN}/" ${SCRIPT}
 sed -i -e "s/###VCENTER_PASSWD###/${VCENTER_PASSWD}/" ${SCRIPT}
-sed -i -e "s/###TEMPLATE_NAME###/${1}/" ${SCRIPT}
+sed -i -e "s/###TEMPLATE_NAME###/${TEMPLATENAME}/" ${SCRIPT}
 
 echo "Removing cdrom from '${TEMPLATENAME}'"
 echo ${SCRIPT}

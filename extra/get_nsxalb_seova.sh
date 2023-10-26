@@ -113,6 +113,24 @@ else
         exit
 fi
 
+
+# API calls
+# gettign clusterUUID
+RESPONSE=$(curl -s -k -w '####%{response_code}' "${curlArgs[@]}" -d '{"username":"admin", "password":"'${PASSWORD}'"}' -X GET https://${NSXALBFQDN}/api/cloud   -b /tmp/cookies.txt)
+HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+
+if [ $HTTPSTATUS -eq 200 ]
+then
+        echo "Response : "
+        echo ${RESPONSE} |awk -F '####' '{print $1}' |jq .
+else
+        echo "error logging in"
+        echo ${HTTPSTATUS}
+        echo ${RESPONSE}
+        exit
+fi
+
+
 exit
 # getting SEOVA
 

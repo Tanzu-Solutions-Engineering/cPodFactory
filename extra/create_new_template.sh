@@ -25,18 +25,7 @@ collect_info(){
     done
     ISONAMECODE=$(echo ${ISO} |sed 's/VMware-VMvisor-Installer-//' | sed 's/.x86_64.iso//')
     TEMPLATENAME="template-ESX-${ISONAMECODE}"
-
-    test_network=$(govc ls network |grep "cpod-services")
-
-    if [ "${test_network}" == "" ];
-    then
-        echo "cpod-services not present."
-        echo "check your setup."
-        exit
-    else
-        PORTGROUP="cpod-services"
-    fi
-
+    PORTGROUP="cpod-services"
 }
 
 START=$( date +%s ) 
@@ -48,15 +37,43 @@ then
     collect_info
 else
     TEMPLATENAME="${1}"
-    shortIsoFileName=$(echo $2 | sed 's/.*\///')
+    LongIsoFileName="${2}"
+    shortIsoFileName=$(echo "${LongIsoFileName}" | sed 's/.*\///')
     PORTGROUP=${3}
 fi
-
 
 FinalIsoFileName="ks-${shortIsoFileName}"
 echo $TEMPLATENAME
 echo $shortIsoFileName
 echo $PORTGROUP
+
+#Checks before execution
+test_vm=$(govc find . -type m -name "${TEMPLATENAME}")
+
+if [ "${test_vm}" != "" ];
+then
+    echo "${TEMPLATENAME} already present."
+    echo "delete or rename it before creating a new one"
+    exit
+fi  
+
+test_network=$(govc ls network |grep "cpod-services")
+
+if [ "${test_network}" == "" ];
+then
+    echo "cpod-services not present."
+    echo "check your setup."
+    exit
+fi
+
+if [ ! -f "${LongIsoFileName}" ];
+then
+    echo "${LongIsoFileName} not found."
+    echo "check file path."
+    exit
+fi
+
+# Create template
 echo "scp ${LongIsoFileName} root@forty-two:/tmp/cpod-template"
 
 #using vm forty-two to generate iso file
@@ -117,26 +134,63 @@ echo Waiting for template VM to be created
 sleep 120
 
 
-while true; do
-    echo Checing template vm started
-    TEMPLATE_VM=$(govc vm.info ${TEMPLATENAME} | grep -i "poweredon" | wc -l)
-    if [ ${TEMPLATE_VM} -eq 1 ]; then
+#while true; do
+#    echo Checking template vm started
+#    TEMPLATE_VM=$(govc vm.info ${TEMPLATENAME} | grep -i "poweredon" | wc -l)
+#    if [ ${TEMPLATE_VM} -eq 1 ]; then
+#        IP=$(govc vm.info -r ${TEMPLATENAME} | grep -i "ip" | awk '{print $3}')
+#        echo Template IP : ${IP}
+#        test=$(curl -s -k https://${IP})
+#        if [ $? -eq 0 ]
+#        then
+#            echo "Template VM is up and running"
+#            break
+#        else
+#            echo "Waiting for UI to start"
+#        fi
+#    else
+#        echo Waiting for IP address for ${TEMPLATENAME}
+#    fi
+#    sleep 30
+#done
+#sleep 30
+
+#
+echo
+ONCE=0
+STATUS=""
+PREVIOUSSTAGE=""
+POWERSTATUS=""
+printf "Checking template vm status"
+while [ "${STATUS}" != "READY" ]
+do
+    POWERSTATUS=$(govc vm.info ${TEMPLATENAME} | grep -i "poweredon" | wc -l)
+    if [ "${POWERSTATUS}" != ""];
+    then
+        STATUS="POWEREDON"
+        STAGE="Waiting for Template IP"
         IP=$(govc vm.info -r ${TEMPLATENAME} | grep -i "ip" | awk '{print $3}')
-        echo Template IP : ${IP}
-        test=$(curl -s -k https://${IP})
-        if [ $? -eq 0 ]
+        if [ "${IP}" != ""];
         then
-            echo "Template VM is up and running"
-            break
-        else
-            echo "Waiting for UI to start"
+            STAGE="Got IP : ${IP}. Waiting for UI to start"
+            test=$(curl -s -k https://${IP})
+            if [ $? -eq 0 ]
+            then
+                echo "Template VM is up and running"
+                STATUS="READY"
+            fi
         fi
-    else
-        echo Waiting for IP address for ${TEMPLATENAME}
     fi
-    sleep 30
-done
-sleep 30
+	if [ "${STAGE}" != "${PREVIOUSSTAGE}" ]; then
+		printf "\n\t %s" "${STAGE}"
+		PREVIOUSSTAGE=${STAGE}
+	fi
+    printf '.' >/dev/tty
+	sleep 5
+done	
+echo
+
+#
 
 echo finalising configuration of ${TEMPLATENAME}
 

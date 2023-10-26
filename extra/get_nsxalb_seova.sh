@@ -121,8 +121,10 @@ HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
 
 if [ $HTTPSTATUS -eq 200 ]
 then
+        RESPONSEJSON=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
         echo "Response : "
-        echo ${RESPONSE} |awk -F '####' '{print $1}' |jq .
+        echo ${RESPONSEJSON} |jq .
+        CLOUD_UUID=$(echo ${RESPONSEJSON} |jq -r '.results[] | select ( .vtype = "CLOUD_NONE") | .uuid' )
 else
         echo "error logging in"
         echo ${HTTPSTATUS}
@@ -130,13 +132,11 @@ else
         exit
 fi
 
-
-exit
 # getting SEOVA
 
-echo "Getting Configuration settings"
-CLOUDUUID=""
-RESPONSE=$(curl -s -k -w '####%{response_code}' "${curlArgs[@]}" -X GET https://${NSXALBFQDN}/api/securetoken-generate?cloud_uuid=${CLOUDUUID} -b /tmp/cookies.txt)
+echo "Getting AUTH_TOKEN"
+
+RESPONSE=$(curl -s -k -w '####%{response_code}' "${curlArgs[@]}" -X GET https://${NSXALBFQDN}/api/securetoken-generate?cloud_uuid=${CLOUD_UUID} -b /tmp/cookies.txt)
 HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
 if [ $HTTPSTATUS -eq 200 ]
 then
@@ -153,4 +153,4 @@ fi
 echo "Configuration done"
 
 
-curl 'https://nsxalb01.cpod-v8alb.az-lhr.cloud-garage.net/api/securetoken-generate?cloud_uuid=cloud-89a795f5-52e1-4d23-8184-6e9c992d0aea' -H 'User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:109.0) Gecko/20100101 Firefox/118.0' -H 'Accept: application/json, text/plain, */*' -H 'Accept-Language: en-US,en;q=0.5' -H 'Accept-Encoding: gzip, deflate, br' -H 'Referer: https://nsxalb01.cpod-v8alb.az-lhr.cloud-garage.net/' -H 'X-Avi-UserAgent: UI' -H 'X-Avi-Version: 22.1.4' -H 'X-Avi-Tenant: admin' -H 'X-CSRFToken: OcwCkDW9d2EKYV5CDraMzMQPEglXZogl' -H 'Connection: keep-alive' -H 'Cookie: csrftoken=OcwCkDW9d2EKYV5CDraMzMQPEglXZogl; avi-sessionid=gzr0mj3sof713w00zhuh55t6kdkefxj4; sessionid=gzr0mj3sof713w00zhuh55t6kdkefxj4' -H 'Sec-Fetch-Dest: empty' -H 'Sec-Fetch-Mode: cors' -H 'Sec-Fetch-Site: same-origin' -H 'TE: trailers'
+#curl 'https://nsxalb01.cpod-v8alb.az-lhr.cloud-garage.net/api/securetoken-generate?cloud_uuid=cloud-89a795f5-52e1-4d23-8184-6e9c992d0aea' -H 'User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:109.0) Gecko/20100101 Firefox/118.0' -H 'Accept: application/json, text/plain, */*' -H 'Accept-Language: en-US,en;q=0.5' -H 'Accept-Encoding: gzip, deflate, br' -H 'Referer: https://nsxalb01.cpod-v8alb.az-lhr.cloud-garage.net/' -H 'X-Avi-UserAgent: UI' -H 'X-Avi-Version: 22.1.4' -H 'X-Avi-Tenant: admin' -H 'X-CSRFToken: OcwCkDW9d2EKYV5CDraMzMQPEglXZogl' -H 'Connection: keep-alive' -H 'Cookie: csrftoken=OcwCkDW9d2EKYV5CDraMzMQPEglXZogl; avi-sessionid=gzr0mj3sof713w00zhuh55t6kdkefxj4; sessionid=gzr0mj3sof713w00zhuh55t6kdkefxj4' -H 'Sec-Fetch-Dest: empty' -H 'Sec-Fetch-Mode: cors' -H 'Sec-Fetch-Site: same-origin' -H 'TE: trailers'

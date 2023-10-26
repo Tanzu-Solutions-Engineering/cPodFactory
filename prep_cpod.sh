@@ -51,7 +51,7 @@ for ((i=1; i<=NUM_ESX; i++)); do
     echo "DHCPIP is now: $DHCPIP"
     sleep 10
     TIMEOUT=$((TIMEOUT + 1))
-    if [ $TIMEOUT -ge 10 ]; then
+    if [ $TIMEOUT -ge 20 ]; then
       echo "bailing out..."
       exit 1  
     fi      
@@ -64,7 +64,7 @@ for ((i=1; i<=NUM_ESX; i++)); do
     echo "SSH is not ready on $DHCPIP ===$SSHOK==="
     sleep 10
     TIMEOUT=$((TIMEOUT + 1))
-    if [ $TIMEOUT -ge 10 ]; then
+    if [ $TIMEOUT -ge 20 ]; then
       echo "bailing out..."
       exit 1  
     fi 

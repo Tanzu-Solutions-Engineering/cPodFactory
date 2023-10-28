@@ -20,6 +20,7 @@ echo export GOVC_USERNAME="administrator@${POD_FQDN}" > ${SCRIPT}
 echo export GOVC_PASSWORD="$( ./extra/passwd_for_cpod.sh ${1} )" >> ${SCRIPT}
 
 echo export GOVC_URL="https://vcsa.${POD_FQDN}" >> ${SCRIPT}
+echo export GOVC_HOST="vcsa.${POD_FQDN}" >> ${SCRIPT}
 echo export GOVC_DATACENTER="" >> ${SCRIPT}
 echo "export GOVC_INSECURE=1" >> ${SCRIPT}
 

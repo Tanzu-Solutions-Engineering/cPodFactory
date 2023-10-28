@@ -58,7 +58,7 @@ apply_license_vcenter() {
 	echo 
 	echo "Applying vCenter license"
 	echo 
-	govc license.assign -host="vcsa.${POD_FQDN}" $VCENTER_KEY
+	govc license.assign -host="" -name="vcsa.${POD_FQDN}" $VCENTER_KEY
 }
 
 apply_licenses_hosts() {

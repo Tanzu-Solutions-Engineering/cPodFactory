@@ -94,7 +94,6 @@ apply_licenses_tanzu() {
 	done
 }
 
-
 remove_eval_license() {
 	echo 
 	echo "Removing Eval license"
@@ -107,7 +106,7 @@ add_and_apply_licenses() {
 		apply_license_vcenter
 		apply_licenses_hosts
 		apply_licenses_clusters
-		apply_licenses_tanzu
+		# apply_licenses_tanzu - govc does not yet support assigning tanzu keys.
 		remove_eval_license
 		govc license.assigned.ls
 }

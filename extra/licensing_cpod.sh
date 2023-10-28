@@ -65,17 +65,16 @@ apply_licenses_hosts() {
 	echo 
 	echo "Applying hosts licenses"
 	echo 
-	NUM_ESX=$(govc datacenter.info "${POD_NAME}" | grep "Hosts" | cut -d : -f 2 | cut -d " " -f 14)
-	for (( i = 1; i <= NUM_ESX; i++ ));
+	HOSTS=$(govc find . -type h|cut -d "/" -f5)
+	for HOST in $HOSTS;
 	do
-		HOST="esx0${i}.${POD_FQDN}"
 		govc license.assign -host ${HOST,,} ${ESX_KEY}
 	done
 }
 
 apply_licenses_clusters() {
 	echo 
-	echo "Applying vCenter licenses"
+	echo "Applying VSAN licenses"
 	echo 
 	CLUSTERS=$(govc ls -t ClusterComputeResource host |cut -d "/" -f4)
 	for CLUSTER in $CLUSTERS;
@@ -111,6 +110,8 @@ check_license_file(){
 #======================================
 
 VCENTER_VERSION=$(govc about |grep Version | awk '{print $2}' |cut -d "." -f1)
+
+DATACENTERS=$(govc find . -type d)
 
 case $VCENTER_VERSION in
 	7)

@@ -80,9 +80,20 @@ apply_licenses_clusters() {
 	for CLUSTER in $CLUSTERS;
 	do
 		govc license.assign -host="" -cluster $CLUSTER $VSAN_KEY
-		govc license.assign -host="" -cluster $CLUSTER $TANZU_KEY
 	done
 }
+
+apply_licenses_tanzu() {
+	echo 
+	echo "Applying TANZU licenses"
+	echo 
+	CLUSTERS=$(govc license.assigned.ls |grep wcp | awk '{print $3}')
+	for CLUSTER in $CLUSTERS;
+	do
+		govc license.assign -host="" -name=$CLUSTER $TANZU_KEY
+	done
+}
+
 
 remove_eval_license() {
 	echo 
@@ -96,6 +107,7 @@ add_and_apply_licenses() {
 		apply_license_vcenter
 		apply_licenses_hosts
 		apply_licenses_clusters
+		apply_licenses_tanzu
 		remove_eval_license
 		govc license.assigned.ls
 }

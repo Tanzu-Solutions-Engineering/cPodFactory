@@ -79,8 +79,8 @@ apply_licenses_clusters() {
 	CLUSTERS=$(govc ls -t ClusterComputeResource host |cut -d "/" -f4)
 	for CLUSTER in $CLUSTERS;
 	do
-		govc license.assign -cluster $CLUSTER $VSAN_KEY
-		#govc license.assign -cluster $CLUSTER $TANZU_KEY
+		govc license.assign -host="" -cluster $CLUSTER $VSAN_KEY
+		govc license.assign -host="" -cluster $CLUSTER $TANZU_KEY
 	done
 }
 

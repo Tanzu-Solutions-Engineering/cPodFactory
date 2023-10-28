@@ -96,9 +96,13 @@ apply_licenses_tanzu() {
 
 remove_eval_license() {
 	echo 
-	echo "Removing Eval license"
+	echo "Removing Eval license if applicable "
 	echo 
-	govc license.remove "00000-00000-00000-00000-00000"
+	TESTEVAL=$(govc license.ls |grep 00000)
+	if [[ ${TESTEVAL} -gt 0 ]];
+	then
+		govc license.remove "00000-00000-00000-00000-00000"
+	fi
 }
 
 add_and_apply_licenses() {

@@ -74,7 +74,8 @@ CLOUDUUID=$(get_cluster_uuid)
 DATACENTER=$(vcenter_verify_login  "${VCENTERUSER}" "${PASSWORD}" "${CPOD_VCSA}")
 
 configure_defaultcloud_vcenter "${CLOUDUUID}" "${VCENTERUSER}" "${PASSWORD}" "${CPOD_VCSA}" "${DATACENTER}"
- 
+
+get_portgroups "${CLOUDUUID}" 
 
 # ===== Script finished =====
 echo "Configuration done"

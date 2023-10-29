@@ -101,8 +101,8 @@ vcenter_verify_login(){
         VCENTER_FQDN=${3}
         DATA='{"username":"'${USERNAME}'","password":"'${PASSWORD}'","host":"'${VCENTER_FQDN}'"}'
         echo "${DATA}"
-        echo "curl -s -k -w '####%{response_code}' "${curlArgs[@]}" -d '{"username":"admin", "password":"'${PASSWORD}'"}' -X POST https://${NSXALBFQDN}/api/vimgrvcenterruntime/verify/login  --data-raw "'"${DATA}"'"  -b /tmp/cookies.txt"
-        RESPONSE=$(curl -s -k -w '####%{response_code}' "${curlArgs[@]}" -d '{"username":"admin", "password":"'${PASSWORD}'"}' -X POST https://${NSXALBFQDN}/api/vimgrvcenterruntime/verify/login  --data-raw "'"${DATA}"'"  -b /tmp/cookies.txt)
+        echo "curl -s -k -w '####%{response_code}' "${curlArgs[@]}" -d '{"username":"admin", "password":"'${PASSWORD}'"}' -X POST https://${NSXALBFQDN}/api/vimgrvcenterruntime/verify/login  --data-raw ${DATA}  -b /tmp/cookies.txt"
+        RESPONSE=$(curl -s -k -w '####%{response_code}' "${curlArgs[@]}" -d '{"username":"admin", "password":"'${PASSWORD}'"}' -X POST https://${NSXALBFQDN}/api/vimgrvcenterruntime/verify/login  --data-raw "'""${DATA}""'"  -b /tmp/cookies.txt)
         HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
 
         if [ $HTTPSTATUS -eq 200 ]

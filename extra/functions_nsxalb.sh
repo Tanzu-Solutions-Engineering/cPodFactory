@@ -11,11 +11,10 @@ Check_NSXALB_Online(){
         # needs NSXALBFQDN
         
         NSXALBFQDN="${1}"
-        echo "Querying status ${NSXALBFQDN}"
         STATUS="RUNNING"
         while [ "${STATUS}" != "SUCCEEDED" ]
         do
-                echo "connecting..."
+                #echo "connecting..."
                 RESPONSE=$(curl -s -k -w '####%{response_code}' https://${NSXALBFQDN})
                 HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
                 case $HTTPSTATUS in
@@ -38,7 +37,7 @@ Check_NSXALB_Online(){
 loop_wait_nsxalb_manager_status(){
         NSXALBFQDN="${1}"
 
-        echo "  Checking nsxalb manager status"
+        echo "  Checking nsxalb manager status ${NSXALBFQDN}"
         echo
         printf "\t connecting to nsx alb "
         INPROGRESS=$(Check_NSXALB_Online "${NSXALBFQDN}")

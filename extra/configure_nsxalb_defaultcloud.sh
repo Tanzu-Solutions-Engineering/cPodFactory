@@ -108,39 +108,46 @@ curlArgs+=('-H' "x-avi-version":"${AVIVERSIONAPI}")
 curlArgs+=('-H' "x-csrftoken":"${CSRFTOKEN}")
 curlArgs+=('-H' "referer":"https://${NSXALBFQDN}/login")
 
-# API calls
-# get Cluster Version
-RESPONSE=$(curl -s -k -w '####%{response_code}' "${curlArgs[@]}" -d '{"username":"admin", "password":"'${PASSWORD}'"}' -X GET https://${NSXALBFQDN}/api/cluster   -b /tmp/cookies.txt)
-HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
 
-if [ $HTTPSTATUS -eq 200 ]
-then
-        echo "Response : "
-        echo ${RESPONSE} |awk -F '####' '{print $1}' |jq .
-else
-        echo "error getting cluster info"
-        echo ${HTTPSTATUS}
-        echo ${RESPONSE}
-        exit
-fi
+get_cluster_info
 
-# get clusterUUID
-RESPONSE=$(curl -s -k -w '####%{response_code}' "${curlArgs[@]}" -d '{"username":"admin", "password":"'${PASSWORD}'"}' -X GET https://${NSXALBFQDN}/api/cloud   -b /tmp/cookies.txt)
-HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+## API calls
+## get Cluster Version
+#RESPONSE=$(curl -s -k -w '####%{response_code}' "${curlArgs[@]}" -d '{"username":"admin", "password":"'${PASSWORD}'"}' -X GET https://${NSXALBFQDN}/api/cluster   -b /tmp/cookies.txt)
+#HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+#
+#if [ $HTTPSTATUS -eq 200 ]
+#then
+#        echo "Response : "
+#        echo ${RESPONSE} |awk -F '####' '{print $1}' |jq .
+#else
+#        echo "error getting cluster info"
+#        echo ${HTTPSTATUS}
+#        echo ${RESPONSE}
+#        exit
+#fi
+#
 
-if [ $HTTPSTATUS -eq 200 ]
-then
-        RESPONSEJSON=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
-        echo "Response : "
-        echo ${RESPONSEJSON} |jq .
-        CLOUD_UUID=$(echo ${RESPONSEJSON} |jq -r '.results[] | select ( .vtype = "CLOUD_NONE") | .uuid' )
-else
-        echo "error logging in"
-        echo ${HTTPSTATUS}
-        echo ${RESPONSE}
-        exit
-fi
-        
+get_cluster_uuid
+
+## get clusterUUID
+#RESPONSE=$(curl -s -k -w '####%{response_code}' "${curlArgs[@]}" -d '{"username":"admin", "password":"'${PASSWORD}'"}' -X GET https://${NSXALBFQDN}/api/cloud   -b /tmp/cookies.txt)
+#HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+#
+#if [ $HTTPSTATUS -eq 200 ]
+#then
+#        RESPONSEJSON=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+#        echo "Response : "
+#        echo ${RESPONSEJSON} |jq .
+#        CLOUD_UUID=$(echo ${RESPONSEJSON} |jq -r '.results[] | select ( .vtype = "CLOUD_NONE") | .uuid' )
+#        echo "${CLOUD_UUID}"
+#else
+#        echo "error logging in"
+#        echo ${HTTPSTATUS}
+#        echo ${RESPONSE}
+#        exit
+#fi
+#        
 
 # ===== Script finished =====
 echo "Configuration done"

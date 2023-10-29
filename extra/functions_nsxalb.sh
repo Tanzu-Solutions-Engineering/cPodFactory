@@ -3,7 +3,6 @@
 
 ### NSX ALB functions ####
 
-
 # ========== NSX ALB functions ===========
 
 AVIVERSIONAPI="20.1.4"
@@ -49,14 +48,6 @@ login_nsxalb() {
                 #echo "${SYSTEMINFO}" | jq .
                 API_MIN_VERSION=$(echo "${SYSTEMINFO}" | jq .version.min_version)
                 CLUSTER_API_VERSION=$(echo "${SYSTEMINFO}" | jq .version.Version)
-#                echo "building curl args "
-#                CSRFTOKEN=$(cat /tmp/cookies.txt |grep csrftoken | awk -F 'csrftoken' '{print $2}'  |tr -d '[:space:]')
-#                declare -a -x curlArgs=('-H' "Content-Type: application/json")
-#                curlArgs+=('-H' "Accept":"application/json")
-#                curlArgs+=('-H' "x-avi-version":"${AVIVERSIONAPI}")
-#                curlArgs+=('-H' "x-csrftoken":"${CSRFTOKEN}")
-#                curlArgs+=('-H' "referer":"https://${NSXALBFQDN}/login")
-#                
         else
                 echo "error logging in"
                 echo ${HTTPSTATUS}
@@ -65,5 +56,40 @@ login_nsxalb() {
         fi
 }
 
+get_cluster_info(){
+        # get Cluster Version
+        RESPONSE=$(curl -s -k -w '####%{response_code}' "${curlArgs[@]}" -d '{"username":"admin", "password":"'${PASSWORD}'"}' -X GET https://${NSXALBFQDN}/api/cluster   -b /tmp/cookies.txt)
+        HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
 
+        if [ $HTTPSTATUS -eq 200 ]
+        then
+                echo "Response : "
+                echo ${RESPONSE} |awk -F '####' '{print $1}' |jq .
+        else
+                echo "error getting cluster info"
+                echo ${HTTPSTATUS}
+                echo ${RESPONSE}
+                exit
+        fi
+}
+
+get_cluster_uuid(){
+        # get clusterUUID
+        RESPONSE=$(curl -s -k -w '####%{response_code}' "${curlArgs[@]}" -d '{"username":"admin", "password":"'${PASSWORD}'"}' -X GET https://${NSXALBFQDN}/api/cloud   -b /tmp/cookies.txt)
+        HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+
+        if [ $HTTPSTATUS -eq 200 ]
+        then
+                RESPONSEJSON=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+                echo "Response : "
+                echo ${RESPONSEJSON} |jq .
+                CLOUD_UUID=$(echo ${RESPONSEJSON} |jq -r '.results[] | select ( .vtype = "CLOUD_NONE") | .uuid' )
+                echo "${CLOUD_UUID}"
+        else
+                echo "error logging in"
+                echo ${HTTPSTATUS}
+                echo ${RESPONSE}
+                exit
+        fi
+}
 ###################

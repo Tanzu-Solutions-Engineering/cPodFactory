@@ -118,7 +118,7 @@ then
         echo "Response : "
         echo ${RESPONSE} |awk -F '####' '{print $1}' |jq .
 else
-        echo "error logging in"
+        echo "error getting cluster info"
         echo ${HTTPSTATUS}
         echo ${RESPONSE}
         exit

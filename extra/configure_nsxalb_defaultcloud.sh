@@ -53,52 +53,10 @@ NSXALBFQDN=${HOSTNAME}.${CPOD_NAME_LOWER}.${ROOT_DOMAIN}
 
 Check_NSXALB_Online
 
-#echo "Querying status"
-#
-#STATUS="RUNNING"
-#while [ "${STATUS}" != "SUCCEEDED" ]
-#do
-#	echo "connecting..."
-#        RESPONSE=$(curl -s -w '####%{response_code}' http://${NSXALBFQDN})
-#        HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
-#        case $HTTPSTATUS in
-#                000)
-#                        echo "000"
-#                        ;;
-#                301)
-#                        echo "switching to https portal"
-#                        STATUS="SUCCEEDED"
-#                        ;;
-#                *)
-#                        echo "status: $HTTPSTATUS"
-#                        ;;
-#        esac
-#        sleep 5
-#done	
-
 # ===== Login with basic auth =====
 echo "trying to login with cpod password"
-
 login_nsxalb
 
-#RESPONSE=$(curl -s -k -w '####%{response_code}'  -H "Content-Type: application/json" -d '{"username":"admin", "password":"'${PASSWORD}'"}'  -X POST   https://${NSXALBFQDN}/login  --cookie-jar /tmp/cookies.txt)
-#HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
-#
-#if [ $HTTPSTATUS -eq 200 ]
-#then
-#        echo "logged in"
-#        SYSTEMINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
-#        echo "System info :"
-#        echo "${SYSTEMINFO}" | jq .
-#        API_MIN_VERSION=$(echo "${SYSTEMINFO}" | jq .version.min_version)
-#        CLUSTER_API_VERSION=$(echo "${SYSTEMINFO}" | jq .version.Version)
-#else
-#        echo "error logging in"
-#        echo ${HTTPSTATUS}
-#        echo ${RESPONSE}
-#        exit
-#fi
-#
 # ===== setting args =====
 echo "building curl args "
 CSRFTOKEN=$(cat /tmp/cookies.txt |grep csrftoken | awk -F 'csrftoken' '{print $2}'  |tr -d '[:space:]')
@@ -110,44 +68,10 @@ curlArgs+=('-H' "referer":"https://${NSXALBFQDN}/login")
 
 
 get_cluster_info
-
-## API calls
-## get Cluster Version
-#RESPONSE=$(curl -s -k -w '####%{response_code}' "${curlArgs[@]}" -d '{"username":"admin", "password":"'${PASSWORD}'"}' -X GET https://${NSXALBFQDN}/api/cluster   -b /tmp/cookies.txt)
-#HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
-#
-#if [ $HTTPSTATUS -eq 200 ]
-#then
-#        echo "Response : "
-#        echo ${RESPONSE} |awk -F '####' '{print $1}' |jq .
-#else
-#        echo "error getting cluster info"
-#        echo ${HTTPSTATUS}
-#        echo ${RESPONSE}
-#        exit
-#fi
-#
-
 get_cluster_uuid
 
-## get clusterUUID
-#RESPONSE=$(curl -s -k -w '####%{response_code}' "${curlArgs[@]}" -d '{"username":"admin", "password":"'${PASSWORD}'"}' -X GET https://${NSXALBFQDN}/api/cloud   -b /tmp/cookies.txt)
-#HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
-#
-#if [ $HTTPSTATUS -eq 200 ]
-#then
-#        RESPONSEJSON=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
-#        echo "Response : "
-#        echo ${RESPONSEJSON} |jq .
-#        CLOUD_UUID=$(echo ${RESPONSEJSON} |jq -r '.results[] | select ( .vtype = "CLOUD_NONE") | .uuid' )
-#        echo "${CLOUD_UUID}"
-#else
-#        echo "error logging in"
-#        echo ${HTTPSTATUS}
-#        echo ${RESPONSE}
-#        exit
-#fi
-#        
+# check vcenter login from alb
+vcenter_verify_login  "${VCENTERUSER}" "${PASSWORD}" "${CPOD_VCSA}"
 
 # ===== Script finished =====
 echo "Configuration done"

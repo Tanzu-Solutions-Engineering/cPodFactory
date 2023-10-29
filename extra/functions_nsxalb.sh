@@ -100,9 +100,9 @@ vcenter_verify_login(){
         PASSWORD=${2}
         VCENTER_FQDN=${3}
         DATA='{"username":"'${USERNAME}'","password":"'${PASSWORD}'","host":"'${VCENTER_FQDN}'"}'
-        echo "${DATA}"
-        echo "curl -s -k -w '####%{response_code}' "${curlArgs[@]}" -d '{"username":"admin", "password":"'${PASSWORD}'"}' -X POST https://${NSXALBFQDN}/api/vimgrvcenterruntime/verify/login  --data-raw ${DATA}  -b /tmp/cookies.txt"
-        RESPONSE=$(curl -s -k -w '####%{response_code}' "${curlArgs[@]}" -d '{"username":"admin", "password":"'${PASSWORD}'"}' -X POST https://${NSXALBFQDN}/api/vimgrvcenterruntime/verify/login  --data-raw "'"${DATA}"'"  -b /tmp/cookies.txt)
+        SCRIPT="/tmp/DATA-$$"
+        echo ${DATA} > ${SCRIPT}
+        RESPONSE=$(curl -s -k -w '####%{response_code}' "${curlArgs[@]}" -d '{"username":"admin", "password":"'${PASSWORD}'"}' -X POST -d @${SCRIPT} https://${NSXALBFQDN}/api/vimgrvcenterruntime/verify/login -b /tmp/cookies.txt)
         HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
 
         if [ $HTTPSTATUS -eq 200 ]

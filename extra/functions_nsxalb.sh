@@ -46,8 +46,8 @@ login_nsxalb() {
                 SYSTEMINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
                 #echo "System info :"
                 #echo "${SYSTEMINFO}" | jq .
-                API_MIN_VERSION=$(echo "${SYSTEMINFO}" | jq .version.min_version)
-                CLUSTER_API_VERSION=$(echo "${SYSTEMINFO}" | jq .version.Version)
+                export API_MIN_VERSION=$(echo "${SYSTEMINFO}" | jq .version.min_version)
+                export CLUSTER_API_VERSION=$(echo "${SYSTEMINFO}" | jq .version.Version)
         else
                 echo "error logging in"
                 echo ${HTTPSTATUS}
@@ -102,13 +102,14 @@ vcenter_verify_login(){
         DATA='{"username":"'${USERNAME}'","password":"'${PASSWORD}'","host":"'${VCENTER_FQDN}'"}'
         SCRIPT="/tmp/DATA-$$"
         echo ${DATA} > ${SCRIPT}
-        RESPONSE=$(curl -s -k -w '####%{response_code}' "${curlArgs[@]}" -d '{"username":"admin", "password":"'${PASSWORD}'"}' -X POST -d @${SCRIPT} https://${NSXALBFQDN}/api/vimgrvcenterruntime/verify/login -b /tmp/cookies.txt)
+#        RESPONSE=$(curl -s -k -w '####%{response_code}' "${curlArgs[@]}" -d '{"username":"admin", "password":"'${PASSWORD}'"}' -X POST -d @${SCRIPT} https://${NSXALBFQDN}/api/vimgrvcenterruntime/verify/login -b /tmp/cookies.txt)
+        RESPONSE=$(curl -s -k -w '####%{response_code}' "${curlArgs[@]}" -X POST -d @${SCRIPT} https://${NSXALBFQDN}/api/vimgrvcenterruntime/verify/login -b /tmp/cookies.txt)
         HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
 
         if [ $HTTPSTATUS -eq 200 ]
         then
                 RESPONSEJSON=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
-                echo "Response : "
+                #echo "Response : "
                 echo ${RESPONSEJSON} |jq .
         else
                 echo "error verifying vcenter login"

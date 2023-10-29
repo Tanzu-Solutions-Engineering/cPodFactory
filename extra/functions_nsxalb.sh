@@ -45,8 +45,8 @@ login_nsxalb() {
         then
                 echo "logged in"
                 SYSTEMINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
-                echo "System info :"
-                echo "${SYSTEMINFO}" | jq .
+                #echo "System info :"
+                #echo "${SYSTEMINFO}" | jq .
                 API_MIN_VERSION=$(echo "${SYSTEMINFO}" | jq .version.min_version)
                 CLUSTER_API_VERSION=$(echo "${SYSTEMINFO}" | jq .version.Version)
                 echo "building curl args "

@@ -140,7 +140,7 @@ else
         echo ${RESPONSE}
         exit
 fi
-
+        
 
 # ===== Script finished =====
 echo "Configuration done"

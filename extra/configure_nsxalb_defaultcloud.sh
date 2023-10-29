@@ -51,7 +51,7 @@ CPOD_VCSA=vcsa.${DOMAIN}
 
 NSXALBFQDN=${HOSTNAME}.${CPOD_NAME_LOWER}.${ROOT_DOMAIN}
 
-Check_NSXALB_Online
+loop_wait_nsx_manager_status
 
 # ===== Login with basic auth =====
 echo "trying to login with cpod password"

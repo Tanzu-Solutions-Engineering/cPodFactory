@@ -5,7 +5,7 @@
 
 # ========== NSX ALB functions ===========
 
-AVIVERSIONAPI="22.1.4"
+AVIVERSIONAPI="22.1.3"
 
 Check_NSXALB_Online(){
         # needs NSXALBFQDN
@@ -23,7 +23,7 @@ Check_NSXALB_Online(){
                                 sleep 5
                                 ;;
                         301)
-                                echo "switching to https portal"
+                                echo "READY"
                                 STATUS="SUCCEEDED"
                                 ;;
                         *)
@@ -33,6 +33,27 @@ Check_NSXALB_Online(){
                 esac
         done	
 }
+
+loop_wait_nsx_manager_status(){
+        echo "  Checking nsxalb manager status"
+        echo
+        printf "\t connecting to nsx ."
+        INPROGRESS=$(Check_NSXALB_Online)
+        CURRENTSTATE=${INPROGRESS}
+        while [[ "$INPROGRESS" != "READY" ]]
+        do      
+                printf '.' >/dev/tty
+                sleep 10
+                INPROGRESS=$(get_nsx_manager_status)
+                if [ "${INPROGRESS}" != "${CURRENTSTATE}" ] 
+                then 
+                        printf "\n\t%s" ${INPROGRESS}
+                        CURRENTSTATE=${INPROGRESS}
+                fi
+        done
+}
+
+
 
 login_nsxalb() {
         # needs NSXALBFQDN

@@ -53,7 +53,7 @@ PASSWORD=$( ./${EXTRA_DIR}/passwd_for_cpod.sh ${1} )
 
 NSXALBFQDN=${HOSTNAME}.${CPOD_NAME_LOWER}.${ROOT_DOMAIN}
 
-loop_wait_nsx_manager_status
+loop_wait_nsxalb_manager_status "${NSXALBFQDN}"
 
 # ===== login =====
 echo "trying to login"

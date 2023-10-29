@@ -49,14 +49,14 @@ login_nsxalb() {
                 #echo "${SYSTEMINFO}" | jq .
                 API_MIN_VERSION=$(echo "${SYSTEMINFO}" | jq .version.min_version)
                 CLUSTER_API_VERSION=$(echo "${SYSTEMINFO}" | jq .version.Version)
-                echo "building curl args "
-                CSRFTOKEN=$(cat /tmp/cookies.txt |grep csrftoken | awk -F 'csrftoken' '{print $2}'  |tr -d '[:space:]')
-                declare -a -x curlArgs=('-H' "Content-Type: application/json")
-                curlArgs+=('-H' "Accept":"application/json")
-                curlArgs+=('-H' "x-avi-version":"${AVIVERSIONAPI}")
-                curlArgs+=('-H' "x-csrftoken":"${CSRFTOKEN}")
-                curlArgs+=('-H' "referer":"https://${NSXALBFQDN}/login")
-                
+#                echo "building curl args "
+#                CSRFTOKEN=$(cat /tmp/cookies.txt |grep csrftoken | awk -F 'csrftoken' '{print $2}'  |tr -d '[:space:]')
+#                declare -a -x curlArgs=('-H' "Content-Type: application/json")
+#                curlArgs+=('-H' "Accept":"application/json")
+#                curlArgs+=('-H' "x-avi-version":"${AVIVERSIONAPI}")
+#                curlArgs+=('-H' "x-csrftoken":"${CSRFTOKEN}")
+#                curlArgs+=('-H' "referer":"https://${NSXALBFQDN}/login")
+#                
         else
                 echo "error logging in"
                 echo ${HTTPSTATUS}

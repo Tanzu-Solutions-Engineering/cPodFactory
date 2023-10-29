@@ -100,13 +100,13 @@ login_nsxalb
 #fi
 #
 # ===== setting args =====
-#echo "building curl args "
-#CSRFTOKEN=$(cat /tmp/cookies.txt |grep csrftoken | awk -F 'csrftoken' '{print $2}'  |tr -d '[:space:]')
-#declare -a curlArgs=('-H' "Content-Type: application/json")
-#curlArgs+=('-H' "Accept":"application/json")
-#curlArgs+=('-H' "x-avi-version":"${AVIVERSIONAPI}")
-#curlArgs+=('-H' "x-csrftoken":"${CSRFTOKEN}")
-#curlArgs+=('-H' "referer":"https://${NSXALBFQDN}/login")
+echo "building curl args "
+CSRFTOKEN=$(cat /tmp/cookies.txt |grep csrftoken | awk -F 'csrftoken' '{print $2}'  |tr -d '[:space:]')
+declare -a curlArgs=('-H' "Content-Type: application/json")
+curlArgs+=('-H' "Accept":"application/json")
+curlArgs+=('-H' "x-avi-version":"${AVIVERSIONAPI}")
+curlArgs+=('-H' "x-csrftoken":"${CSRFTOKEN}")
+curlArgs+=('-H' "referer":"https://${NSXALBFQDN}/login")
 
 # API calls
 # get Cluster Version

@@ -44,7 +44,7 @@ loop_wait_nsx_manager_status(){
         do      
                 printf '.' >/dev/tty
                 sleep 10
-                INPROGRESS=$(get_nsx_manager_status)
+                INPROGRESS=$(Check_NSXALB_Online)
                 if [ "${INPROGRESS}" != "${CURRENTSTATE}" ] 
                 then 
                         printf "\n\t%s" ${INPROGRESS}

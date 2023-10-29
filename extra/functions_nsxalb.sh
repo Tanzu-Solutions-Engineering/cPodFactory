@@ -110,7 +110,7 @@ vcenter_verify_login(){
         then
                 RESPONSEJSON=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
                 #echo "Response : "
-                echo ${RESPONSEJSON} |jq .resource.vcenter_dc_info[].name
+                echo ${RESPONSEJSON} |jq -r .resource.vcenter_dc_info[].name
         else
                 echo "error verifying vcenter login"
                 echo ${HTTPSTATUS}

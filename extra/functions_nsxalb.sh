@@ -10,6 +10,7 @@ AVIVERSIONAPI="22.1.3"
 Check_NSXALB_Online(){
         # needs NSXALBFQDN
         echo "Querying status"
+        NSXALBFQDN="${1}"
 
         STATUS="RUNNING"
         while [ "${STATUS}" != "SUCCEEDED" ]
@@ -34,17 +35,19 @@ Check_NSXALB_Online(){
         done	
 }
 
-loop_wait_nsx_manager_status(){
+loop_wait_nsxalb_manager_status(){
+        NSXALBFQDN="${1}"
+
         echo "  Checking nsxalb manager status"
         echo
         printf "\t connecting to nsx alb "
-        INPROGRESS=$(Check_NSXALB_Online)
+        INPROGRESS=$(Check_NSXALB_Online "${NSXALBFQDN}")
         CURRENTSTATE=${INPROGRESS}
         while [[ "$INPROGRESS" != "READY" ]]
         do      
                 printf '.' >/dev/tty
                 sleep 5
-                INPROGRESS=$(Check_NSXALB_Online)
+                INPROGRESS=$(Check_NSXALB_Online "${NSXALBFQDN}")
                 if [ "${INPROGRESS}" != "${CURRENTSTATE}" ] 
                 then 
                         printf "\n\t%s" ${INPROGRESS}

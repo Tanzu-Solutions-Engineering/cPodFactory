@@ -37,13 +37,13 @@ Check_NSXALB_Online(){
 loop_wait_nsx_manager_status(){
         echo "  Checking nsxalb manager status"
         echo
-        printf "\t connecting to nsx ."
+        printf "\t connecting to nsx alb "
         INPROGRESS=$(Check_NSXALB_Online)
         CURRENTSTATE=${INPROGRESS}
         while [[ "$INPROGRESS" != "READY" ]]
         do      
                 printf '.' >/dev/tty
-                sleep 10
+                sleep 5
                 INPROGRESS=$(Check_NSXALB_Online)
                 if [ "${INPROGRESS}" != "${CURRENTSTATE}" ] 
                 then 

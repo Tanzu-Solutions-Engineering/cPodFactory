@@ -16,7 +16,7 @@ Check_NSXALB_Online(){
         while [ "${STATUS}" != "SUCCEEDED" ]
         do
                 echo "connecting..."
-                RESPONSE=$(curl -s -w '####%{response_code}' http://${NSXALBFQDN})
+                RESPONSE=$(curl -s -k -w '####%{response_code}' https://${NSXALBFQDN})
                 HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
                 case $HTTPSTATUS in
                         000)

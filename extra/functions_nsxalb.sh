@@ -9,9 +9,9 @@ AVIVERSIONAPI="22.1.3"
 
 Check_NSXALB_Online(){
         # needs NSXALBFQDN
-        echo "Querying status"
+        
         NSXALBFQDN="${1}"
-
+        echo "Querying status ${NSXALBFQDN}"
         STATUS="RUNNING"
         while [ "${STATUS}" != "SUCCEEDED" ]
         do

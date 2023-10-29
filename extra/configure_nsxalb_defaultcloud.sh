@@ -75,10 +75,13 @@ DATACENTER=$(vcenter_verify_login  "${VCENTERUSER}" "${PASSWORD}" "${CPOD_VCSA}"
 
 configure_defaultcloud_vcenter "${CLOUDUUID}" "${VCENTERUSER}" "${PASSWORD}" "${CPOD_VCSA}" "${DATACENTER}"
 
+# find mgmt portgroup for SE's
 PORTGROUPS=$(get_portgroups "${CLOUDUUID}")
 echo "${PORTGROUPS}" > /tmp/portgroups.json
-MGMT_PORTGROUP=$(echo "${PORTGROUPS}" |jq '.resource.vcenter_pg_names[] | select (.name contains("-management") | .)')
+MGMT_PORTGROUP=$(echo "${PORTGROUPS}" |jq '.resource.vcenter_pg_names[] | select (.name | contains("-management")) | .)')
 echo "${MGMT_PORTGROUP}"
+get_portgroup_info "$(echo "${MGMT_PORTGROUP}" |jq -r .uuid)"
+
 # ===== Script finished =====
 echo "Configuration done"
 

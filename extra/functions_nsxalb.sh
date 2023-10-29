@@ -180,4 +180,31 @@ get_portgroups(){
         fi
 
 }
+
+get_portgroup_info(){
+        # curl 'https://nsxalb01.cpod-v8alb.az-lhr.cloud-garage.net/api/network/dvportgroup-23-cloud-89a795f5-52e1-4d23-8184-6e9c992d0aea?include_name=true' -H 'User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:109.0) Gecko/20100101 Firefox/118.0' -H 'Accept: application/json, text/plain, */*' -H 'Accept-Language: en-US,en;q=0.5' -H 'Accept-Encoding: gzip, deflate, br' -H 'Referer: https://nsxalb01.cpod-v8alb.az-lhr.cloud-garage.net/' -H 'X-Avi-UserAgent: UI' -H 'X-Avi-Version: 22.1.4' -H 'X-Avi-Tenant: admin' -H 'X-CSRFToken: Ix4pDXABLlZcjkNr3NmkHEKWwAIQoRJm' -H 'Connection: keep-alive' -H 'Cookie: csrftoken=Ix4pDXABLlZcjkNr3NmkHEKWwAIQoRJm; avi-sessionid=moanoz5jflrgs1cfpzi73puhy03wc8az; sessionid=moanoz5jflrgs1cfpzi73puhy03wc8az' -H 'Sec-Fetch-Dest: empty' -H 'Sec-Fetch-Mode: cors' -H 'Sec-Fetch-Site: same-origin' -H 'TE: trailers'
+
+        PORTGROUPUUID=${1}
+
+        RESPONSE=$(curl -s -k -w '####%{response_code}' "${curlArgs[@]}" https://${NSXALBFQDN}/api/network/${PORTGROUPUUID} -b /tmp/cookies.txt)
+        HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+
+        if [ $HTTPSTATUS -eq 200 ]
+        then
+                RESPONSEJSON=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+                #echo "Response : "
+                echo ${RESPONSEJSON} |jq .
+        else
+                echo "error getting portgroups"
+                echo ${HTTPSTATUS}
+                echo ${RESPONSE}
+                exit
+        fi
+
+}
+
+
+
+
+
 ###################

@@ -40,6 +40,7 @@ loop_wait_nsxalb_manager_status(){
         echo "  Checking nsxalb manager status ${NSXALBFQDN}"
         echo
         printf "\t connecting to nsx alb "
+        Check_NSXALB_Online "${NSXALBFQDN}"
         INPROGRESS=$(Check_NSXALB_Online "${NSXALBFQDN}")
         CURRENTSTATE=${INPROGRESS}
         while [[ "$INPROGRESS" != "READY" ]]

@@ -5,7 +5,7 @@
 
 # ========== NSX ALB functions ===========
 
-AVIVERSIONAPI="20.1.4"
+AVIVERSIONAPI="22.1.4"
 
 Check_NSXALB_Online(){
         # needs NSXALBFQDN

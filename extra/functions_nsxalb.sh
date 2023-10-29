@@ -47,6 +47,7 @@ loop_wait_nsxalb_manager_status(){
                 printf '.' >/dev/tty
                 sleep 5
                 INPROGRESS=$(Check_NSXALB_Online "${NSXALBFQDN}")
+                echo "${INPROGRESS}"
                 if [ "${INPROGRESS}" != "${CURRENTSTATE}" ] 
                 then 
                         printf "\n\t%s" ${INPROGRESS}

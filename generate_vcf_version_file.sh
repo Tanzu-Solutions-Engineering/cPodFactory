@@ -81,7 +81,7 @@ apply_license(){
   echo "export LIC_ESX=${ESX_KEY}" >> ${filename}
   echo "export LIC_VCSA=${VCENTER_KEY}" >> ${filename}
   echo "export LIC_VSAN=${VSAN_KEY}" >> ${filename}
-  echo "export LIC_NSXT=${NSXT_KEY}" >> ${filename}
+  echo "export LIC_NSXT=${LIC_NSXT}" >> ${filename}
 }
 
 case $VCF_VERSION in

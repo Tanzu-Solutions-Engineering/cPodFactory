@@ -165,7 +165,7 @@ then
     VALIDATIONJSON=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
 	echo "${VALIDATIONJSON}" > /tmp/scripts/validation_request.json
 	VALIDATIONID=$(echo ${VALIDATIONJSON} | jq -r .id )
-	echo "validation id : ${VALIDATIONID}"
+	echo "	validation id : ${VALIDATIONID}"
 else
         echo "  error initiating validation"
         echo ${HTTPSTATUS}
@@ -193,7 +193,7 @@ get_validation_status() {
 }
 
 echo
-printf "\t Querying validation result ."
+echo "Querying validation result"
 
 RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} -H 'Content-Type: application/json' -H 'Accept: application/json' -X GET https://cloudbuilder.${NAME_LOWER}.${ROOT_DOMAIN}/v1/sddcs/validations/${VALIDATIONID})
 HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
@@ -221,11 +221,11 @@ do
 		200)    
 			VALIDATIONJSON=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
 			STATUS=$(echo ${VALIDATIONJSON} | jq -r .executionStatus)
-			INPROGRESS=$(echo "${VALIDATIONJSON}" | jq -r '.validationChecks[] | select ( .resultStatus == "IN_PROGRESS") |.description')
+			INPROGRESS=$(echo "${VALIDATIONJSON}" | jq '.validationChecks[] | select ( .resultStatus == "IN_PROGRESS") |.description')
 			if [ "${INPROGRESS}" != "${CURRENTSTEP}" ] 
 			then 
-				printf "\n\t%s" ${INPROGRESS}
-				CURRENTSTEP=${INPROGRESS}
+				printf "\n\t%s" "${INPROGRESS}"
+				CURRENTSTEP="${INPROGRESS}"
 			fi
 			;;
 		503)    
@@ -246,6 +246,10 @@ do
 	printf '.' >/dev/tty
 	sleep 10
 done
+
+echo 
+echo "Validation completed"
+echo
 
 ##############
 read -n1 -s -r -p $'Hit enter to launch deployment or ctrl-c to stop.\n' key

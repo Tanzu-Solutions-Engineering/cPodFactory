@@ -69,7 +69,7 @@ cpodctl vcsa $1 $3
 ./extra/create_vds_vlans.sh $1 $3
 ./extra/enable_drs_vsan.sh $1 $3
 ./extra/deploy_nsxalb_atside.sh $1 $3
-
+./extra/configure_nsxalb_atside.sh $1 $3
 END=$( date +%s )
 TIME=$( expr ${END} - ${START} )
 

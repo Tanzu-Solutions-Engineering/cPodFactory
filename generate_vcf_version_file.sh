@@ -17,7 +17,6 @@ cat << EOF > ${filename}
 # source this env file and
 # create cPod with: cpodctl create X 3 [you-name]
 
-export NOCUSTO='NO' # =NO means configure nfsdatastore based on cpodrouter
 EOF
 
 # select ESX template

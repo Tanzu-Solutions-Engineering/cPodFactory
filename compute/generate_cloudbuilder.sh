@@ -160,14 +160,14 @@ done
 echo "Submitting SDDC validation"
 RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} -H 'Content-Type: application/json' -H 'Accept: application/json' -d @${SCRIPT} -X POST https://cloudbuilder.${NAME_LOWER}.${ROOT_DOMAIN}/v1/sddcs/validations)
 HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
-if [ $HTTPSTATUS -eq 200 ]
+if [ $HTTPSTATUS -eq 200 ] || [ $HTTPSTATUS -eq 202 ] 
 then
     VALIDATIONJSON=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
 	echo "${VALIDATIONJSON}" > /tmp/scripts/validation_request.json
 	VALIDATIONID=$(echo ${VALIDATIONJSON} | jq -r .id )
 	echo "validation id : ${VALIDATIONID}"
 else
-        echo "  error getting version"
+        echo "  error initiating validation"
         echo ${HTTPSTATUS}
         echo ${RESPONSE}
         exit
@@ -179,10 +179,6 @@ get_validation_status() {
 	HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
 	case $HTTPSTATUS in
 		200)    
-			VALIDATIONJSON=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
-			EXECUTIONSTATUS=$(echo ${VALIDATIONJSON} | jq -r .executionStatus)
-			;;
-		202)    
 			VALIDATIONJSON=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
 			EXECUTIONSTATUS=$(echo ${VALIDATIONJSON} | jq -r .executionStatus)
 			;;

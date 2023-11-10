@@ -10,7 +10,7 @@ source ./extra/functions.sh
 
 [ "$1" == "" ] && echo "usage: $0 <name_of_cpod>" && exit 1 
 
-#add_to_cpodrouter_hosts() {
+#add_entry_cpodrouter_hosts() {
 #	echo "add ${1} -> ${2}"
 #	ssh -o LogLevel=error ${NAME_LOWER} "sed "/${1}/d" -i /etc/hosts ; printf \"${1}\\t${2}\\n\" >> /etc/hosts"
 #}
@@ -88,6 +88,7 @@ sed -i -e "s/###VLAN###/${VLAN}/g" \
 -e "s/###TRANSIT_NET###/${TRANSIT_NET}/g" \
 ${BGPD}
 
+#add_cpodrouter_bgp_neighbor 
 
 echo "Modifying dnsmasq on cpodrouter."
 scp ${DNSMASQ} ${NAME_LOWER}:/etc/dnsmasq.conf
@@ -96,18 +97,17 @@ echo "Modifying bgpd on cpodrouter."
 #scp ${BGPD} ${NAME_LOWER}:/etc/quagga/bgpd.conf
 
 echo "Adding entries into hosts of ${NAME_LOWER}."
-add_to_cpodrouter_hosts "${SUBNET}.3" "cloudbuilder"
-add_to_cpodrouter_hosts "${SUBNET}.4" "vcsa"
-add_to_cpodrouter_hosts "${SUBNET}.5" "nsx01"
-add_to_cpodrouter_hosts "${SUBNET}.6" "nsx01a"
-add_to_cpodrouter_hosts "${SUBNET}.7" "nsx01b"
-add_to_cpodrouter_hosts "${SUBNET}.8" "nsx01c"
-add_to_cpodrouter_hosts "${SUBNET}.9" "en01"
-add_to_cpodrouter_hosts "${SUBNET}.10" "en02"
-add_to_cpodrouter_hosts "${SUBNET}.11" "sddc"
-	
-ssh -o LogLevel=error ${NAME_LOWER} "systemctl restart dnsmasq"
-ssh -o LogLevel=error ${NAME_LOWER} "systemctl restart bgpd"
+add_entry_cpodrouter_hosts "${SUBNET}.3" "cloudbuilder"  ${NAME_LOWER}
+add_entry_cpodrouter_hosts "${SUBNET}.4" "vcsa" ${NAME_LOWER}
+add_entry_cpodrouter_hosts "${SUBNET}.5" "nsx01" ${NAME_LOWER}
+add_entry_cpodrouter_hosts "${SUBNET}.6" "nsx01a" ${NAME_LOWER}
+add_entry_cpodrouter_hosts "${SUBNET}.7" "nsx01b" ${NAME_LOWER}
+add_entry_cpodrouter_hosts "${SUBNET}.8" "nsx01c" ${NAME_LOWER}
+add_entry_cpodrouter_hosts "${SUBNET}.9" "en01" ${NAME_LOWER}
+add_entry_cpodrouter_hosts "${SUBNET}.10" "en02" ${NAME_LOWER}
+add_entry_cpodrouter_hosts "${SUBNET}.11" "sddc" ${NAME_LOWER}
+
+restart_cpodrouter_dnsmasq ${NAME_LOWER}  
 
 echo "JSON is genereated: ${SCRIPT}"
 echo

@@ -59,7 +59,7 @@ echo
 echo "Select JSON template"
 echo
 
-JSONS=$(ls ./compute/cloudbuilder-*.json)
+JSONS=$(ls ./compute/cloudbuilder-*.json | rev | cut -d "/" -f1 | rev)
 JSONS=${JSONS}" None"
 
 select JSON in ${JSONS}; do 

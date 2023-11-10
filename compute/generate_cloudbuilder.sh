@@ -182,6 +182,10 @@ get_validation_status() {
 			VALIDATIONJSON=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
 			EXECUTIONSTATUS=$(echo ${VALIDATIONJSON} | jq -r .executionStatus)
 			;;
+		202)    
+			VALIDATIONJSON=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+			EXECUTIONSTATUS=$(echo ${VALIDATIONJSON} | jq -r .executionStatus)
+			;;
 		503)    
 			echo "Not Ready"
 			;;

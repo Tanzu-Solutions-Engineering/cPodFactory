@@ -22,7 +22,7 @@ SUBNET=$( ./"${COMPUTE_DIR}"/cpod_ip.sh "${1}" )
 TRANSIT_IP=$( grep "${CPODROUTER}" "/etc/hosts" | awk '{print $1}' )
 GEN_PASSWORD=$( grep "${CPODROUTER}" "/etc/hosts" | awk '{print $4}' )
 DOMAIN="${CPODROUTER}.${ROOT_DOMAIN}"
-
+CPOD_NTP_DNS_IP="${SUBNET}.1"
 # have the hosts created with respool_create
 #echo "Adding $NUM_ESX ESXi hosts to $NAME_UPPER owned by $OWNER on portgroup: $PORTGROUP_NAME in domain: $ROOT_DOMAIN starting at: $STARTNUMESX."
 #"${COMPUTE_DIR}"/create_resourcepool.sh "${NAME_UPPER}" "${PORTGROUP_NAME}" "${TRANSIT_IP}" "${NUM_ESX}" "${ROOT_DOMAIN}" "${OWNER}" "${STARTNUMESX}"
@@ -81,11 +81,11 @@ for ((i=1; i<=NUM_ESX; i++)); do
   echo "$ESXHOST --- Setting MemorySalting and Coredump  ---"
 	sshpass -p "${ROOT_PASSWD}" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=error root@"${DHCPIP}" "esxcli system settings advanced set -o /Mem/ShareForceSalting -i 0"
 	sshpass -p "${ROOT_PASSWD}" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=error root@"${DHCPIP}" "esxcli system settings advanced set -o /UserVars/SuppressCoredumpWarning -i 1"
-  echo "$ESXHOST --- Setting ntp to: $TRANSIT_IP  ---"
-	sshpass -p "${ROOT_PASSWD}" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=error root@"${DHCPIP}" "echo \"server ${TRANSIT_IP} iburst\" >> /etc/ntp.conf ; chkconfig ntpd on ; /etc/init.d/ntpd stop ; /etc/init.d/ntpd start"
-	sshpass -p "${ROOT_PASSWD}" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=error root@"${DHCPIP}" "esxcli system ntp set --reset ; esxcli system ntp set -s ${TRANSIT_IP} --enabled true"
-	echo "$ESXHOST --- setting dns to: $TRANSIT_IP and domain to: $DOMAIN ---"
-	sshpass -p "${ROOT_PASSWD}" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=error root@"${DHCPIP}" "esxcli network ip dns server add -s ${TRANSIT_IP}"
+  echo "$ESXHOST --- Setting ntp to: $CPOD_NTP_DNS_IP  ---"
+	sshpass -p "${ROOT_PASSWD}" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=error root@"${DHCPIP}" "echo \"server ${CPOD_NTP_DNS_IP} iburst\" >> /etc/ntp.conf ; chkconfig ntpd on ; /etc/init.d/ntpd stop ; /etc/init.d/ntpd start"
+	sshpass -p "${ROOT_PASSWD}" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=error root@"${DHCPIP}" "esxcli system ntp set --reset ; esxcli system ntp set -s ${CPOD_NTP_DNS_IP} --enabled true"
+	echo "$ESXHOST --- setting dns to: $CPOD_NTP_DNS_IP and domain to: $DOMAIN ---"
+	sshpass -p "${ROOT_PASSWD}" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=error root@"${DHCPIP}" "esxcli network ip dns server add -s ${CPOD_NTP_DNS_IP}"
 	sshpass -p "${ROOT_PASSWD}" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=error root@"${DHCPIP}" "esxcli network ip dns search add -d ${DOMAIN}"
 	echo "$ESXHOST --- setting ssd with ssdcript in ./install/ssd_esx_tag.sh ---"
 	sshpass -p "${ROOT_PASSWD}" scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=error ./install/ssd_esx_tag.sh root@"${DHCPIP}":/tmp/ssd_esx_tag.sh

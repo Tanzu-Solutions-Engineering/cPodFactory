@@ -92,6 +92,7 @@ case $VCF_VERSION in
 		ESX_KEY=$V7_ESX_KEY
 		VSAN_KEY=$V7_VSAN_KEY
 		#NSXT_KEY
+    apply_license
 		;;
 	5)
 		check_license_file "V8"
@@ -100,6 +101,7 @@ case $VCF_VERSION in
 		ESX_KEY=$V8_ESX_KEY
 		VSAN_KEY=$V8_VSAN_KEY
     #NSXT_KEY
+    apply_license
 		;;
 	*)
 		echo "Version $VCF_VERSION not foreseen yet by script"

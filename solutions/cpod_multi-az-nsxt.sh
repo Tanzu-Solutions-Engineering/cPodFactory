@@ -38,6 +38,7 @@ echo "=== Select CPOD version to deploy ==="
 echo "====================================="
 echo
 
+
 options=$(ls vsphere*.sh)
 options=${options}" Quit"
 
@@ -59,30 +60,42 @@ echo
 test_params_file ${VERSION}
 
 echo
-echo "====================================="
-echo "=== creating cpod / vsan / NLB  ==="
-echo "====================================="
+echo "======================"
+echo "=== creating cpods ==="
+echo "======================"
 echo
 
-cpodctl create $1 $2 $3
-cpodctl vcsa $1 $3
-./extra/create_vds_vlans.sh $1 $3
-./extra/enable_drs_vsan.sh $1 $3
-./extra/deploy_nsxalb_atside.sh $1 $3
-./extra/configure_nsxalb_atside.sh $1 $3
+MGMTCPOD=$1-mgmt
+AZ1CPOD=$1-az1
+AZ2CPOD=$1-az2
+AZ3CPOD=$1-az3
+
+cpodctl create ${MGMTCPOD} 0 $3
+cpodctl create ${AZ1CPOD} 4 $3
+cpodctl create ${AZ2CPOD} 4 $3
+cpodctl create ${AZ3CPOD} 4 $3
+
+./extra/deploy_vcsa_only.sh ${MGMTCPOD} $3
+./extra/configure_vcsa_maz-nsxt.sh ${MGMTCPOD} ${AZ1CPOD} ${AZ2CPOD} ${AZ3CPOD}
+
+./extra/deploy_nsxt_mgr_v4.sh ${MGMTCPOD} $3
+./extra/configure_nsxt_atside_maz_init.sh ${MGMTCPOD} $3
+./extra/info_nsxt_cpod.sh ${MGMTCPOD} $3
+./extra/configure_nsxt_atside_maz_az-config.sh ${MGMTCPOD} ${AZ1CPOD}
+./extra/configure_nsxt_atside_maz_az-config.sh ${MGMTCPOD} ${AZ2CPOD}
+./extra/configure_nsxt_atside_maz_az-config.sh ${MGMTCPOD} ${AZ3CPOD} 
+./extra/configure_nsxt_atside_maz_az-tier0.sh ${MGMTCPOD} ${AZ1CPOD} ${AZ2CPOD} ${AZ3CPOD} 
+
 END=$( date +%s )
 TIME=$( expr ${END} - ${START} )
 
 echo
 echo "============================="
-echo "===  creation is finished"
-echo "=== In ${TIME} Seconds"
+echo "===  creation is finished ==="
+echo "=== In ${TIME} Seconds ==="
 echo "============================="
 
-echo "=== connect to cpod vcsa"
-echo "=== url: https://vcsa.${NAME_LOWER}.${ROOT_DOMAIN}/ui"
-echo "== user : administrator@${NAME_LOWER}.${ROOT_DOMAIN}"
-echo "=== pwd : ${PASSWORD}"
-echo "============================="
+echo
+./info_cpod.sh ${MGMTCPOD}
 
 export LOGGING=""

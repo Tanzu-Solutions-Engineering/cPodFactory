@@ -76,11 +76,16 @@ echo
 ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=error ${CPOD_NAME} "cat /etc/dnsmasq.conf" |grep -e range -e option
 echo =====================
 echo "DNS entries"
-ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=error ${CPOD_NAME} "cat /etc/hosts" |grep -v  -e "#" -e ":" -e "127.0.0.1" | sort -t . -k 2,2n -k 3,3n -k 4,4n
+DNSENTRIES=$(ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=error ${CPOD_NAME} "cat /etc/hosts" |grep -v  -e "#" -e ":" -e "127.0.0.1" | sort -t . -k 2,2n -k 3,3n -k 4,4n)
+echo "${DNSENTRIES}"
 echo =====================
-echo "connect to cpod vcsa"
-echo
-echo " url: https://${CPOD_VCSA}/ui"
-echo " user : administrator@${DOMAIN}"
+TESTVCSA=$( echo "${DNSENTRIES}" | grep vcsa | wc -l)
+if [ $TESTVCSA -gt 0 ];
+then 
+        echo "connect to cpod vcsa"
+        echo
+        echo " url: https://${CPOD_VCSA}/ui"
+        echo " user : administrator@${DOMAIN}"
+fi 
 echo " pwd : ${PASSWORD}"
 echo =====================

@@ -1,9 +1,12 @@
 #!/bin/bash
-#bdereims@vmware.com
+#edewitte@vmware.com
 
-. ./env
+# sourcing params and functions
+
+source ./env 
 source ./govc_env
 source ./extra/functions.sh
+
 
 [ "${1}" == "" ] && echo "usage: ${0} <cPod Name> <owner email>" && exit 1
 
@@ -37,7 +40,6 @@ CPOD_NAME_LOWER=$( echo ${CPOD_NAME} | tr '[:upper:]' '[:lower:]' )
 LINE=$( sed -n "/${CPOD_NAME_LOWER}\t/p" /etc/hosts | cut -f3 | sed "s/#//" | head -1 )
 if [ "${LINE}" != "" ] && [ "${LINE}" != "${2}" ]; then
         echo "Error: You're not allowed to deploy"
-        ./extra/post_slack.sh ":wow: *${2}* you're not allowed to deploy in *${NAME_HIGHER}*"
         exit 1
 fi
 
@@ -46,15 +48,12 @@ STATUS=$( ping -c 1 ${IP} 2>&1 > /dev/null ; echo $? )
 STATUS=$(expr $STATUS)
 if [ ${STATUS} == 0 ]; then
         echo "Error: Something has the same IP."
-        ./extra/post_slack.sh ":wow: Are you sure that VCSA is not already deployed in ${1}. Something have the same @IP."
         exit 1
 fi
 echo "It seems all good, let's deploy ova."
 
 PASSWORD=$( ./${EXTRA_DIR}/passwd_for_cpod.sh ${1} )
 #echo ${PASSWORD}
-
-./extra/post_slack.sh "Deploying a new VCSA for *${1}*. We're working for you, it takes ages. Stay tuned..."
 
 export MYSCRIPT=/tmp/$$
 
@@ -157,10 +156,4 @@ do
 done	
 echo
 echo "VCSA Installation SUCCEEDED !"
-
-CPOD="${1}"
-CPOD_LOWER=$( echo ${1} | tr '[:upper:]' '[:lower:]' )
-NUMESX=$( ssh -o "StrictHostKeyChecking no" root@cpod-${CPOD_LOWER} "grep esx /etc/hosts | wc -l" )
-./compute/prep_vcsa.sh ${CPOD} ${NUMESX}
-
 rm ${MYSCRIPT}

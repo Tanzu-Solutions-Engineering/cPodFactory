@@ -32,6 +32,10 @@ AUTH_DOMAIN=${DOMAIN}
 
 ###################
 
+source ./extra/functions_nsxalb.sh
+
+###################
+
 [ "${HOSTNAME_NSXALB}" == ""  -o "${NSXALBOVA}" == "" -o "${IP_NSXALBMGR}" == "" ] && echo "missing parameters - please source version file !" && exit 1
 
 CPOD_NAME="cpod-$1"
@@ -49,30 +53,7 @@ PASSWORD=$( ./${EXTRA_DIR}/passwd_for_cpod.sh ${1} )
 
 NSXALBFQDN=${HOSTNAME}.${CPOD_NAME_LOWER}.${ROOT_DOMAIN}
 
-echo "Querying status"
-
-STATUS="RUNNING"
-while [ "${STATUS}" != "SUCCEEDED" ]
-do
-	echo "connecting..."
-        RESPONSE=$(curl -s -w '####%{response_code}' http://${NSXALBFQDN})
-        HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
-        case $HTTPSTATUS in
-                000)
-                        echo "000"
-                        ;;
-                301)
-                        echo "switching to https portal"
-                        STATUS="SUCCEEDED"
-                        ;;
-                *)
-                        echo "status: $HTTPSTATUS"
-                        ;;
-        esac
-        sleep 5
-done	
-
-
+loop_wait_nsxalb_manager_status "${NSXALBFQDN}"
 
 # ===== login =====
 echo "trying to login"

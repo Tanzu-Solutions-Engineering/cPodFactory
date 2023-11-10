@@ -58,38 +58,51 @@ apply_license_vcenter() {
 	echo 
 	echo "Applying vCenter license"
 	echo 
-	govc license.assign  $VCENTER_KEY
+	govc license.assign -host="" -name="vcsa.${POD_FQDN}" $VCENTER_KEY
 }
 
 apply_licenses_hosts() {
 	echo 
 	echo "Applying hosts licenses"
 	echo 
-	NUM_ESX=$(govc datacenter.info "${POD_NAME}" | grep "Hosts" | cut -d : -f 2 | cut -d " " -f 14)
-	for (( i=1; i<=$NUM_ESX; i++ ));
+	HOSTS=$(govc find . -type h|cut -d "/" -f5)
+	for HOST in $HOSTS;
 	do
-		HOST="esx0${i}.${POD_FQDN}"
 		govc license.assign -host ${HOST,,} ${ESX_KEY}
 	done
 }
 
 apply_licenses_clusters() {
 	echo 
-	echo "Applying vCenter licenses"
+	echo "Applying VSAN licenses"
 	echo 
 	CLUSTERS=$(govc ls -t ClusterComputeResource host |cut -d "/" -f4)
 	for CLUSTER in $CLUSTERS;
 	do
-		govc license.assign -cluster $CLUSTER $VSAN_KEY
-		#govc license.assign -cluster $CLUSTER $TANZU_KEY
+		govc license.assign -host="" -cluster $CLUSTER $VSAN_KEY
+	done
+}
+
+apply_licenses_tanzu() {
+	echo 
+	echo "Applying TANZU licenses"
+	echo 
+	CLUSTERS=$(govc license.assigned.ls |grep wcp | awk '{print $3}')
+	for CLUSTER in $CLUSTERS;
+	do
+		govc license.assign -host="" -name=$CLUSTER $TANZU_KEY
 	done
 }
 
 remove_eval_license() {
 	echo 
-	echo "Removing Eval license"
+	echo "Removing Eval license if applicable "
 	echo 
-	govc license.remove "00000-00000-00000-00000-00000"
+	TESTEVAL=$(govc license.ls |grep 00000|wc -l)
+	if [[ ${TESTEVAL} -gt 0 ]];
+	then
+		govc license.remove "00000-00000-00000-00000-00000"
+	fi
 }
 
 add_and_apply_licenses() {
@@ -97,6 +110,7 @@ add_and_apply_licenses() {
 		apply_license_vcenter
 		apply_licenses_hosts
 		apply_licenses_clusters
+		# apply_licenses_tanzu - govc does not yet support assigning tanzu keys.
 		remove_eval_license
 		govc license.assigned.ls
 }
@@ -111,6 +125,8 @@ check_license_file(){
 #======================================
 
 VCENTER_VERSION=$(govc about |grep Version | awk '{print $2}' |cut -d "." -f1)
+
+DATACENTERS=$(govc find . -type d)
 
 case $VCENTER_VERSION in
 	7)

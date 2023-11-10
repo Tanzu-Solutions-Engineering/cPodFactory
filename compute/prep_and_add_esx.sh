@@ -96,11 +96,6 @@ for ESX in $( cat ${DHCP_LEASE} | cut -f 2,3 -d' ' | sed 's/\ /,/' ); do
 	sshpass -p ${GEN_PASSWORD} ssh -o StrictHostKeyChecking=no root@${NEWIP} "/sbin/generate-certificates ; /etc/init.d/hostd restart && /etc/init.d/vpxa restart" 2>&1 > /dev/null
 done
 
-# Create entry for VCSA
-if [ ${NUM_ESX} -ge 1 ]; then
-	printf "${BASEIP}3\tvcsa\n" >> ${HOSTS}
-fi
-
 # Optionnal
 #printf "${BASEIP}4\tnsx\n" >> ${HOSTS}
 #printf "#${BASEIP}5-7\tnsx controllers\n" >> ${HOSTS}

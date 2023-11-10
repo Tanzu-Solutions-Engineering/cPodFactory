@@ -48,6 +48,10 @@ SCRIPT=/tmp/scripts/cloudbuilder-${NAME_LOWER}.json
 DNSMASQ=/tmp/scripts/dnsmasq-${NAME_LOWER}.conf
 BGPD=/tmp/scripts/bgpd-${NAME_LOWER}.conf
 
+
+echo
+echo "Generating cloudbuilder jsons"
+
 mkdir -p ${SCRIPT_DIR} 
 cp ${COMPUTE_DIR}/${JSON_TEMPLATE} ${SCRIPT} 
 cp ${COMPUTE_DIR}/${DNSMASQ_TEMPLATE} ${DNSMASQ} 
@@ -113,6 +117,45 @@ echo "JSON is genereated: ${SCRIPT}"
 echo
 
 #read -n1 -s -r -p $'Hit enter to launch prereqs validation or ctrl-c to stop.\n' key
+echo "CheckingCloudbuilder is ready"
+
+get_cloudbuilder_status() {
+        #returns json
+        RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} https://cloudbuilder.${NAME_LOWER}.${ROOT_DOMAIN})
+        HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+        case $HTTPSTATUS in
+
+                200)    
+                        echo "READY"
+                        ;;
+
+                503)    
+                        echo "Not Ready"
+                        ;;
+                *)      
+                         echo ${RESPONSE} |awk -F '####' '{print $1}'
+                        ;;
+
+        esac
+}
+
+echo "  Checking cloudbuilder status"
+echo
+printf "\t connecting to cloudbuilder ."
+INPROGRESS=$(get_cloudbuilder_status)
+CURRENTSTATE=${INPROGRESS}
+while [[ "$INPROGRESS" != "READY" ]]
+do      
+		printf '.' >/dev/tty
+		sleep 10
+		INPROGRESS=$(get_cloudbuilder_status)
+		if [ "${INPROGRESS}" != "${CURRENTSTATE}" ] 
+		then 
+				printf "\n\t%s" ${INPROGRESS}
+				CURRENTSTATE=${INPROGRESS}
+		fi
+done
+
 
 echo "Submitting SDDC validation"
 RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} -H 'Content-Type: application/json' -H 'Accept: application/json' -d @${SCRIPT} -X POST https://cloudbuilder.${NAME_LOWER}.${ROOT_DOMAIN}/v1/sddcs/validations)
@@ -130,33 +173,6 @@ else
         exit
 fi
 
-#echo "Querying validation result"
-#VALIDATIONRESULT=$(curl -s -k -u admin:${PASSWORD} -H 'Content-Type: application/json' -H 'Accept: application/json' -X GET https://cloudbuilder.${NAME_LOWER}.${ROOT_DOMAIN}/v1/sddcs/validations/${VALIDATIONID})
-#echo "${VALIDATIONRESULT}" > /tmp/scripts/validation_result.json
-#EXECUTIONSTATUS=$(echo ${VALIDATIONRESULT} | jq -r .executionStatus)
-#
-#
-#while [[ "${EXECUTIONSTATUS}" != "COMPLETED" ]]
-#do
-#	case  ${EXECUTIONSTATUS} in 
-#		IN_PROGRESS)
-#			echo "IN_PROGRESS"
-#			;;
-#		FAILED)
-#			echo "FAILED"
-#			echo ${VALIDATIONRESULT} | jq .
-#			echo "stopping script"
-#			exit 1
-#			;;
-#		*)
-#			echo ${EXECUTIONSTATUS}
-#			;;
-#	esac
-#	sleep 10
-#	VALIDATIONRESULT=$(curl -s -k -u admin:${PASSWORD} -H 'Content-Type: application/json' -H 'Accept: application/json' -X GET https://cloudbuilder.${NAME_LOWER}.${ROOT_DOMAIN}/v1/sddcs/validations/${VALIDATIONID})
-#	EXECUTIONSTATUS=$(echo ${VALIDATIONRESULT} | jq -r .executionStatus)
-#done
-#
 get_validation_status() {
 	#returns json
 	RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} -H 'Content-Type: application/json' -H 'Accept: application/json' -X GET https://cloudbuilder.${NAME_LOWER}.${ROOT_DOMAIN}/v1/sddcs/validations/${VALIDATIONID})
@@ -213,7 +229,7 @@ then
 		echo "${DEPLOYMENTINFO} created succesfully"
 		DEPLOYMENTID=$(echo "${DEPLOYMENTINFO}" |jq '.id')
 else
-		echo "  error creating uplink profile : ${DEPLOYMENTINFO}"
+		echo "  error creating deployment : ${DEPLOYMENTINFO}"
 		echo ${HTTPSTATUS}
 		echo ${RESPONSE}
 		exit

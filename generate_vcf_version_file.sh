@@ -54,7 +54,7 @@ select OVA in ${OVAS}; do
     break
 done
 
-VCF_VERSION=$(echo "${OVA}" |sed 's/.*\///' | sed 's/VMware-Cloud-Builder-//'  | cut -d "." -f)
+VCF_VERSION=$(echo "${OVA}" |sed 's/.*\///' | sed 's/VMware-Cloud-Builder-//'  | cut -d "." -f1)
 
 echo 
 echo "Select JSON template"

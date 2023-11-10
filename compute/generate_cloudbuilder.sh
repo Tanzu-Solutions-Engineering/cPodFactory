@@ -5,19 +5,17 @@
 # add : "server=/5.23.172.in-addr.arpa/172.23.5.1" in dnsmasq.conf @ wdm in order to add cPod as WD
 # minimal deployment with : "excludedComponents": ["NSX-V", "AVN", "EBGP"] in json
 
-. ./env
+source ./env
+source ./extra/functions.sh
 
 [ "$1" == "" ] && echo "usage: $0 <name_of_cpod>" && exit 1 
 
-add_to_cpodrouter_hosts() {
-	echo "add ${1} -> ${2}"
-	ssh -o LogLevel=error ${NAME_LOWER} "sed "/${1}/d" -i /etc/hosts ; printf \"${1}\\t${2}\\n\" >> /etc/hosts"
-}
+#add_to_cpodrouter_hosts() {
+#	echo "add ${1} -> ${2}"
+#	ssh -o LogLevel=error ${NAME_LOWER} "sed "/${1}/d" -i /etc/hosts ; printf \"${1}\\t${2}\\n\" >> /etc/hosts"
+#}
 
-#JSON_TEMPLATE=cloudbuilder-401.json
-#JSON_TEMPLATE=cloudbuilder-43.json
 JSON_TEMPLATE=${JSON_TEMPLATE:-"cloudbuilder-43.json"}
-#JSON_TEMPLATE=cloudbuilder-43.json
 DNSMASQ_TEMPLATE=dnsmasq.conf-vcf
 BGPD_TEMPLATE=bgpd.conf-vcf
 
@@ -90,6 +88,7 @@ sed -i -e "s/###VLAN###/${VLAN}/g" \
 -e "s/###TRANSIT_NET###/${TRANSIT_NET}/g" \
 ${BGPD}
 
+
 echo "Modifying dnsmasq on cpodrouter."
 scp ${DNSMASQ} ${NAME_LOWER}:/etc/dnsmasq.conf
 
@@ -113,44 +112,160 @@ ssh -o LogLevel=error ${NAME_LOWER} "systemctl restart bgpd"
 echo "JSON is genereated: ${SCRIPT}"
 echo
 
-read -n1 -s -r -p $'Hit enter to launch prereqs validation or ctrl-c to stop.\n' key
+#read -n1 -s -r -p $'Hit enter to launch prereqs validation or ctrl-c to stop.\n' key
+
 
 echo "Submitting SDDC validation"
 VALIDATIONJSON=$(curl -s -k -u admin:${PASSWORD} -H 'Content-Type: application/json' -H 'Accept: application/json' -d @${SCRIPT} -X POST https://cloudbuilder.${NAME_LOWER}.${ROOT_DOMAIN}/v1/sddcs/validations)
-echo "${VALIDATIONJSON}" > /tmp/scripts/validation_request.json
-VALIDATIONID=$(echo ${VALIDATIONJSON} | jq -r .id )
-echo "validation id : ${VALIDATIONID}"
 
-echo "Querying validation result"
-VALIDATIONRESULT=$(curl -s -k -u admin:${PASSWORD} -H 'Content-Type: application/json' -H 'Accept: application/json' -X GET https://cloudbuilder.${NAME_LOWER}.${ROOT_DOMAIN}/v1/sddcs/validations/${VALIDATIONID})
-echo "${VALIDATIONRESULT}" > /tmp/scripts/validation_result.json
-EXECUTIONSTATUS=$(echo ${VALIDATIONRESULT} | jq -r .executionStatus)
 
-while [[ "${EXECUTIONSTATUS}" != "COMPLETED" ]]
-do
-	case  ${EXECUTIONSTATUS} in 
-		IN_PROGRESS)
-			echo "IN_PROGRESS"
+RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} -H 'Content-Type: application/json' -H 'Accept: application/json' -d @${SCRIPT} -X POST https://cloudbuilder.${NAME_LOWER}.${ROOT_DOMAIN}/v1/sddcs/validations)
+HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+if [ $HTTPSTATUS -eq 200 ]
+then
+    VALIDATIONJSON=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+	echo "${VALIDATIONJSON}" > /tmp/scripts/validation_request.json
+	VALIDATIONID=$(echo ${VALIDATIONJSON} | jq -r .id )
+	echo "validation id : ${VALIDATIONID}"
+else
+        echo "  error getting version"
+        echo ${HTTPSTATUS}
+        echo ${RESPONSE}
+        exit
+fi
+
+#echo "Querying validation result"
+#VALIDATIONRESULT=$(curl -s -k -u admin:${PASSWORD} -H 'Content-Type: application/json' -H 'Accept: application/json' -X GET https://cloudbuilder.${NAME_LOWER}.${ROOT_DOMAIN}/v1/sddcs/validations/${VALIDATIONID})
+#echo "${VALIDATIONRESULT}" > /tmp/scripts/validation_result.json
+#EXECUTIONSTATUS=$(echo ${VALIDATIONRESULT} | jq -r .executionStatus)
+#
+#
+#while [[ "${EXECUTIONSTATUS}" != "COMPLETED" ]]
+#do
+#	case  ${EXECUTIONSTATUS} in 
+#		IN_PROGRESS)
+#			echo "IN_PROGRESS"
+#			;;
+#		FAILED)
+#			echo "FAILED"
+#			echo ${VALIDATIONRESULT} | jq .
+#			echo "stopping script"
+#			exit 1
+#			;;
+#		*)
+#			echo ${EXECUTIONSTATUS}
+#			;;
+#	esac
+#	sleep 10
+#	VALIDATIONRESULT=$(curl -s -k -u admin:${PASSWORD} -H 'Content-Type: application/json' -H 'Accept: application/json' -X GET https://cloudbuilder.${NAME_LOWER}.${ROOT_DOMAIN}/v1/sddcs/validations/${VALIDATIONID})
+#	EXECUTIONSTATUS=$(echo ${VALIDATIONRESULT} | jq -r .executionStatus)
+#done
+#
+get_validation_status() {
+	#returns json
+	RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} -H 'Content-Type: application/json' -H 'Accept: application/json' -X GET https://cloudbuilder.${NAME_LOWER}.${ROOT_DOMAIN}/v1/sddcs/validations/${VALIDATIONID})
+	HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+	case $HTTPSTATUS in
+		200)    
+			VALIDATIONJSON=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+			EXECUTIONSTATUS=$(echo ${VALIDATIONJSON} | jq -r .executionStatus)
 			;;
-		FAILED)
+		503)    
+			echo "Not Ready"
+			;;
+		*)      
+			echo ${RESPONSE} |awk -F '####' '{print $1}'
+			;;
+	esac
+}
+
+echo
+printf "\t Querying validation result ."
+INPROGRESS=$(get_validation_status)
+CURRENTSTATE=${INPROGRESS}
+while [[ "$INPROGRESS" != "COMPLETED" ]]
+do      
+		printf '.' >/dev/tty
+		sleep 10
+		INPROGRESS=$(get_validation_status)
+		if [ "${INPROGRESS}" != "${CURRENTSTATE}" ] 
+		then 
+				printf "\n\t%s" ${INPROGRESS}
+				CURRENTSTATE=${INPROGRESS}
+		fi
+		if [ "${INPROGRESS}" == "FAILED" ] 
+		then 
+			echo
 			echo "FAILED"
 			echo ${VALIDATIONRESULT} | jq .
 			echo "stopping script"
 			exit 1
-			;;
-		*)
-			echo ${EXECUTIONSTATUS}
-			;;
-	esac
-	sleep 10
-	VALIDATIONRESULT=$(curl -s -k -u admin:${PASSWORD} -H 'Content-Type: application/json' -H 'Accept: application/json' -X GET https://cloudbuilder.${NAME_LOWER}.${ROOT_DOMAIN}/v1/sddcs/validations/${VALIDATIONID})
-	EXECUTIONSTATUS=$(echo ${VALIDATIONRESULT} | jq -r .executionStatus)
+		fi
 done
 
-
+##############
 read -n1 -s -r -p $'Hit enter to launch deployment or ctrl-c to stop.\n' key
 
-curl -i -k -u admin:${PASSWORD} -H 'Content-Type: application/json' -H 'Accept: application/json' -d @${SCRIPT} -X POST https://cloudbuilder.${NAME_LOWER}.${ROOT_DOMAIN}/v1/sddcs
+#curl -i -k -u admin:${PASSWORD} -H 'Content-Type: application/json' -H 'Accept: application/json' -d @${SCRIPT} -X POST https://cloudbuilder.${NAME_LOWER}.${ROOT_DOMAIN}/v1/sddcs
+
+RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} -H 'Content-Type: application/json' -H 'Accept: application/json' -d @${SCRIPT} -X POST https://cloudbuilder.${NAME_LOWER}.${ROOT_DOMAIN}/v1/sddcs)
+HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+
+if [ $HTTPSTATUS -eq 200 ]
+then
+		DEPLOYMENTINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+		echo "${DEPLOYMENTINFO} created succesfully"
+		DEPLOYMENTID=$(echo "${DEPLOYMENTINFO}" |jq '.id')
+else
+		echo "  error creating uplink profile : ${DEPLOYMENTINFO}"
+		echo ${HTTPSTATUS}
+		echo ${RESPONSE}
+		exit
+fi
+
+get_deployment_status() {
+	#returns json
+	RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} -H 'Content-Type: application/json' -H 'Accept: application/json' -X GET https://cloudbuilder.${NAME_LOWER}.${ROOT_DOMAIN}/v1/sddcs/${DEPLOYMENTID})
+	HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+	case $HTTPSTATUS in
+		200)    
+			VALIDATIONJSON=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+			EXECUTIONSTATUS=$(echo ${VALIDATIONJSON} | jq -r .status)
+			echo "${EXECUTIONSTATUS}"
+			;;
+		503)    
+			echo "Not Ready"
+			;;
+		*)      
+			echo ${RESPONSE} |awk -F '####' '{print $1}'
+			;;
+	esac
+}
+
+echo
+printf "\t Querying deployment status ."
+INPROGRESS=$(get_deployment_status)
+CURRENTSTATE=${INPROGRESS}
+while [[ "$INPROGRESS" != "COMPLETED" ]]
+do      
+		printf '.' >/dev/tty
+		sleep 10
+		INPROGRESS=$(get_deployment_status)
+		if [ "${INPROGRESS}" != "${CURRENTSTATE}" ] 
+		then 
+				printf "\n\t%s" ${INPROGRESS}
+				CURRENTSTATE=${INPROGRESS}
+		fi
+		if [ "${INPROGRESS}" == "FAILED" ] 
+		then 
+			echo
+			echo "FAILED"
+			echo ${VALIDATIONRESULT} | jq .
+			echo "stopping script"
+			exit 1
+		fi
+done
+
 echo
 echo "Check deployment in CloudBuilder:"
 echo "check url : https://cloudbuilder.${NAME_LOWER}.${ROOT_DOMAIN}"

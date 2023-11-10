@@ -194,26 +194,57 @@ get_validation_status() {
 
 echo
 printf "\t Querying validation result ."
-INPROGRESS=$(get_validation_status)
-CURRENTSTATE=${INPROGRESS}
-while [[ "$INPROGRESS" != "COMPLETED" ]]
+
+RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} -H 'Content-Type: application/json' -H 'Accept: application/json' -X GET https://cloudbuilder.${NAME_LOWER}.${ROOT_DOMAIN}/v1/sddcs/validations/${VALIDATIONID})
+HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+case $HTTPSTATUS in
+	200)    
+		VALIDATIONJSON=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+		STATUS=$(echo ${VALIDATIONJSON} | jq -r .executionStatus)
+		echo "${STATUS}"
+		;;
+	503)    
+		echo "Not Ready"
+		;;
+	*)      
+		echo ${RESPONSE} |awk -F '####' '{print $1}'
+		;;
+esac
+
+CURRENTSTATE=${STATUS}
+CURRENTSTEP=""
+while [[ "$STATUS" != "COMPLETED" ]]
 do      
-		printf '.' >/dev/tty
-		sleep 10
-		INPROGRESS=$(get_validation_status)
-		if [ "${INPROGRESS}" != "${CURRENTSTATE}" ] 
-		then 
+	RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} -H 'Content-Type: application/json' -H 'Accept: application/json' -X GET https://cloudbuilder.${NAME_LOWER}.${ROOT_DOMAIN}/v1/sddcs/validations/${VALIDATIONID})
+	HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+	case $HTTPSTATUS in
+		200)    
+			VALIDATIONJSON=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+			STATUS=$(echo ${VALIDATIONJSON} | jq -r .executionStatus)
+			INPROGRESS=$(echo "${VALIDATIONJSON}" | jq -r '.validationChecks[] | select ( .resultStatus == "IN_PROGRESS") |.description')
+			if [ "${INPROGRESS}" != "${CURRENTSTEP}" ] 
+			then 
 				printf "\n\t%s" ${INPROGRESS}
-				CURRENTSTATE=${INPROGRESS}
-		fi
-		if [ "${INPROGRESS}" == "FAILED" ] 
-		then 
-			echo
-			echo "FAILED"
-			echo ${VALIDATIONRESULT} | jq .
-			echo "stopping script"
-			exit 1
-		fi
+				CURRENTSTEP=${INPROGRESS}
+			fi
+			;;
+		503)    
+			echo "Not Ready"
+			;;
+		*)      
+			echo ${RESPONSE} |awk -F '####' '{print $1}'
+			;;
+	esac
+	if [ "${STATUS}" == "FAILED" ] 
+	then 
+		echo
+		echo "FAILED"
+		echo ${VALIDATIONRESULT} | jq .
+		echo "stopping script"
+		exit 1
+	fi
+	printf '.' >/dev/tty
+	sleep 10
 done
 
 ##############

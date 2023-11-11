@@ -49,6 +49,9 @@ get_validations() {
 			VALIDATIONJSON=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
 			echo "${VALIDATIONJSON}"
 			;;
+		502)    
+			echo "Not Ready"
+			;;
 		503)    
 			echo "Not Ready"
 			;;
@@ -249,6 +252,7 @@ do
 	then
 		echo "problem getting initial validation ${VALIDATIONID} status : "
 		echo "${RESPONSE}"
+		sleep 5
 	else
 		STATUS=$(echo ${RESPONSE} |jq -r '.elements[].validationChecks[]| .resultStatus' |sort |uniq)
 		echo "${STATUS}"

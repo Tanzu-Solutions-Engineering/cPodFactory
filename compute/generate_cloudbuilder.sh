@@ -223,7 +223,9 @@ do
 			STATUS=$(echo ${VALIDATIONJSON} | jq -r .executionStatus)
 			INPROGRESS=$(echo "${VALIDATIONJSON}" | jq '.validationChecks[] | select ( .resultStatus == "IN_PROGRESS") |.description')
 			if [ "${INPROGRESS}" != "${CURRENTSTEP}" ] 
-			then 
+			then
+				FINALSTATUS=$(echo "${VALIDATIONJSON}" | jq '.validationChecks[]| select ( .description == "'"${INPROGRESS}"'") |.description  ')
+				printf "\t%s" "${FINALSTATUS}"
 				printf "\n\t%s" "${INPROGRESS}"
 				CURRENTSTEP="${INPROGRESS}"
 			fi
@@ -244,8 +246,9 @@ do
 		exit 1
 	fi
 	printf '.' >/dev/tty
-	sleep 10
+	sleep 2
 done
+
 
 echo 
 echo "Validation completed"
@@ -313,6 +316,11 @@ do
 			exit 1
 		fi
 done
+
+
+
+# govc guest.run -vm /intel-DC/vm/cPod-VCF51-MGMT-cloudbuilder -l root:GcPr59hhCno! cat /etc/hostname
+
 
 echo
 echo "Check deployment in CloudBuilder:"

@@ -234,6 +234,10 @@ do
 		echo "${STATUS}"
 		STATUSCOUNT=$(echo "${STATUS}" | wc -l)
 		echo "count : ${STATUSCOUNT}"
+		if [[ "$STATUSCOUNT" -gt 1 ]]
+		then
+			sleep 5
+		fi
 	fi
 done
 
@@ -281,7 +285,7 @@ do
 		INPROGRESS=$(echo "${RESPONSE}" | jq -r '.validationChecks[] | select ( .resultStatus == "IN_PROGRESS") |.description')
 		if [ "${INPROGRESS}" != "${CURRENTSTEP}" ] 
 		then
-			FINALSTATUS=$(echo "${RESPONSE}" | jq -r '.validationChecks[]| select ( .description == '"${CURRENTSTEP}"') |.resultStatus')
+			FINALSTATUS=$(echo "${RESPONSE}" | jq -r '.validationChecks[]| select ( .description == "'"${CURRENTSTEP}"'") |.resultStatus')
 			printf "\t%s" "${FINALSTATUS}"
 			printf "\n\t%s" "${INPROGRESS}"
 			CURRENTSTEP="${INPROGRESS}"

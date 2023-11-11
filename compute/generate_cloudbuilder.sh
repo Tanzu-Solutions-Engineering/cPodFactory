@@ -339,8 +339,8 @@ HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
 if [ $HTTPSTATUS -eq 200 ] || [ $HTTPSTATUS -eq 202 ] 
 then
 		DEPLOYMENTINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
-		echo "${DEPLOYMENTINFO} created succesfully"
 		DEPLOYMENTID=$(echo "${DEPLOYMENTINFO}" |jq '.id')
+		echo "Deployment : ${DEPLOYMENTID} created succesfully"
 else
 		echo "  error creating deployment : ${DEPLOYMENTINFO}"
 		echo ${HTTPSTATUS}
@@ -350,6 +350,7 @@ fi
 
 echo
 printf "\t Querying deployment status ."
+
 
 RESPONSE=$(get_deployment_status "${DEPLOYMENTID}")
 if [[ "${RESPONSE}" == *"ERROR - HTTPSTATUS"* ]] || [[ "${RESPONSE}" == "" ]]
@@ -388,7 +389,7 @@ do
 				FINALSTATUS=$(echo "${RESPONSE}" | jq -r '.sddcSubTasks[]| select ( .name == "'"${CURRENTSTEP}"'") |.status')
 				printf "\t%s" "${FINALSTATUS}"
 			fi
-			printf "\n\t\t%s" "${MAINTASK}"
+			printf "\n\t\t%s" "${SUBTASK}"
 			CURRENTSTEP="${SUBTASK}"
 		fi
 	fi

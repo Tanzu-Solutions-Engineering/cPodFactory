@@ -199,6 +199,9 @@ add_entry_cpodrouter_hosts "${SUBNET}.11" "sddc" ${NAME_LOWER}
 
 restart_cpodrouter_dnsmasq ${NAME_LOWER}  
 
+# Check cloudbuilder lab settings"
+sshpass -p "${PASSWORD}" scp ./compute/cloudbuilder_lab_settings.sh admin@cloudbuilder.${NAME_LOWER}.${ROOT_DOMAIN}:/home/admin
+
 echo "JSON is genereated: ${JSONFILE}"
 echo
 

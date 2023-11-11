@@ -87,7 +87,7 @@ get_deployment_status() {
 	case $HTTPSTATUS in
 		200)    
 			VALIDATIONJSON=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
-			EXECUTIONSTATUS=$(echo ${VALIDATIONJSON} | jq -r .status)
+			EXECUTIONSTATUS=$(echo ${VALIDATIONJSON})
 			echo "${EXECUTIONSTATUS}"
 			;;
 		503)    
@@ -98,8 +98,6 @@ get_deployment_status() {
 			;;
 	esac
 }
-
-
 
 # ========= CODE ===========
 JSON_TEMPLATE=${JSON_TEMPLATE:-"cloudbuilder-43.json"}
@@ -350,56 +348,68 @@ else
 		exit
 fi
 
-
 echo
 printf "\t Querying deployment status ."
-INPROGRESS=$(get_deployment_status)
-CURRENTSTATE=${INPROGRESS}
-while [[ "$INPROGRESS" != "COMPLETED" ]]
+
+RESPONSE=$(get_deployment_status "${DEPLOYMENTID}")
+if [[ "${RESPONSE}" == *"ERROR - HTTPSTATUS"* ]] || [[ "${RESPONSE}" == "" ]]
+then
+	echo "problem getting initial deployment ${DEPLOYMENTID} status : "
+	echo "${RESPONSE}"
+else
+	STATUS=$(echo ${RESPONSE} | jq -r '.executionStatus')
+	echo "${STATUS}"
+fi
+
+CURRENTSTATE=${STATUS}
+CURRENTSTEP=""
+while [[ "$STATUS" != "COMPLETED" ]]
 do      
-		printf '.' >/dev/tty
-		sleep 10
-		INPROGRESS=$(get_deployment_status)
-		if [ "${INPROGRESS}" != "${CURRENTSTATE}" ] 
-		then 
-				printf "\n\t%s" ${INPROGRESS}
-				CURRENTSTATE=${INPROGRESS}
+	RESPONSE=$(get_deployment_status "${DEPLOYMENTID}")
+	if [[ "${RESPONSE}" == *"ERROR - HTTPSTATUS"* ]] || [[ "${RESPONSE}" == "" ]]
+	then
+		echo "problem getting deployment ${DEPLOYMENTID} status : "
+		echo "${RESPONSE}"		
+	else
+		STATUS=$(echo "${RESPONSE}" | jq -r '.executionStatus')
+		INPROGRESS=$(echo "${RESPONSE}" | jq -r '.validationChecks[] | select ( .resultStatus == "IN_PROGRESS") |.description')
+		if [ "${INPROGRESS}" != "${CURRENTSTEP}" ] 
+		then
+			FINALSTATUS=$(echo "${RESPONSE}" | jq -r '.validationChecks[]| select ( .description == "'"${CURRENTSTEP}"'") |.resultStatus')
+			printf "\t%s" "${FINALSTATUS}"
+			printf "\n\t%s" "${INPROGRESS}"
+			CURRENTSTEP="${INPROGRESS}"
 		fi
-		if [ "${INPROGRESS}" == "FAILED" ] 
-		then 
-			echo
-			echo "FAILED"
-			echo ${VALIDATIONRESULT} | jq .
-			echo "stopping script"
-			exit 1
-		fi
+	fi
+	if [ "${STATUS}" == "FAILED" ] 
+	then 
+		echo
+		echo "FAILED"
+		echo ${VALIDATIONRESULT} | jq .
+		echo "stopping script"
+		exit 1
+	fi
+	printf '.' >/dev/tty
+	sleep 2
 done
 
+RESPONSE=$(get_deployment_status "${DEPLOYMENTID}")
 
+if [[ "${RESPONSE}" == *"ERROR - HTTPSTATUS"* ]] || [[ "${RESPONSE}" == "" ]]
+then
+	echo "problem getting validation ${VALIDATIONID} final status : "
+	echo "${RESPONSE}"
+	exit
+else
+	FINALSTATUS=$(echo ${RESPONSE} |jq -r '.validationChecks[]| .resultStatus' | sort | uniq)
+	echo "${FINALSTATUS}"
+	STATUSCOUNT=$(echo "${FINALSTATUS}" | wc -l)
+	echo "count : ${STATUSCOUNT}"
+fi
 
-# govc guest.run -vm /intel-DC/vm/cPod-VCF51-MGMT-cloudbuilder -l root:GcPr59hhCno! cat /etc/hostname
-
-
+echo 
+echo "Deployment completed"
 echo
-echo "Check deployment in CloudBuilder:"
-echo "check url : https://cloudbuilder.${NAME_LOWER}.${ROOT_DOMAIN}"
-echo "using pwd : ${PASSWORD}"
-echo
-echo "when deployment finished, please manually edit sddc properties as follows:"
-echo "ssh vcf@sddc.${NAME_LOWER}.${ROOT_DOMAIN}"
-echo "su -"
-echo "pwd = ${PASSWORD}"
-echo 'DOMAINMGR=$(find /etc -name application-pro* | grep domainmanager)'
-echo 'echo "nsxt.manager.formfactor=small" >> $DOMAINMGR'
-echo 'echo "nsxt.management.resources.validation.skip=true" >> $DOMAINMGR'
-echo 'echo "vc.deployment.option=management-tiny" >> $DOMAINMGR'
-
-echo "verify the 2 lines have been added as expected"
-echo 'cat $DOMAINMGR'
-echo "restart service :"
-echo "systemctl restart domainmanager"
-echo "exit"
-echo "exit"
 
 
 # Delete a failed deployment

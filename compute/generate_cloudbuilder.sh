@@ -336,7 +336,7 @@ read -n1 -s -r -p $'Hit enter to launch deployment or ctrl-c to stop.\n' key
 RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} -H 'Content-Type: application/json' -H 'Accept: application/json' -d @${JSONFILE} -X POST https://cloudbuilder.${NAME_LOWER}.${ROOT_DOMAIN}/v1/sddcs)
 HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
 
-if [ $HTTPSTATUS -eq 200 ]
+if [ $HTTPSTATUS -eq 200 ] || [ $HTTPSTATUS -eq 202 ] 
 then
 		DEPLOYMENTINFO=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
 		echo "${DEPLOYMENTINFO} created succesfully"
@@ -357,12 +357,13 @@ then
 	echo "problem getting initial deployment ${DEPLOYMENTID} status : "
 	echo "${RESPONSE}"
 else
-	STATUS=$(echo ${RESPONSE} | jq -r '.executionStatus')
+	STATUS=$(echo ${RESPONSE} | jq -r '.status')
 	echo "${STATUS}"
 fi
 
 CURRENTSTATE=${STATUS}
 CURRENTSTEP=""
+CURRENTMAINTASK=""
 while [[ "$STATUS" != "COMPLETED" ]]
 do      
 	RESPONSE=$(get_deployment_status "${DEPLOYMENTID}")
@@ -371,14 +372,24 @@ do
 		echo "problem getting deployment ${DEPLOYMENTID} status : "
 		echo "${RESPONSE}"		
 	else
-		STATUS=$(echo "${RESPONSE}" | jq -r '.executionStatus')
-		INPROGRESS=$(echo "${RESPONSE}" | jq -r '.validationChecks[] | select ( .resultStatus == "IN_PROGRESS") |.description')
-		if [ "${INPROGRESS}" != "${CURRENTSTEP}" ] 
+		STATUS=$(echo "${RESPONSE}" | jq -r '.status')
+		MAINTASK=$(echo "${RESPONSE}" | jq -r '.sddcSubTasks[] | select ( .status == "IN_PROGRESS") |.description')
+		SUBTASK=$(echo "${RESPONSE}" | jq -r '.sddcSubTasks[] | select ( .status == "IN_PROGRESS") |.name')
+
+		if [ "${MAINTASK}" != "${CURRENTMAINTASK}" ] 
 		then
-			FINALSTATUS=$(echo "${RESPONSE}" | jq -r '.validationChecks[]| select ( .description == "'"${CURRENTSTEP}"'") |.resultStatus')
-			printf "\t%s" "${FINALSTATUS}"
-			printf "\n\t%s" "${INPROGRESS}"
-			CURRENTSTEP="${INPROGRESS}"
+			printf "\t%s" "${MAINTASK}"
+			CURRENTMAINTASK="${MAINTASK}"
+		fi	
+		if [ "${SUBTASK}" != "${CURRENTSTEP}" ] 
+		then
+			if [ "${CURRENTSTEP}" != ""  ]
+			then
+				FINALSTATUS=$(echo "${RESPONSE}" | jq -r '.sddcSubTasks[]| select ( .name == "'"${CURRENTSTEP}"'") |.status')
+				printf "\t%s" "${FINALSTATUS}"
+			fi
+			printf "\n\t\t%s" "${MAINTASK}"
+			CURRENTSTEP="${SUBTASK}"
 		fi
 	fi
 	if [ "${STATUS}" == "FAILED" ] 
@@ -401,7 +412,7 @@ then
 	echo "${RESPONSE}"
 	exit
 else
-	FINALSTATUS=$(echo ${RESPONSE} |jq -r '.validationChecks[]| .resultStatus' | sort | uniq)
+	FINALSTATUS=$(echo ${RESPONSE} |jq -r '.sddcSubTasks[]| .status' | sort | uniq)
 	echo "${FINALSTATUS}"
 	STATUSCOUNT=$(echo "${FINALSTATUS}" | wc -l)
 	echo "count : ${STATUSCOUNT}"

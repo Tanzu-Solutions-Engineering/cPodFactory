@@ -224,7 +224,7 @@ do
 			INPROGRESS=$(echo "${VALIDATIONJSON}" | jq '.validationChecks[] | select ( .resultStatus == "IN_PROGRESS") |.description')
 			if [ "${INPROGRESS}" != "${CURRENTSTEP}" ] 
 			then
-				FINALSTATUS=$(echo "${VALIDATIONJSON}" | jq '.validationChecks[]| select ( .description == '"${INPROGRESS}"') |.description  ')
+				FINALSTATUS=$(echo "${VALIDATIONJSON}" | jq '.validationChecks[]| select ( .description == '"${INPROGRESS}"') |.resultStatus')
 				printf "\t%s" "${FINALSTATUS}"
 				printf "\n\t%s" "${INPROGRESS}"
 				CURRENTSTEP="${INPROGRESS}"

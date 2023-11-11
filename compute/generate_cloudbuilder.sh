@@ -224,22 +224,24 @@ do
 		fi
 done
 # Check cloudbuilder lab settings"
+echo
 echo "prepping cloudbuilder"
 #wait for ESXCLI to become available 
 while [ "$SSHOK" != 0 ]
 do  
 	SSHOK=$( sshpass -p "${PASSWORD}" ssh -o "StrictHostKeyChecking=no" -o "ConnectTimeout=5" -o "UserKnownHostsFile=/dev/null" -o "LogLevel=error" admin@cloudbuilder.${NAME_LOWER}.${ROOT_DOMAIN} exit >/dev/null 2>&1; echo $? ) 
 	echo "SSH status ===$SSHOK==="
-	sleep 10
+	sleep 2
 	TIMEOUT=$((TIMEOUT + 1))
 	if [ $TIMEOUT -ge 10 ]; then
 		echo "bailing out..."
 		exit 1  
 	fi 
 done
-
-sshpass -p "${PASSWORD}" scp  -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null"  ./compute/cloudbuilder_lab_settings.sh admin@cloudbuilder.${NAME_LOWER}.${ROOT_DOMAIN}:/home/admin
+echo "scp script"
+sshpass -p "${PASSWORD}" scp  -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" ./compute/cloudbuilder_lab_settings.sh admin@cloudbuilder.${NAME_LOWER}.${ROOT_DOMAIN}:/home/admin
 BUILDERVM=$(govc ls vm | grep -i ${NAME_LOWER} | grep cloudbuilder)
+echo "execute script"
 govc guest.run -vm "${BUILDERVM}" -l root:"${PASSWORD}" sh /home/admin/cloudbuilder_lab_settings.sh
 
 echo

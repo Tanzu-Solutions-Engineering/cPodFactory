@@ -198,12 +198,6 @@ add_entry_cpodrouter_hosts "${SUBNET}.11" "sddc" ${NAME_LOWER}
 
 restart_cpodrouter_dnsmasq ${NAME_LOWER}  
 
-# Check cloudbuilder lab settings"
-sshpass -p "${PASSWORD}" scp ./compute/cloudbuilder_lab_settings.sh admin@cloudbuilder.${NAME_LOWER}.${ROOT_DOMAIN}:/home/admin
-
-BUILDERVM=$(govc ls vm | grep -i ${NAME_LOWER} | grep cloudbuilder)
-govc guest.run -vm "${BUILDERVM}" -l root:"${PASSWORD}" sh /home/admin/cloudbuilder_lab_settings.sh
-
 
 echo "JSON is genereated: ${JSONFILE}"
 echo
@@ -224,6 +218,12 @@ do
 				CURRENTSTATE=${INPROGRESS}
 		fi
 done
+
+# Check cloudbuilder lab settings"
+sshpass -p "${PASSWORD}" scp ./compute/cloudbuilder_lab_settings.sh admin@cloudbuilder.${NAME_LOWER}.${ROOT_DOMAIN}:/home/admin
+
+BUILDERVM=$(govc ls vm | grep -i ${NAME_LOWER} | grep cloudbuilder)
+govc guest.run -vm "${BUILDERVM}" -l root:"${PASSWORD}" sh /home/admin/cloudbuilder_lab_settings.sh
 
 echo
 echo "Checking if ready for new submission"
@@ -376,12 +376,12 @@ do
 		MAINTASK=$(echo "${RESPONSE}" | jq -r '.sddcSubTasks[] | select ( .status == "IN_PROGRESS") |.description')
 		SUBTASK=$(echo "${RESPONSE}" | jq -r '.sddcSubTasks[] | select ( .status == "IN_PROGRESS") |.name')
 
-		if [ "${MAINTASK}" != "${CURRENTMAINTASK}" ] 
+		if [[ "${MAINTASK}" != "${CURRENTMAINTASK}" ]] 
 		then
 			printf "\t%s" "${MAINTASK}"
 			CURRENTMAINTASK="${MAINTASK}"
 		fi	
-		if [ "${SUBTASK}" != "${CURRENTSTEP}" ] 
+		if [[ "${SUBTASK}" != "${CURRENTSTEP}" ]] 
 		then
 			if [ "${CURRENTSTEP}" != ""  ]
 			then
@@ -392,7 +392,7 @@ do
 			CURRENTSTEP="${SUBTASK}"
 		fi
 	fi
-	if [ "${STATUS}" == "FAILED" ] 
+	if [[ "${STATUS}" == "FAILED" ]] 
 	then 
 		echo
 		echo "FAILED"
@@ -425,3 +425,6 @@ echo
 
 # Delete a failed deployment
 # curl -X GET http://localhost:9080/bringup-app/bringup/sddcs/test/deleteAll
+
+# get table
+# curl -s -k  -u admin:${PASSWORD} -H 'Content-Type: application/json' -H 'Accept: application/json' -X GET https://cloudbuilder.${NAME_LOWER}.${ROOT_DOMAIN}/v1/sddcs/119e194f-31e2-4010-bed2-97d313992081 | jq -r '.sddcSubTasks[] | [.description, .name, .status] | @tsv' | column -t -s $'\t'

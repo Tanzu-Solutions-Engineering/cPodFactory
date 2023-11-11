@@ -373,8 +373,8 @@ do
 		echo "${RESPONSE}"		
 	else
 		STATUS=$(echo "${RESPONSE}" | jq -r '.status')
-		MAINTASK=$(echo "${RESPONSE}" | jq -r '.sddcSubTasks[] | select ( .status == "IN_PROGRESS") |.description')
-		SUBTASK=$(echo "${RESPONSE}" | jq -r '.sddcSubTasks[] | select ( .status == "IN_PROGRESS") |.name')
+		MAINTASK=$(echo "${RESPONSE}" | jq -r '.sddcSubTasks[] | select ( .status | contains("IN_PROGRESS")) |.description')
+		SUBTASK=$(echo "${RESPONSE}" | jq -r '.sddcSubTasks[] | select ( .status | contains("IN_PROGRESS")) |.name')
 
 		if [[ "${MAINTASK}" != "${CURRENTMAINTASK}" ]] 
 		then

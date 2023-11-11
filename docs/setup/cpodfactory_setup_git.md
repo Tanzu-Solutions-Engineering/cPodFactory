@@ -22,3 +22,17 @@ git pull fork dom-cobb
 ```
 
 ## force pull
+
+
+## Testing the PR locally
+
+
+```
+git fetch origin pull/ID/head:BRANCHNAME
+```
+
+example
+```
+git fetch origin pull/10/head:demo-feature
+git checkout demo-feature
+```

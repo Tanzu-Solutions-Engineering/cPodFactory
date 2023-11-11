@@ -14,5 +14,5 @@ echo "nsxt.manager.cluster.size=1" >> ${SETTINGSFILE}
 echo "nsxt.management.resources.validation.skip=true" >> ${SETTINGSFILE}
 echo "vc7.deployment.option:small" >> ${SETTINGSFILE}
 
-systemctl restart domainmanager
+systemctl restart vcf-bringup.service
 touch /home/admin/labsettings_done

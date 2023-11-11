@@ -7,6 +7,7 @@
 
 source ./env
 source ./extra/functions.sh
+source ./govc_env
 
 [ "$1" == "" ] && echo "usage: $0 <name_of_cpod>" && exit 1 
 
@@ -201,6 +202,10 @@ restart_cpodrouter_dnsmasq ${NAME_LOWER}
 
 # Check cloudbuilder lab settings"
 sshpass -p "${PASSWORD}" scp ./compute/cloudbuilder_lab_settings.sh admin@cloudbuilder.${NAME_LOWER}.${ROOT_DOMAIN}:/home/admin
+
+BUILDERVM=$(govc ls vm | grep -i ${NAME_LOWER} | grep cloudbuilder)
+govc guest.run -vm "${BUILDERVM}" -l root:"${PASSWORD}" sh /home/admin/cloudbuilder_lab_settings.sh
+
 
 echo "JSON is genereated: ${JSONFILE}"
 echo

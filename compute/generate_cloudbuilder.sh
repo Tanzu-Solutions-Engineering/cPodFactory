@@ -282,6 +282,7 @@ do
 		echo "problem getting validation ${VALIDATIONID} status : "
 		echo "${RESPONSE}"		
 	else
+		STATUS=$(echo "${RESPONSE}" | jq -r '.executionStatus')
 		INPROGRESS=$(echo "${RESPONSE}" | jq -r '.validationChecks[] | select ( .resultStatus == "IN_PROGRESS") |.description')
 		if [ "${INPROGRESS}" != "${CURRENTSTEP}" ] 
 		then

@@ -225,20 +225,19 @@ echo "prepping cloudbuilder"
 #wait for ESXCLI to become available 
 while [ "$SSHOK" != 0 ]
 do  
-SSHOK=$( sshpass -p "${PASSWORD}" ssh -o "StrictHostKeyChecking=no" -o "ConnectTimeout=5" -o "UserKnownHostsFile=/dev/null" -o "LogLevel=error" admin@cloudbuilder.${NAME_LOWER}.${ROOT_DOMAIN} exit >/dev/null 2>&1; echo $? ) 
-echo "SSH is not ready ===$SSHOK==="
-sleep 10
-TIMEOUT=$((TIMEOUT + 1))
-if [ $TIMEOUT -ge 10 ]; then
-	echo "bailing out..."
-	exit 1  
-fi 
+	SSHOK=$( sshpass -p "${PASSWORD}" ssh -o "StrictHostKeyChecking=no" -o "ConnectTimeout=5" -o "UserKnownHostsFile=/dev/null" -o "LogLevel=error" admin@cloudbuilder.${NAME_LOWER}.${ROOT_DOMAIN} exit >/dev/null 2>&1; echo $? ) 
+	echo "SSH status ===$SSHOK==="
+	sleep 10
+	TIMEOUT=$((TIMEOUT + 1))
+	if [ $TIMEOUT -ge 10 ]; then
+		echo "bailing out..."
+		exit 1  
+	fi 
 done
 
-sshpass -p "${PASSWORD}" scp ./compute/cloudbuilder_lab_settings.sh admin@cloudbuilder.${NAME_LOWER}.${ROOT_DOMAIN}:/home/admin
+sshpass -p "${PASSWORD}" scp  -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null"  ./compute/cloudbuilder_lab_settings.sh admin@cloudbuilder.${NAME_LOWER}.${ROOT_DOMAIN}:/home/admin
 BUILDERVM=$(govc ls vm | grep -i ${NAME_LOWER} | grep cloudbuilder)
 govc guest.run -vm "${BUILDERVM}" -l root:"${PASSWORD}" sh /home/admin/cloudbuilder_lab_settings.sh
-
 
 echo
 echo "Checking if ready for new submission"

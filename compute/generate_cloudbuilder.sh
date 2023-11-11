@@ -329,7 +329,7 @@ echo "Validation completed"
 echo
 
 ##############
-read -n1 -s -r -p $'Hit enter to launch deployment or ctrl-c to stop.\n' key
+#read -n1 -s -r -p $'Hit enter to launch deployment or ctrl-c to stop.\n' key
 
 #curl -i -k -u admin:${PASSWORD} -H 'Content-Type: application/json' -H 'Accept: application/json' -d @${JSONFILE} -X POST https://cloudbuilder.${NAME_LOWER}.${ROOT_DOMAIN}/v1/sddcs
 

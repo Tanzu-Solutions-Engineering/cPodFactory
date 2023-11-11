@@ -36,6 +36,27 @@ get_cloudbuilder_status() {
         esac
 }
 
+get_validations() {
+	# argument : none
+	#returns json
+	RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} -H 'Content-Type: application/json' -H 'Accept: application/json' -X GET https://cloudbuilder.${NAME_LOWER}.${ROOT_DOMAIN}/v1/sddcs/validations)
+	HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+	case $HTTPSTATUS in
+		200)    
+			VALIDATIONJSON=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+			echo "${VALIDATIONJSON}"
+			;;
+		503)    
+			echo "Not Ready"
+			;;
+		*)      
+			echo "ERROR - HTTPSTATUS : $HTTPSTATUS "
+			VALIDATIONJSON=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+			echo "${VALIDATIONJSON}"
+			;;
+	esac
+}
+
 get_validation_status() {
 	# argument : ${1} = VALIDATION_ID
 	#returns json
@@ -199,6 +220,24 @@ do
 done
 
 echo
+echo "Checking if ready for new submission"
+STATUSCOUNT=2
+while [[ "$STATUSCOUNT" -gt 1 ]]
+do      
+	RESPONSE=$(get_validations)
+	if [[ "${RESPONSE}" == *"ERROR - HTTPSTATUS"* ]] || [[ "${RESPONSE}" == "" ]]
+	then
+		echo "problem getting initial validation ${VALIDATIONID} status : "
+		echo "${RESPONSE}"
+	else
+		STATUS=$(echo ${RESPONSE} |jq -r '.elements[].validationChecks[]| .resultStatus' |sort |uniq)
+		echo "${STATUS}"
+		STATUSCOUNT=$(echo "${STATUS}" | wc -l)
+		echo "count : ${STATUSCOUNT}"
+	fi
+done
+
+echo
 echo "Submitting SDDC validation"
 RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} -H 'Content-Type: application/json' -H 'Accept: application/json' -d @${JSONFILE} -X POST https://cloudbuilder.${NAME_LOWER}.${ROOT_DOMAIN}/v1/sddcs/validations)
 HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
@@ -220,7 +259,7 @@ echo "Querying validation result"
 
 RESPONSE=$(get_validation_status  "${VALIDATIONID}")
 
-if [[ "${RESPONSE}" == *"error"* ]] || [[ "${TNCID}" == "" ]]
+if [[ "${RESPONSE}" == *"ERROR - HTTPSTATUS"* ]] || [[ "${RESPONSE}" == "" ]]
 then
 	echo "problem getting initial validation ${VALIDATIONID} status : "
 	echo "${RESPONSE}"
@@ -234,7 +273,7 @@ CURRENTSTEP=""
 while [[ "$STATUS" != "COMPLETED" ]]
 do      
 	RESPONSE=$(get_validation_status  "${VALIDATIONID}")
-	if [[ "${RESPONSE}" == *"error"* ]] || [[ "${TNCID}" == "" ]]
+	if [[ "${RESPONSE}" == *"ERROR - HTTPSTATUS"* ]] || [[ "${RESPONSE}" == "" ]]
 	then
 		echo "problem getting validation ${VALIDATIONID} status : "
 		echo "${RESPONSE}"		
@@ -262,7 +301,7 @@ done
 
 RESPONSE=$(get_validation_status  "${VALIDATIONID}")
 
-if [[ "${RESPONSE}" == *"error"* ]] || [[ "${TNCID}" == "" ]]
+if [[ "${RESPONSE}" == *"ERROR - HTTPSTATUS"* ]] || [[ "${RESPONSE}" == "" ]]
 then
 	echo "problem getting validation ${VALIDATIONID} final status : "
 	echo "${RESPONSE}"

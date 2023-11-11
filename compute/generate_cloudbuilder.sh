@@ -264,7 +264,7 @@ then
 	echo "problem getting initial validation ${VALIDATIONID} status : "
 	echo "${RESPONSE}"
 else
-	STATUS=$(echo ${RESPONSE} | jq -r .executionStatus)
+	STATUS=$(echo ${RESPONSE} | jq -r '.executionStatus')
 	echo "${STATUS}"
 fi
 
@@ -278,10 +278,10 @@ do
 		echo "problem getting validation ${VALIDATIONID} status : "
 		echo "${RESPONSE}"		
 	else
-		INPROGRESS=$(echo "${RESPONSE}" | jq '.validationChecks[] | select ( .resultStatus == "IN_PROGRESS") |.description')
+		INPROGRESS=$(echo "${RESPONSE}" | jq -r '.validationChecks[] | select ( .resultStatus == "IN_PROGRESS") |.description')
 		if [ "${INPROGRESS}" != "${CURRENTSTEP}" ] 
 		then
-			FINALSTATUS=$(echo "${RESPONSE}" | jq '.validationChecks[]| select ( .description == '"${CURRENTSTEP}"') |.resultStatus')
+			FINALSTATUS=$(echo "${RESPONSE}" | jq -r '.validationChecks[]| select ( .description == '"${CURRENTSTEP}"') |.resultStatus')
 			printf "\t%s" "${FINALSTATUS}"
 			printf "\n\t%s" "${INPROGRESS}"
 			CURRENTSTEP="${INPROGRESS}"

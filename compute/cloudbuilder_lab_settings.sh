@@ -16,3 +16,4 @@ echo "vc7.deployment.option:small" >> ${SETTINGSFILE}
 
 systemctl restart vcf-bringup.service
 touch /home/admin/labsettings_done
+cat ${SETTINGSFILE}

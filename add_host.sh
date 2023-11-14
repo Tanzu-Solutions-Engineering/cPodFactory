@@ -115,7 +115,7 @@ for ((i=1; i<=NUM_ESX; i++)); do
   do
     # code to be executed while $DHCPIP is empty
     echo "Waiting for $ESXHOST to get a DHCP IP..."
-    DHCPIP=$( govc vm.ip "$VMNAME" )
+    DHCPIP=$( govc vm.ip -v4 "$VMNAME" )
     echo "DHCPIP is now: $DHCPIP"
     sleep 10
     TIMEOUT=$((TIMEOUT + 1))

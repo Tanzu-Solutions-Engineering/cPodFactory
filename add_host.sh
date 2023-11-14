@@ -118,11 +118,14 @@ for ((i=1; i<=NUM_ESX; i++)); do
     DHCPIP=$( govc vm.ip -v4 "$VMNAME" )
     echo "DHCPIP is now: $DHCPIP"
     TESTIPV6=$(echo "${DHCPI}" |grep ":" | wc -l)
-    if [[ "${TESTIPV6}" -gt 0 ]]    
+    echo 
+    if [[ ${TESTIPV6} -gt 0 ]]    
     then
       echo "IPV6 detected"
       DHCPIP=""
       sleep 10
+    else
+      echo "IPV6 NOT detected"
     fi
     TIMEOUT=$((TIMEOUT + 1))
     if [ $TIMEOUT -ge 10 ]; then

@@ -117,7 +117,13 @@ for ((i=1; i<=NUM_ESX; i++)); do
     echo "Waiting for $ESXHOST to get a DHCP IP..."
     DHCPIP=$( govc vm.ip -v4 "$VMNAME" )
     echo "DHCPIP is now: $DHCPIP"
-    sleep 10
+    TESTIPV6=$(echo "${DHCPI}" |grep ":" | wc -l)
+    if [[ "${TESTIPV6}" -gt 0 ]]    
+    then
+      echo "IPV6 detected"
+      DHCPIP=""
+      sleep 10
+    fi
     TIMEOUT=$((TIMEOUT + 1))
     if [ $TIMEOUT -ge 10 ]; then
       echo "bailing out..."

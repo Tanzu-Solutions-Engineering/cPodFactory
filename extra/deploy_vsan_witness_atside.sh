@@ -63,8 +63,6 @@ fi
 CPOD_PORTGROUP="${CPOD_NAME_LOWER}"
 VAPP="cPod-${NAME_HIGHER}"
 
-echo "enter last bit for ip address. (it will be {cpod-subnet}.[lastbit])"
-read IPLASTBIT
 SUBNET=$( ./${COMPUTE_DIR}/cpod_ip.sh ${1} )
 IP=${SUBNET}.${IPLASTBIT}
 

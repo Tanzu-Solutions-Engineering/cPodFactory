@@ -28,8 +28,10 @@ fi
 
 #check if the cpod name equals ikea
 if [ "$1" == "ikea" ]; then
-    NAME=$("./extra/ikeaname.sh")
-    echo "the name of your cpod will be: $NAME"
+  NAME=$("./extra/ikeaname.sh")
+  echo "the name of your cpod will be: $NAME"
+else
+  NAME="${1}"
 fi
 
 #check if the cpod name exists by checking the host file
@@ -83,11 +85,12 @@ PASSWORD=$( ${EXTRA_DIR}/passwd_for_cpod.sh ${CPOD_NAME} )
 
 END=$( date +%s )
 TIME=$( expr ${END} - ${START} )
+TIME=$(date -d@$TIME -u +%Hh%Mm%Ss)
 
 echo
 echo "============================="
 echo "===  creation is finished ==="
-echo "=== In ${TIME} Seconds ==="
+echo "=== In ${TIME} ==="
 echo "============================="
 
 echo "=== connect to cpod sddc ==="

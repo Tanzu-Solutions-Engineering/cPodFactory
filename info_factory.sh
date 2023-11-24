@@ -11,7 +11,8 @@ echo "CPODS in AZ-${SPEC} : ${CPODS}"
 echo =====================
 echo Storage Info
 echo
-govc datastore.info ${DATASTORE} | grep -e Name -e Capacity -e Free
+#govc datastore.info ${DATASTORE} | grep -e Name -e Capacity -e Free
+govc datastore.info -json  |jq -r '["Name","Capacity","Free","Used%" ], (.Datastores[].Summary | select ( .MultipleHostAccess == true ) |  [.Name, (.Capacity/1024/1024/1024|floor), (.FreeSpace/1024/1024/1024|floor), (((.Capacity-.FreeSpace)*100/.Capacity)|floor)] )|@tsv ' | column -t
 
 DATASTOREFREE=$(govc datastore.info ${DATASTORE} | grep Free | sed -e "s/^.*://" -e "s/GB//" -e "s/ //g")
 DATASTOREFREE=$( echo "${DATASTOREFREE}/1" | bc )
@@ -21,10 +22,15 @@ DATASTORECAP=$(govc datastore.info ${DATASTORE} | grep Capacity | sed -e "s/^.*:
 DATASTORECAP=$( echo "${DATASTORECAP}/1" | bc )
 DATASTORECAP=$( expr ${DATASTORECAP} )
 
-PERCENTFULL=$(echo "scale=2; 100*($DATASTORECAP-$DATASTOREFREE)/$DATASTORECAP" |bc)
+PERCENTFULL=$(echo "scale=0; 100*($DATASTORECAP-$DATASTOREFREE)/$DATASTORECAP" |bc)
+[[ $PERCENTFULL -gt 70 ]] && STORAGESTATUS="!! alert !!" || STORAGESTATUS="ok"
 echo
-echo "Status: $PERCENTFULL% Full"
+echo "Status ${DATASTORE}  : $PERCENTFULL% Full - ${STORAGESTATUS}"
 echo =====================
+
+CPU=$( govc metric.sample "host/${VCENTER_CLUSTER}" cpu.usage.average | sed -e "s/,.*$//" | cut -f9 -d" " | cut -f1 -d"." )
+CPU=$( expr ${CPU} )
+echo "CPU : ${CPU}% avg"
 
 MEM=$( govc metric.sample "host/${VCENTER_CLUSTER}" mem.usage.average | sed -e "s/,.*$//" | cut -f9 -d" " | cut -f1 -d"." )
 MEM=$( expr ${MEM} )

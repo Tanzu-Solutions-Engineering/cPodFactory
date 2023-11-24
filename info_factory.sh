@@ -9,6 +9,8 @@ CPODS=$(cat /etc/hosts |grep cpod- | wc -l)
 echo =====================
 echo "CPODS in AZ-${SPEC} : ${CPODS}" 
 echo =====================
+echo "  govc version : $(govc version)"
+echo =====================
 echo Storage Info
 echo
 #govc datastore.info ${DATASTORE} | grep -e Name -e Capacity -e Free

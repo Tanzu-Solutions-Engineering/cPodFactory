@@ -26,10 +26,19 @@ PASSWORD=$( ${EXTRA_DIR}/passwd_for_cpod.sh ${CPOD_NAME} )
 SCRIPT_DIR=/tmp/scripts
 SCRIPT=/tmp/scripts/cloudbuilder-${NAME_LOWER}.json
 
-# with NSX, VLAN Management is untagged
-if [ ${BACKEND_NETWORK} != "VLAN" ]; then
+case "${BACKEND_NETWORK}" in
+NSX-T)
+	echo "NSX-T Backend"
+	echo "VLAN_MGMT=0"
 	VLAN_MGMT="0"
-fi
+	;;
+VLAN)
+	VLANID=$( expr ${BACKEND_VLAN_OFFSET} + ${TRANSIT_IP} )
+	VLAN_MGMT=${VLANID}
+	echo "VLAN Backend"
+	echo "VLAN_MGMT=${VLANID}"
+	;;
+esac
 
 if [ ${VLAN} -gt 40 ]; then
 	VMOTIONVLANID=${VLAN}1

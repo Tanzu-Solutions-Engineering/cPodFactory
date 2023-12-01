@@ -26,6 +26,19 @@ PASSWORD=$( ${EXTRA_DIR}/passwd_for_cpod.sh ${CPOD_NAME} )
 SCRIPT_DIR=/tmp/scripts
 SCRIPT=/tmp/scripts/cloudbuilder-${NAME_LOWER}.json
 
+#Check VLAN infos
+FIRST_LINE=$( grep ${ROOT_DOMAIN} ${DNSMASQ} | grep "${TRANSIT_NET}\." | grep "cpod-" | awk -F "/" '{print $3}' | sort -n -t "." -k 4 | head -1 )
+
+#testing for cpod-resume - used for shiting ranges while keeping existing cpods
+RESUME_LINE=$( grep ${ROOT_DOMAIN} ${DNSMASQ} | grep "${TRANSIT_NET}\." | grep "cpod-resume" | awk -F "/" '{print $3}' | sort -n -t "." -k 4 | head -1 )
+if [ "${RESUME_LINE}" != "" ]; then
+	FIRST_LINE=${RESUME_LINE}
+fi
+
+TRANSIT_IP=$( echo ${FIRST_LINE} | sed 's!^.*/!!' | sed 's/.*\.//' )
+TRANSIT_IP=$( expr ${TRANSIT_IP} )
+
+
 case "${BACKEND_NETWORK}" in
 NSX-T)
 	echo "NSX-T Backend"

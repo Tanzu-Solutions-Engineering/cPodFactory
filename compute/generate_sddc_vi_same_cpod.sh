@@ -11,7 +11,6 @@
 
 source ./extra/functions.sh
 
-NP_JSON_TEMPLATE=cloudbuilder-networkpool.json
 NEWHOSTS_JSON_TEMPLATE=cloudbuilder-hosts.json
 
 #Management Domain CPOD
@@ -91,7 +90,7 @@ done
 echo "]" >> ${HOSTSSCRIPT}
 
 echo "host json produced :"
-cat ${HOSTSSCRIPT} | jq . 
+cat "${HOSTSSCRIPT}" | jq . 
 
 echo "Submitting host validation"
 VALIDATIONJSON=$(curl -s -k -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}" -d @${HOSTSSCRIPT} -X POST  https://sddc.${NAME_LOWER}.${ROOT_DOMAIN}/v1/hosts/validations)
@@ -140,7 +139,7 @@ then
 	echo "problem getting initial validation ${VALIDATIONID} status : "
 	echo "${RESPONSE}"
 else
-	STATUS=$(echo ${RESPONSE} | jq -r '.executionStatus')
+	STATUS=$(echo "${RESPONSE}" | jq -r '.executionStatus')
 	echo "${STATUS}"
 fi
 
@@ -180,7 +179,7 @@ do
 	then 
 		echo
 		echo "FAILED"
-		echo ${VALIDATIONRESULT} | jq .
+		echo "${VALIDATIONRESULT}" | jq .
 		echo "stopping script"
 		exit 1
 	fi
@@ -245,10 +244,11 @@ get_commission_status(){
 RESPONSE=$(get_commission_status "${COMMISSIONID}")
 if [[ "${RESPONSE}" == *"ERROR"* ]] || [[ "${RESPONSE}" == "" ]]
 then
-	echo "problem getting initial validation ${COMMISSIONID} status : "
+	echo "problem getting initial commissioning ${COMMISSIONID} status : "
 	echo "${RESPONSE}"
+	exit
 else
-	STATUS=$(echo ${RESPONSE} | jq -r '.status')
+	STATUS=$(echo "${RESPONSE}" | jq -r '.status')
 	echo "${STATUS}"
 fi
 
@@ -264,9 +264,9 @@ do
 		echo "problem getting deployment ${VALIDATIONID} status : "
 		echo "${RESPONSE}"		
 	else
-		STATUS=$(echo "${RESPONSE}" | jq -r '.executionStatus')
-		MAINTASK=$(echo "${RESPONSE}" | jq -r '.description')
-		SUBTASK=$(echo "${RESPONSE}" | jq -r '.validationChecks[] | select ( .resultStatus | contains("IN_PROGRESS")) |.name')
+		STATUS=$(echo "${RESPONSE}" | jq -r '.status')
+		MAINTASK=$(echo "${RESPONSE}" | jq -r '.subTasks[] | select ( .status | contains("IN_PROGRESS")) |.description')
+		SUBTASK=$(echo "${RESPONSE}" | jq -r '.subTasks[] | select ( .status | contains("IN_PROGRESS")) |.name')
 
 		if [[ "${MAINTASK}" != "${CURRENTMAINTASK}" ]] 
 		then
@@ -277,7 +277,7 @@ do
 		then
 			if [ "${CURRENTSTEP}" != ""  ]
 			then
-				FINALSTATUS=$(echo "${RESPONSE}" | jq -r '.validationChecks[]| select ( .name == "'"${CURRENTSTEP}"'") |.status')
+				FINALSTATUS=$(echo "${RESPONSE}" | jq -r '.subTasks[]| select ( .name == "'"${CURRENTSTEP}"'") |.status')
 				printf "\t%s" "${FINALSTATUS}"
 			fi
 			printf "\n\t\t%s" "${SUBTASK}"
@@ -296,7 +296,7 @@ do
 	sleep 2
 done
 RESPONSE=$(get_commission_status "${COMMISSIONID}")
-RESULTSTATUS=$(echo "${RESPONSE}" | jq -r '.resultStatus')
+RESULTSTATUS=$(echo "${RESPONSE}" | jq -r '.resolutionStatus')
 
 echo
 echo "Host Commisioning Result Status : $RESULTSTATUS"
@@ -305,7 +305,7 @@ echo "Host Commisioning Result Status : $RESULTSTATUS"
 
 echo "Getting list of unassigned hosts"
 VALIDATIONRESULT=$(curl -s -k -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}" -X GET  'https://sddc.'${NAME_LOWER}.${ROOT_DOMAIN}'/v1/hosts?status=UNASSIGNED_USEABLE')
-echo ${VALIDATIONRESULT} | jq .
+echo "${VALIDATIONRESULT}" | jq .
 
 
 

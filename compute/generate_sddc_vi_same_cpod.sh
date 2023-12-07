@@ -156,9 +156,9 @@ do
 		echo "problem getting deployment ${VALIDATIONID} status : "
 		echo "${RESPONSE}"		
 	else
-		STATUS=$(echo "${RESPONSE}" | jq -r '.status')
-		MAINTASK=$(echo "${RESPONSE}" | jq -r '.subTasks[] | select ( .status | contains("IN_PROGRESS")) |.description')
-		SUBTASK=$(echo "${RESPONSE}" | jq -r '.subTasks[] | select ( .status | contains("IN_PROGRESS")) |.name')
+		STATUS=$(echo "${RESPONSE}" | jq -r '.executionStatus')
+		MAINTASK=$(echo "${RESPONSE}" | jq -r '.description')
+		SUBTASK=$(echo "${RESPONSE}" | jq -r '.validationChecks[] | select ( .resultStatus | contains("IN_PROGRESS")) |.name')
 
 		if [[ "${MAINTASK}" != "${CURRENTMAINTASK}" ]] 
 		then

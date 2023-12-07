@@ -7,7 +7,7 @@
 
 . ./env
 
-[ "$1" == "" -o "$2" == "" ] && echo "usage: $0 <name_of_vcf_cpod> wldname"  && echo "usage example: $0 vcf45 wld01" && exit 1
+[ "$1" == "" ] && echo "usage: $0 <name_of_vcf_cpod> "  && echo "usage example: $0 vcf45 wld01" && exit 1
 
 source ./extra/functions.sh
 
@@ -20,8 +20,6 @@ VLAN=$( grep -m 1 "${NAME_LOWER}\s" /etc/hosts | awk '{print $1}' | cut -d "." -
 VLAN_MGMT="${VLAN}"
 SUBNET=$( ./${COMPUTE_DIR}/cpod_ip.sh ${1} )
 VLAN_SHIFT=$( expr ${VLAN} + ${VLAN_SHIFT} )
-
-WLDNAME="${2}"
 
 SCRIPT_DIR=/tmp/scripts
 mkdir -p ${SCRIPT_DIR} 

@@ -130,6 +130,7 @@ echo "Querying validation result"
 get_validation_status(){
 	VALIDATIONID="${1}"
 	VALIDATIONRESULT=$(curl -s -k -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}" -X GET  https://sddc.${NAME_LOWER}.${ROOT_DOMAIN}/v1/hosts/validations/${VALIDATIONID})
+	echo ${VALIDATIONRESULT} > /tmp/script/validation-test.json
 	echo ${VALIDATIONRESULT}
 }
 
@@ -149,10 +150,10 @@ CURRENTSTEP=""
 CURRENTMAINTASK=""
 while [[ "$STATUS" != "COMPLETED" ]]
 do      
-	RESPONSE=$(get_validation_status "${DEPLOYMENTID}")
-	if [[ "${RESPONSE}" == *"ERROR - HTTPSTATUS"* ]] || [[ "${RESPONSE}" == "" ]]
+	RESPONSE=$(get_validation_status "${VALIDATIONID}")
+	if [[ "${RESPONSE}" == *"ERROR"* ]] || [[ "${RESPONSE}" == "" ]]
 	then
-		echo "problem getting deployment ${DEPLOYMENTID} status : "
+		echo "problem getting deployment ${VALIDATIONID} status : "
 		echo "${RESPONSE}"		
 	else
 		STATUS=$(echo "${RESPONSE}" | jq -r '.status')
@@ -168,7 +169,7 @@ do
 		then
 			if [ "${CURRENTSTEP}" != ""  ]
 			then
-				FINALSTATUS=$(echo "${RESPONSE}" | jq -r '.sddcSubTasks[]| select ( .name == "'"${CURRENTSTEP}"'") |.status')
+				FINALSTATUS=$(echo "${RESPONSE}" | jq -r '.subTasks[]| select ( .name == "'"${CURRENTSTEP}"'") |.status')
 				printf "\t%s" "${FINALSTATUS}"
 			fi
 			printf "\n\t\t%s" "${SUBTASK}"

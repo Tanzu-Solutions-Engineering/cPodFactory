@@ -149,7 +149,7 @@ CURRENTMAINTASK=""
 while [[ "$STATUS" != "COMPLETED" ]]
 do      
 	RESPONSE=$(get_validation_status "${VALIDATIONID}")
-	echo "${RESPONSE}" |jq .
+	#echo "${RESPONSE}" |jq .
 	if [[ "${RESPONSE}" == *"ERROR"* ]] || [[ "${RESPONSE}" == "" ]]
 	then
 		echo "problem getting deployment ${VALIDATIONID} status : "
@@ -255,10 +255,10 @@ fi
 CURRENTSTATE=${STATUS}
 CURRENTSTEP=""
 CURRENTMAINTASK=""
-while [[ "${STATUS}" != "COMPLETED" ]]
+while [[ "${STATUS}" != "Successful" ]]
 do      
 	RESPONSE=$(get_commission_status "${COMMISSIONID}")
-	echo "${RESPONSE}" |jq .
+	#echo "${RESPONSE}" |jq .
 	if [[ "${RESPONSE}" == *"ERROR"* ]] || [[ "${RESPONSE}" == "" ]]
 	then
 		echo "problem getting deployment ${VALIDATIONID} status : "
@@ -296,7 +296,7 @@ do
 	sleep 2
 done
 RESPONSE=$(get_commission_status "${COMMISSIONID}")
-RESULTSTATUS=$(echo "${RESPONSE}" | jq -r '.resolutionStatus')
+RESULTSTATUS=$(echo "${RESPONSE}" | jq -r '.status')
 
 echo
 echo "Host Commisioning Result Status : $RESULTSTATUS"

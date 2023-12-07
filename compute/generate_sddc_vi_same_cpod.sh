@@ -141,7 +141,7 @@ then
 	echo "problem getting initial validation ${VALIDATIONID} status : "
 	echo "${RESPONSE}"
 else
-	STATUS=$(echo ${RESPONSE} | jq -r '.status')
+	STATUS=$(echo ${RESPONSE} | jq -r '.executionStatus')
 	echo "${STATUS}"
 fi
 
@@ -169,7 +169,7 @@ do
 		then
 			if [ "${CURRENTSTEP}" != ""  ]
 			then
-				FINALSTATUS=$(echo "${RESPONSE}" | jq -r '.subTasks[]| select ( .name == "'"${CURRENTSTEP}"'") |.status')
+				FINALSTATUS=$(echo "${RESPONSE}" | jq -r '.validationChecks[]| select ( .name == "'"${CURRENTSTEP}"'") |.status')
 				printf "\t%s" "${FINALSTATUS}"
 			fi
 			printf "\n\t\t%s" "${SUBTASK}"
@@ -187,6 +187,12 @@ do
 	printf '.' >/dev/tty
 	sleep 2
 done
+RESPONSE=$(get_validation_status "${VALIDATIONID}")
+RESULTSTATUS=$(echo "${RESPONSE}" | jq -r '.resultStatus')
+
+echo
+echo "Host Validation Result Status : $RESULTSTATUS"
+
 
 ####
 exit

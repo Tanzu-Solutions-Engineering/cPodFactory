@@ -52,7 +52,7 @@ IPADDRESS=$((${IPADDRESS}+1))
 add_entry_cpodrouter_hosts "${SUBNET}.${IPADDRESS}" "nsx01b-"${WLDNAME} ${NAME_LOWER} 
 IPADDRESS=$((${IPADDRESS}+1))
 add_entry_cpodrouter_hosts "${SUBNET}.${IPADDRESS}" "nsx01c-"${WLDNAME} ${NAME_LOWER} 
-IPADDRESS=$((${LASTIP}+1))
+IPADDRESS=$((${IPADDRESS}+1))
 add_entry_cpodrouter_hosts "${SUBNET}.${IPADDRESS}" "en01-"${WLDNAME} ${NAME_LOWER} 
 IPADDRESS=$((${IPADDRESS}+1))
 add_entry_cpodrouter_hosts "${SUBNET}.${IPADDRESS}" "en02-"${WLDNAME} ${NAME_LOWER} 

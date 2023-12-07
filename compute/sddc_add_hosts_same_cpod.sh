@@ -29,20 +29,23 @@ mkdir -p ${SCRIPT_DIR}
 PASSWORD=$( ${EXTRA_DIR}/passwd_for_cpod.sh ${CPOD_NAME} ) 
 
 #USERNAME="administrator@${NAME_LOWER}.${ROOT_DOMAIN}"
+echo
 echo "Getting VCF API Token"
 TOKEN=$(curl -s -k -X POST -H "Content-Type: application/json" -d '{"password":"'${PASSWORD}'","username":"administrator@'${NAME_LOWER}.${ROOT_DOMAIN}'"}' https://sddc.${NAME_LOWER}.${ROOT_DOMAIN}/v1/tokens | jq .accessToken | sed 's/"//g')
 
+echo
 echo "Listing Hosts"
 SDDCHOSTS=$(curl -s -k -X GET -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}" https://sddc.${NAME_LOWER}.${ROOT_DOMAIN}/v1/hosts | jq .elements[].fqdn)
-echo $SDDCHOSTS
+echo "$SDDCHOSTS"
 
 echo
 echo "Listing Network Pools"
 SDDCNETPOOLS=$(curl -s -k -X GET -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}" https://sddc.${NAME_LOWER}.${ROOT_DOMAIN}/v1/network-pools | jq '.elements[] | {id, name}')
-echo $SDDCNETPOOLS
+echo "$SDDCNETPOOLS"
+echo
 echo "id of MGMT NP POOL"
 WLDNPPOOLID=$(curl -s -k -X GET -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}" https://sddc.${NAME_LOWER}.${ROOT_DOMAIN}/v1/network-pools | jq '.elements[] | select(.name == "np01") | .id' | sed 's/"//g')
-echo $WLDNPPOOLID
+echo "$WLDNPPOOLID"
 
 NPPOOLNAME="np01"
 # get wld esx hosts
@@ -89,9 +92,11 @@ for ESX in ${CPODHOSTS}; do
 done
 echo "]" >> ${HOSTSSCRIPT}
 
+echo
 echo "host json produced :"
 cat "${HOSTSSCRIPT}" | jq . 
 
+echo
 echo "Submitting host validation"
 VALIDATIONJSON=$(curl -s -k -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}" -d @${HOSTSSCRIPT} -X POST  https://sddc.${NAME_LOWER}.${ROOT_DOMAIN}/v1/hosts/validations)
 VALIDATIONID=$(echo "${VALIDATIONJSON}" | jq -r '.id')
@@ -152,6 +157,7 @@ do
 	#echo "${RESPONSE}" |jq .
 	if [[ "${RESPONSE}" == *"ERROR"* ]] || [[ "${RESPONSE}" == "" ]]
 	then
+		echo
 		echo "problem getting deployment ${VALIDATIONID} status : "
 		echo "${RESPONSE}"		
 	else
@@ -200,12 +206,14 @@ fi
 
 ####
 
+echo
 echo "Submitting host commisioning"
 COMMISIONJSON=$(curl -s -k -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}" -d @${HOSTSSCRIPT} -X POST  https://sddc.${NAME_LOWER}.${ROOT_DOMAIN}/v1/hosts)
 COMMISSIONID=$(echo "${COMMISIONJSON}" | jq -r '.id' )
 echo
 echo "Commissioning ID : ${COMMISSIONID}"
 
+echo
 echo "Querying commisioning result"
 
 get_commission_status(){
@@ -244,6 +252,7 @@ get_commission_status(){
 RESPONSE=$(get_commission_status "${COMMISSIONID}")
 if [[ "${RESPONSE}" == *"ERROR"* ]] || [[ "${RESPONSE}" == "" ]]
 then
+	echo
 	echo "problem getting initial commissioning ${COMMISSIONID} status : "
 	echo "${RESPONSE}"
 	exit
@@ -261,7 +270,7 @@ do
 	#echo "${RESPONSE}" |jq .
 	if [[ "${RESPONSE}" == *"ERROR"* ]] || [[ "${RESPONSE}" == "" ]]
 	then
-		echo "problem getting deployment ${VALIDATIONID} status : "
+		echo "problem getting deployment ${COMMISSIONID} status : "
 		echo "${RESPONSE}"		
 	else
 		STATUS=$(echo "${RESPONSE}" | jq -r '.status')
@@ -288,7 +297,7 @@ do
 	then 
 		echo
 		echo "FAILED"
-		echo ${VALIDATIONRESULT} | jq .
+		echo "${RESPONSE}" | jq .
 		echo "stopping script"
 		exit 1
 	fi
@@ -305,26 +314,6 @@ echo "Host Commisioning Result Status : $RESULTSTATUS"
 
 echo "Getting list of unassigned hosts"
 VALIDATIONRESULT=$(curl -s -k -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}" -X GET  'https://sddc.'${NAME_LOWER}.${ROOT_DOMAIN}'/v1/hosts?status=UNASSIGNED_USEABLE')
-echo "${VALIDATIONRESULT}" | jq .
+echo "${VALIDATIONRESULT}" | jq '.elements[].fqdn'
 
-
-
-echo "Adding host entries into hosts of ${NAME_LOWER}."
-LASTIP=$(get_last_ip  ${SUBNET}  ${NAME_LOWER})
-[[ $LASTIP -lt 50 ]] && LASTIP=50
-IPADDRESS=$((${LASTIP}+1))
-add_entry_cpodrouter_hosts "${SUBNET}.${IPADDRESS}" "vcsa-"${WLDNAME} ${NAME_LOWER} 
-IPADDRESS=$((${IPADDRESS}+1))
-add_entry_cpodrouter_hosts "${SUBNET}.${IPADDRESS}" "nsx01-"${WLDNAME} ${NAME_LOWER} 
-IPADDRESS=$((${IPADDRESS}+1))
-add_entry_cpodrouter_hosts "${SUBNET}.${IPADDRESS}" "nsx01a-"${WLDNAME} ${NAME_LOWER} 
-IPADDRESS=$((${IPADDRESS}+1))
-add_entry_cpodrouter_hosts "${SUBNET}.${IPADDRESS}" "nsx01b-"${WLDNAME} ${NAME_LOWER} 
-IPADDRESS=$((${IPADDRESS}+1))
-add_entry_cpodrouter_hosts "${SUBNET}.${IPADDRESS}" "nsx01c-"${WLDNAME} ${NAME_LOWER} 
-IPADDRESS=$((${LASTIP}+1))
-add_entry_cpodrouter_hosts "${SUBNET}.${IPADDRESS}" "en01-"${WLDNAME} ${NAME_LOWER} 
-IPADDRESS=$((${IPADDRESS}+1))
-add_entry_cpodrouter_hosts "${SUBNET}.${IPADDRESS}" "en02-"${WLDNAME} ${NAME_LOWER} 
-
-restart_cpodrouter_dnsmasq ${NAME_LOWER} 
+echo "Done."

@@ -64,7 +64,6 @@ echo "]" >> ${HOSTSSCRIPT}
 echo
 echo "host json produced :"
 cat "${HOSTSSCRIPT}" | jq . 
-exit 
 
 echo
 echo "Submitting host decommissioning"
@@ -78,11 +77,72 @@ echo
 echo "Querying commisioning result"
 
 get_commission_status(){
-
+	COMMISSIONID="${1}"
 	COMMISSIONRESULT=$(curl -s -k -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}" -X GET  https://sddc.${NAME_LOWER}.${ROOT_DOMAIN}/v1/tasks/${COMMISSIONID})
 	echo "${COMMISSIONRESULT}" > /tmp/scripts/commissionresult.json
 	echo "${COMMISSIONRESULT}"
 }
+
+RESPONSE=$(get_commission_status "${COMMISSIONID}")
+if [[ "${RESPONSE}" == *"ERROR"* ]] || [[ "${RESPONSE}" == "" ]]
+then
+	echo
+	echo "problem getting initial commissioning ${COMMISSIONID} status : "
+	echo "${RESPONSE}"
+	exit
+else
+	STATUS=$(echo "${RESPONSE}" | jq -r '.status')
+	echo "${STATUS}"
+fi
+
+CURRENTSTATE=${STATUS}
+CURRENTSTEP=""
+CURRENTMAINTASK=""
+while [[ "${STATUS}" != "Successful" ]]
+do      
+	RESPONSE=$(get_commission_status "${COMMISSIONID}")
+	#echo "${RESPONSE}" |jq .
+	if [[ "${RESPONSE}" == *"ERROR"* ]] || [[ "${RESPONSE}" == "" ]]
+	then
+		echo "problem getting deployment ${COMMISSIONID} status : "
+		echo "${RESPONSE}"		
+	else
+		STATUS=$(echo "${RESPONSE}" | jq -r '.status')
+		MAINTASK=$(echo "${RESPONSE}" | jq -r '.subTasks[] | select ( .status | contains("IN_PROGRESS")) |.description')
+		SUBTASK=$(echo "${RESPONSE}" | jq -r '.subTasks[] | select ( .status | contains("IN_PROGRESS")) |.name')
+
+		if [[ "${MAINTASK}" != "${CURRENTMAINTASK}" ]] 
+		then
+			printf "\t%s" "${MAINTASK}"
+			CURRENTMAINTASK="${MAINTASK}"
+		fi	
+		if [[ "${SUBTASK}" != "${CURRENTSTEP}" ]] 
+		then
+			if [ "${CURRENTSTEP}" != ""  ]
+			then
+				FINALSTATUS=$(echo "${RESPONSE}" | jq -r '.subTasks[]| select ( .name == "'"${CURRENTSTEP}"'") |.status')
+				printf "\t%s" "${FINALSTATUS}"
+			fi
+			printf "\n\t\t%s" "${SUBTASK}"
+			CURRENTSTEP="${SUBTASK}"
+		fi
+	fi
+	if [[ "${STATUS}" == "FAILED" ]] 
+	then 
+		echo
+		echo "FAILED"
+		echo "${RESPONSE}" | jq .
+		echo "stopping script"
+		exit 1
+	fi
+	printf '.' >/dev/tty
+	sleep 2
+done
+RESPONSE=$(get_commission_status "${COMMISSIONID}")
+RESULTSTATUS=$(echo "${RESPONSE}" | jq -r '.status')
+
+echo
+echo "Host Commisioning Result Status : $RESULTSTATUS"
 
 ####
 

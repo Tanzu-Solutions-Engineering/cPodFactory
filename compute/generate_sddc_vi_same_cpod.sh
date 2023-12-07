@@ -7,7 +7,7 @@
 
 . ./env
 
-[ "$1" == "" -o "$2" == ""  ] && echo "usage: $0 <name_of_vcf_cpod> <name_of_wld_cpod>"  && echo "usage example: $0 vcf45 vcf45-wld01" && exit 1
+[ "$1" == "" ] && echo "usage: $0 <name_of_vcf_cpod> "  && echo "usage example: $0 vcf45 " && exit 1
 
 source ./extra/functions.sh
 

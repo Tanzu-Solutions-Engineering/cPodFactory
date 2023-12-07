@@ -151,6 +151,7 @@ CURRENTMAINTASK=""
 while [[ "$STATUS" != "COMPLETED" ]]
 do      
 	RESPONSE=$(get_validation_status "${VALIDATIONID}")
+	echo "${RESPONSE}" |jq .
 	if [[ "${RESPONSE}" == *"ERROR"* ]] || [[ "${RESPONSE}" == "" ]]
 	then
 		echo "problem getting deployment ${VALIDATIONID} status : "

@@ -130,7 +130,7 @@ echo "Querying validation result"
 get_validation_status(){
 	VALIDATIONID="${1}"
 	VALIDATIONRESULT=$(curl -s -k -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}" -X GET  https://sddc.${NAME_LOWER}.${ROOT_DOMAIN}/v1/hosts/validations/${VALIDATIONID})
-	echo ${VALIDATIONRESULT} > /tmp/script/validation-test.json
+	echo ${VALIDATIONRESULT} > /tmp/scripts/validation-test.json
 	echo ${VALIDATIONRESULT}
 }
 

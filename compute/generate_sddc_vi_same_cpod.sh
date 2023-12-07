@@ -88,7 +88,7 @@ for ESX in ${CPODHOSTS}; do
 		echo "adding Host $ESX to list"
 		cat ${COMPUTE_DIR}/${NEWHOSTS_JSON_TEMPLATE} >> ${HOSTSSCRIPT}
 		
-		ESX_FQDN="${ESX}.${WLDNAME_LOWER}.${ROOT_DOMAIN}"
+		ESX_FQDN="${ESX}.${NAME_LOWER}.${ROOT_DOMAIN}"
 		sed -i -e "s/###ESXFQDN###/${ESX_FQDN}/g" \
 		-e "s/###POOLID###/${WLDNPPOOLID}/g" \
 		-e "s/###NPPOOL###/${NPPOOLNAME}/g" \
@@ -96,11 +96,11 @@ for ESX in ${CPODHOSTS}; do
 		${HOSTSSCRIPT}
 		if [ ${HOSTCOUNT} -gt 1 ];then
 			echo "," >> ${HOSTSSCRIPT}
+			((HOSTCOUNT=HOSTCOUNT-1))
 		fi
 	else
 		echo "Host $ESX already known by SDDC"
 	fi
-	((HOSTCOUNT=HOSTCOUNT-1))
 done
 echo "]" >> ${HOSTSSCRIPT}
 

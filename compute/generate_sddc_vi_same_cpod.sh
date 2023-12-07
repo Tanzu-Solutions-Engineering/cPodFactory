@@ -53,7 +53,6 @@ CPODHOSTS=$(ssh -o LogLevel=error ${NAME_LOWER}  "cat /etc/hosts | cut -f2 | gre
 
 HOSTSSCRIPT=/tmp/scripts/cloudbuilder-hosts-${NAME_LOWER}.json
 
-
 CPODHOSTCOUNT=$(echo "${CPODHOSTS}" |wc -l )
 SDDCHOSTCOUNT=$(echo "${SDDCHOSTS}" |wc -l )
 HOSTCOUNT=$((CPODHOSTCOUNT-SDDCHOSTCOUNT))
@@ -96,7 +95,7 @@ cat ${HOSTSSCRIPT} | jq .
 
 echo "Submitting host validation"
 VALIDATIONJSON=$(curl -s -k -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}" -d @${HOSTSSCRIPT} -X POST  https://sddc.${NAME_LOWER}.${ROOT_DOMAIN}/v1/hosts/validations)
-VALIDATIONID=$(echo ${VALIDATIONJSON} | jq .id | sed 's/"//g')
+VALIDATIONID=$(echo "${VALIDATIONJSON}" | jq -r '.id')
 #echo ${VALIDATIONID}
 
 echo "Querying validation result"
@@ -130,8 +129,8 @@ echo "Querying validation result"
 get_validation_status(){
 	VALIDATIONID="${1}"
 	VALIDATIONRESULT=$(curl -s -k -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}" -X GET  https://sddc.${NAME_LOWER}.${ROOT_DOMAIN}/v1/hosts/validations/${VALIDATIONID})
-	echo ${VALIDATIONRESULT} > /tmp/scripts/validation-test.json
-	echo ${VALIDATIONRESULT}
+	echo "${VALIDATIONRESULT}" > /tmp/scripts/validation-test.json
+	echo "${VALIDATIONRESULT}"
 }
 
 
@@ -194,44 +193,121 @@ RESULTSTATUS=$(echo "${RESPONSE}" | jq -r '.resultStatus')
 echo
 echo "Host Validation Result Status : $RESULTSTATUS"
 
+if [ "${RESULTSTATUS}" != "SUCCEEDED" ]
+then
+	echo "Validation not succesful. Quitting"
+	exit
+fi
 
 ####
-exit
 
 echo "Submitting host commisioning"
 COMMISIONJSON=$(curl -s -k -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}" -d @${HOSTSSCRIPT} -X POST  https://sddc.${NAME_LOWER}.${ROOT_DOMAIN}/v1/hosts)
-VALIDATIONID=$(echo ${COMMISIONJSON} | jq .id | sed 's/"//g')
-echo ${VALIDATIONID}
+COMMISSIONID=$(echo "${COMMISIONJSON}" | jq -r '.id' )
+echo
+echo "Commissioning ID : ${COMMISSIONID}"
 
 echo "Querying commisioning result"
-VALIDATIONRESULT=$(curl -s -k -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}" -X GET  https://sddc.${NAME_LOWER}.${ROOT_DOMAIN}/v1/tasks/${VALIDATIONID})
-EXECUTIONSTATUS=$(echo ${VALIDATIONRESULT} | jq .status | sed 's/"//g')
 
-while [[ "${EXECUTIONSTATUS}" != "Successful" ]]
-do
-	case  ${EXECUTIONSTATUS} in 
-		"In Progress")
-			echo "In Progress"
-			;;
-		FAILED)
-			echo "FAILED"
-			echo ${VALIDATIONRESULT} | jq .
-			echo "stopping script"
-			exit 1
-			;;
-		*)
-			echo ${EXECUTIONSTATUS}
-			;;
-	esac
-	sleep 30
-	VALIDATIONRESULT=$(curl -s -k -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}" -X GET  https://sddc.${NAME_LOWER}.${ROOT_DOMAIN}/v1/tasks/${VALIDATIONID})
-	echo ${VALIDATIONRESULT} | jq .
-	EXECUTIONSTATUS=$(echo ${VALIDATIONRESULT} | jq .status | sed 's/"//g')
+get_commission_status(){
+
+	COMMISSIONRESULT=$(curl -s -k -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}" -X GET  https://sddc.${NAME_LOWER}.${ROOT_DOMAIN}/v1/tasks/${COMMISSIONID})
+	echo "${COMMISSIONRESULT}" > /tmp/scripts/commissionresult.json
+	echo "${COMMISSIONRESULT}"
+}
+
+# RESULT=$(get_commission_status "${COMMISSIONID}")
+# EXECUTIONSTATUS=$(echo "${RESULT}" | jq -r '.status')
+
+
+# while [[ "${EXECUTIONSTATUS}" != "Successful" ]]
+# do
+# 	case  ${EXECUTIONSTATUS} in 
+# 		"In Progress")
+# 			echo "In Progress"
+# 			;;
+# 		FAILED)
+# 			echo "FAILED"
+# 			echo ${VALIDATIONRESULT} | jq .
+# 			echo "stopping script"
+# 			exit 1
+# 			;;
+# 		*)
+# 			echo ${EXECUTIONSTATUS}
+# 			;;
+# 	esac
+# 	sleep 30
+# 	VALIDATIONRESULT=$(curl -s -k -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}" -X GET  https://sddc.${NAME_LOWER}.${ROOT_DOMAIN}/v1/tasks/${VALIDATIONID})
+# 	echo ${VALIDATIONRESULT} | jq .
+# 	EXECUTIONSTATUS=$(echo ${VALIDATIONRESULT} | jq .status | sed 's/"//g')
+# done
+
+RESPONSE=$(get_commission_status "${COMMISSIONID}")
+if [[ "${RESPONSE}" == *"ERROR"* ]] || [[ "${RESPONSE}" == "" ]]
+then
+	echo "problem getting initial validation ${COMMISSIONID} status : "
+	echo "${RESPONSE}"
+else
+	STATUS=$(echo ${RESPONSE} | jq -r '.status')
+	echo "${STATUS}"
+fi
+
+CURRENTSTATE=${STATUS}
+CURRENTSTEP=""
+CURRENTMAINTASK=""
+while [[ "${STATUS}" != "COMPLETED" ]]
+do      
+	RESPONSE=$(get_commission_status "${COMMISSIONID}")
+	echo "${RESPONSE}" |jq .
+	if [[ "${RESPONSE}" == *"ERROR"* ]] || [[ "${RESPONSE}" == "" ]]
+	then
+		echo "problem getting deployment ${VALIDATIONID} status : "
+		echo "${RESPONSE}"		
+	else
+		STATUS=$(echo "${RESPONSE}" | jq -r '.executionStatus')
+		MAINTASK=$(echo "${RESPONSE}" | jq -r '.description')
+		SUBTASK=$(echo "${RESPONSE}" | jq -r '.validationChecks[] | select ( .resultStatus | contains("IN_PROGRESS")) |.name')
+
+		if [[ "${MAINTASK}" != "${CURRENTMAINTASK}" ]] 
+		then
+			printf "\t%s" "${MAINTASK}"
+			CURRENTMAINTASK="${MAINTASK}"
+		fi	
+		if [[ "${SUBTASK}" != "${CURRENTSTEP}" ]] 
+		then
+			if [ "${CURRENTSTEP}" != ""  ]
+			then
+				FINALSTATUS=$(echo "${RESPONSE}" | jq -r '.validationChecks[]| select ( .name == "'"${CURRENTSTEP}"'") |.status')
+				printf "\t%s" "${FINALSTATUS}"
+			fi
+			printf "\n\t\t%s" "${SUBTASK}"
+			CURRENTSTEP="${SUBTASK}"
+		fi
+	fi
+	if [[ "${STATUS}" == "FAILED" ]] 
+	then 
+		echo
+		echo "FAILED"
+		echo ${VALIDATIONRESULT} | jq .
+		echo "stopping script"
+		exit 1
+	fi
+	printf '.' >/dev/tty
+	sleep 2
 done
-echo "Host commisionned"
+RESPONSE=$(get_commission_status "${COMMISSIONID}")
+RESULTSTATUS=$(echo "${RESPONSE}" | jq -r '.resultStatus')
+
+echo
+echo "Host Commisioning Result Status : $RESULTSTATUS"
+
+####
+
 echo "Getting list of unassigned hosts"
 VALIDATIONRESULT=$(curl -s -k -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}" -X GET  'https://sddc.'${NAME_LOWER}.${ROOT_DOMAIN}'/v1/hosts?status=UNASSIGNED_USEABLE')
 echo ${VALIDATIONRESULT} | jq .
+
+
 
 echo "Adding host entries into hosts of ${NAME_LOWER}."
 LASTIP=$(get_last_ip  ${SUBNET}  ${NAME_LOWER})

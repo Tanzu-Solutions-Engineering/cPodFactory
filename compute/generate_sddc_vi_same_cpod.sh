@@ -24,21 +24,6 @@ VLAN_SHIFT=$( expr ${VLAN} + ${VLAN_SHIFT} )
 
 WLDNAME="${2}"
 
-# with NSX, VLAN Management is untagged
-if [ ${BACKEND_NETWORK} != "VLAN" ]; then
-	VLAN_MGMT="0"
-fi
-
-if [ ${WLDVLAN} -gt 40 ]; then
-	VMOTIONVLANID=${WLDVLAN}1
-	VSANVLANID=${WLDVLAN}2
-	VLANID=${WLDVLAN}3
-else
-	VMOTIONVLANID=${WLDVLAN}01
-	VSANVLANID=${WLDVLAN}02
-	VLANID=${WLDVLAN}03
-fi
-
 SCRIPT_DIR=/tmp/scripts
 mkdir -p ${SCRIPT_DIR} 
 
@@ -115,29 +100,95 @@ VALIDATIONID=$(echo ${VALIDATIONJSON} | jq .id | sed 's/"//g')
 #echo ${VALIDATIONID}
 
 echo "Querying validation result"
-VALIDATIONRESULT=$(curl -s -k -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}" -X GET  https://sddc.${NAME_LOWER}.${ROOT_DOMAIN}/v1/hosts/validations/${VALIDATIONID})
-EXECUTIONSTATUS=$(echo ${VALIDATIONRESULT} | jq .executionStatus | sed 's/"//g')
 
-while [[ "${EXECUTIONSTATUS}" != "COMPLETED" ]]
-do
-	case  ${EXECUTIONSTATUS} in 
-		IN_PROGRESS)
-			echo "IN_PROGRESS"
-			;;
-		FAILED)
-			echo "FAILED"
-			echo ${VALIDATIONRESULT} | jq .
-			echo "stopping script"
-			exit 1
-			;;
-		*)
-			echo ${EXECUTIONSTATUS}
-			;;
-	esac
-	sleep 10
+# VALIDATIONRESULT=$(curl -s -k -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}" -X GET  https://sddc.${NAME_LOWER}.${ROOT_DOMAIN}/v1/hosts/validations/${VALIDATIONID})
+# EXECUTIONSTATUS=$(echo ${VALIDATIONRESULT} | jq .executionStatus | sed 's/"//g')
+
+# while [[ "${EXECUTIONSTATUS}" != "COMPLETED" ]]
+# do
+# 	case  ${EXECUTIONSTATUS} in 
+# 		IN_PROGRESS)
+# 			echo "IN_PROGRESS"
+# 			;;
+# 		FAILED)
+# 			echo "FAILED"
+# 			echo ${VALIDATIONRESULT} | jq .
+# 			echo "stopping script"
+# 			exit 1
+# 			;;
+# 		*)
+# 			echo ${EXECUTIONSTATUS}
+# 			;;
+# 	esac
+# 	sleep 10
+# 	VALIDATIONRESULT=$(curl -s -k -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}" -X GET  https://sddc.${NAME_LOWER}.${ROOT_DOMAIN}/v1/hosts/validations/${VALIDATIONID})
+# 	EXECUTIONSTATUS=$(echo ${VALIDATIONRESULT} | jq .executionStatus | sed 's/"//g')
+# done
+
+####
+
+get_validation_status(){
+	VALIDATIONID="${1}"
 	VALIDATIONRESULT=$(curl -s -k -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}" -X GET  https://sddc.${NAME_LOWER}.${ROOT_DOMAIN}/v1/hosts/validations/${VALIDATIONID})
-	EXECUTIONSTATUS=$(echo ${VALIDATIONRESULT} | jq .executionStatus | sed 's/"//g')
+	echo ${VALIDATIONRESULT}
+}
+
+
+RESPONSE=$(get_validation_status "${VALIDATIONID}")
+if [[ "${RESPONSE}" == *"ERROR - HTTPSTATUS"* ]] || [[ "${RESPONSE}" == "" ]]
+then
+	echo "problem getting initial validation ${VALIDATIONID} status : "
+	echo "${RESPONSE}"
+else
+	STATUS=$(echo ${RESPONSE} | jq -r '.status')
+	echo "${STATUS}"
+fi
+
+CURRENTSTATE=${STATUS}
+CURRENTSTEP=""
+CURRENTMAINTASK=""
+while [[ "$STATUS" != "COMPLETED" ]]
+do      
+	RESPONSE=$(get_validation_status "${DEPLOYMENTID}")
+	if [[ "${RESPONSE}" == *"ERROR - HTTPSTATUS"* ]] || [[ "${RESPONSE}" == "" ]]
+	then
+		echo "problem getting deployment ${DEPLOYMENTID} status : "
+		echo "${RESPONSE}"		
+	else
+		STATUS=$(echo "${RESPONSE}" | jq -r '.status')
+		MAINTASK=$(echo "${RESPONSE}" | jq -r '.subTasks[] | select ( .status | contains("IN_PROGRESS")) |.description')
+		SUBTASK=$(echo "${RESPONSE}" | jq -r '.subTasks[] | select ( .status | contains("IN_PROGRESS")) |.name')
+
+		if [[ "${MAINTASK}" != "${CURRENTMAINTASK}" ]] 
+		then
+			printf "\t%s" "${MAINTASK}"
+			CURRENTMAINTASK="${MAINTASK}"
+		fi	
+		if [[ "${SUBTASK}" != "${CURRENTSTEP}" ]] 
+		then
+			if [ "${CURRENTSTEP}" != ""  ]
+			then
+				FINALSTATUS=$(echo "${RESPONSE}" | jq -r '.sddcSubTasks[]| select ( .name == "'"${CURRENTSTEP}"'") |.status')
+				printf "\t%s" "${FINALSTATUS}"
+			fi
+			printf "\n\t\t%s" "${SUBTASK}"
+			CURRENTSTEP="${SUBTASK}"
+		fi
+	fi
+	if [[ "${STATUS}" == "FAILED" ]] 
+	then 
+		echo
+		echo "FAILED"
+		echo ${VALIDATIONRESULT} | jq .
+		echo "stopping script"
+		exit 1
+	fi
+	printf '.' >/dev/tty
+	sleep 2
 done
+
+####
+exit
 
 echo "Submitting host commisioning"
 COMMISIONJSON=$(curl -s -k -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}" -d @${HOSTSSCRIPT} -X POST  https://sddc.${NAME_LOWER}.${ROOT_DOMAIN}/v1/hosts)
@@ -176,19 +227,20 @@ echo ${VALIDATIONRESULT} | jq .
 
 echo "Adding host entries into hosts of ${NAME_LOWER}."
 LASTIP=$(get_last_ip  ${SUBNET}  ${NAME_LOWER})
+[[ $LASTIP -lt 50 ]] && LASTIP=50
 IPADDRESS=$((${LASTIP}+1))
-add_to_cpodrouter_hosts "${SUBNET}.${IPADDRESS}" "vcsa-"${WLDNAME} ${NAME_LOWER} 
+add_entry_cpodrouter_hosts "${SUBNET}.${IPADDRESS}" "vcsa-"${WLDNAME} ${NAME_LOWER} 
 IPADDRESS=$((${IPADDRESS}+1))
-add_to_cpodrouter_hosts "${SUBNET}.${IPADDRESS}" "nsx01-"${WLDNAME} ${NAME_LOWER} 
+add_entry_cpodrouter_hosts "${SUBNET}.${IPADDRESS}" "nsx01-"${WLDNAME} ${NAME_LOWER} 
 IPADDRESS=$((${IPADDRESS}+1))
-add_to_cpodrouter_hosts "${SUBNET}.${IPADDRESS}" "nsx01a-"${WLDNAME} ${NAME_LOWER} 
+add_entry_cpodrouter_hosts "${SUBNET}.${IPADDRESS}" "nsx01a-"${WLDNAME} ${NAME_LOWER} 
 IPADDRESS=$((${IPADDRESS}+1))
-add_to_cpodrouter_hosts "${SUBNET}.${IPADDRESS}" "nsx01b-"${WLDNAME} ${NAME_LOWER} 
+add_entry_cpodrouter_hosts "${SUBNET}.${IPADDRESS}" "nsx01b-"${WLDNAME} ${NAME_LOWER} 
 IPADDRESS=$((${IPADDRESS}+1))
-add_to_cpodrouter_hosts "${SUBNET}.${IPADDRESS}" "nsx01c-"${WLDNAME} ${NAME_LOWER} 
+add_entry_cpodrouter_hosts "${SUBNET}.${IPADDRESS}" "nsx01c-"${WLDNAME} ${NAME_LOWER} 
 IPADDRESS=$((${LASTIP}+1))
-add_to_cpodrouter_hosts "${WLDSUBNET}.${IPADDRESS}" "en01-"${WLDNAME} ${WLDNAME_LOWER} 
+add_entry_cpodrouter_hosts "${SUBNET}.${IPADDRESS}" "en01-"${WLDNAME} ${NAME_LOWER} 
 IPADDRESS=$((${IPADDRESS}+1))
-add_to_cpodrouter_hosts "${WLDSUBNET}.${IPADDRESS}" "en02-"${WLDNAME} ${WLDNAME_LOWER} 
+add_entry_cpodrouter_hosts "${SUBNET}.${IPADDRESS}" "en02-"${WLDNAME} ${NAME_LOWER} 
 
-
+restart_cpodrouter_dnsmasq ${NAME_LOWER} 

@@ -83,7 +83,7 @@ echo "[" > ${HOSTSSCRIPT}
 for ESX in ${CPODHOSTS}; do
 	#echo ${ESX}
 	#echo ${HOSTCOUNT}
-	if [ $(echo "$SDDCHOSTS" |grep $ESX) == "" ]
+	if [ "$(echo "$SDDCHOSTS" |grep $ESX)" == "" ]
 	then 
 		echo "adding Host $ESX to list"
 		cat ${COMPUTE_DIR}/${NEWHOSTS_JSON_TEMPLATE} >> ${HOSTSSCRIPT}

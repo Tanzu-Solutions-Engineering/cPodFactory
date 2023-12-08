@@ -30,20 +30,20 @@ PASSWORD=$( ${EXTRA_DIR}/passwd_for_cpod.sh ${CPOD_NAME} )
 echo
 echo "Getting VCF API Token"
 TOKEN=$(get_sddc_token "${NAME_LOWER}" "${PASSWORD}" )
-#TOKEN=$(curl -s -k -X POST -H "Content-Type: application/json" -d '{"password":"'${PASSWORD}'","username":"administrator@'${NAME_LOWER}.${ROOT_DOMAIN}'"}' https://sddc.${NAME_LOWER}.${ROOT_DOMAIN}/v1/tokens | jq .accessToken | sed 's/"//g')
 
 echo
 echo "Listing Hosts"
-SDDCHOSTS=$(curl -s -k -X GET -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}" https://sddc.${NAME_LOWER}.${ROOT_DOMAIN}/v1/hosts | jq .elements[].fqdn)
-echo "$SDDCHOSTS"
+get_hosts "${NAME_LOWER}" "${TOKEN}"
 
 echo
 echo "Listing Network Pools"
-SDDCNETPOOLS=$(curl -s -k -X GET -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}" https://sddc.${NAME_LOWER}.${ROOT_DOMAIN}/v1/network-pools | jq '.elements[] | {id, name}')
-echo "$SDDCNETPOOLS"
+get_network_pools "${NAME_LOWER}" "${TOKEN}"
+
+#SDDCNETPOOLS=$(curl -s -k -X GET -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}" https://sddc.${NAME_LOWER}.${ROOT_DOMAIN}/v1/network-pools | jq '.elements[] | {id, name}')
+#echo "$SDDCNETPOOLS"
 echo
 echo "id of MGMT NP POOL"
-WLDNPPOOLID=$(curl -s -k -X GET -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}" https://sddc.${NAME_LOWER}.${ROOT_DOMAIN}/v1/network-pools | jq '.elements[] | select(.name == "np01") | .id' | sed 's/"//g')
+WLDNPPOOLID=$(curl -s -k -X GET -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}" https://sddc.${NAME_LOWER}.${ROOT_DOMAIN}/v1/network-pools | jq -r '.elements[] | select(.name == "np01") | .id' )
 echo "$WLDNPPOOLID"
 
 NPPOOLNAME="np01"
@@ -129,14 +129,6 @@ echo "Querying validation result"
 
 ####
 
-get_validation_status(){
-	VALIDATIONID="${1}"
-	VALIDATIONRESULT=$(curl -s -k -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}" -X GET  https://sddc.${NAME_LOWER}.${ROOT_DOMAIN}/v1/hosts/validations/${VALIDATIONID})
-	echo "${VALIDATIONRESULT}" > /tmp/scripts/validation-test.json
-	echo "${VALIDATIONRESULT}"
-}
-
-
 RESPONSE=$(get_validation_status "${VALIDATIONID}")
 if [[ "${RESPONSE}" == *"ERROR - HTTPSTATUS"* ]] || [[ "${RESPONSE}" == "" ]]
 then
@@ -215,38 +207,6 @@ echo "Commissioning ID : ${COMMISSIONID}"
 echo
 echo "Querying commisioning result"
 
-get_commission_status(){
-
-	COMMISSIONRESULT=$(curl -s -k -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}" -X GET  https://sddc.${NAME_LOWER}.${ROOT_DOMAIN}/v1/tasks/${COMMISSIONID})
-	echo "${COMMISSIONRESULT}" > /tmp/scripts/commissionresult.json
-	echo "${COMMISSIONRESULT}"
-}
-
-# RESULT=$(get_commission_status "${COMMISSIONID}")
-# EXECUTIONSTATUS=$(echo "${RESULT}" | jq -r '.status')
-
-
-# while [[ "${EXECUTIONSTATUS}" != "Successful" ]]
-# do
-# 	case  ${EXECUTIONSTATUS} in 
-# 		"In Progress")
-# 			echo "In Progress"
-# 			;;
-# 		FAILED)
-# 			echo "FAILED"
-# 			echo ${VALIDATIONRESULT} | jq .
-# 			echo "stopping script"
-# 			exit 1
-# 			;;
-# 		*)
-# 			echo ${EXECUTIONSTATUS}
-# 			;;
-# 	esac
-# 	sleep 30
-# 	VALIDATIONRESULT=$(curl -s -k -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}" -X GET  https://sddc.${NAME_LOWER}.${ROOT_DOMAIN}/v1/tasks/${VALIDATIONID})
-# 	echo ${VALIDATIONRESULT} | jq .
-# 	EXECUTIONSTATUS=$(echo ${VALIDATIONRESULT} | jq .status | sed 's/"//g')
-# done
 
 RESPONSE=$(get_commission_status "${COMMISSIONID}")
 if [[ "${RESPONSE}" == *"ERROR"* ]] || [[ "${RESPONSE}" == "" ]]

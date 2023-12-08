@@ -20,8 +20,23 @@ get_network_pools(){
 get_hosts(){
     NAME_LOWER="${1}"
     TOKEN="${2}"
-    SDDCHOSTS=$(curl -s -k -X GET -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}" https://sddc.${NAME_LOWER}.${ROOT_DOMAIN}/v1/hosts | jq .elements[].fqdn)
+    SDDCHOSTS=$(curl -s -k -X GET -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}" https://sddc.${NAME_LOWER}.${ROOT_DOMAIN}/v1/hosts | jq -r '.elements[].fqdn')
     echo "$SDDCHOSTS"
 }
+
+get_validation_status(){
+	VALIDATIONID="${1}"
+	VALIDATIONRESULT=$(curl -s -k -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}" -X GET  https://sddc.${NAME_LOWER}.${ROOT_DOMAIN}/v1/hosts/validations/${VALIDATIONID})
+	echo "${VALIDATIONRESULT}" > /tmp/scripts/validation-test.json
+	echo "${VALIDATIONRESULT}"
+}
+
+get_commission_status(){
+    COMMISSIONID="${1}"
+	COMMISSIONRESULT=$(curl -s -k -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}" -X GET  https://sddc.${NAME_LOWER}.${ROOT_DOMAIN}/v1/tasks/${COMMISSIONID})
+	echo "${COMMISSIONRESULT}" > /tmp/scripts/commissionresult.json
+	echo "${COMMISSIONRESULT}"
+}
+
 
 ###################

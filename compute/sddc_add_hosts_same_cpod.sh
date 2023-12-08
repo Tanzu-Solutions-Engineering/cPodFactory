@@ -10,7 +10,7 @@
 [ "$1" == "" ] && echo "usage: $0 <name_of_vcf_cpod> "  && echo "usage example: $0 vcf45" && exit 1
 
 source ./extra/functions.sh
-
+source ./extra/functions_sddc_mgr.sh
 NEWHOSTS_JSON_TEMPLATE=cloudbuilder-hosts.json
 
 #Management Domain CPOD
@@ -29,7 +29,8 @@ PASSWORD=$( ${EXTRA_DIR}/passwd_for_cpod.sh ${CPOD_NAME} )
 #USERNAME="administrator@${NAME_LOWER}.${ROOT_DOMAIN}"
 echo
 echo "Getting VCF API Token"
-TOKEN=$(curl -s -k -X POST -H "Content-Type: application/json" -d '{"password":"'${PASSWORD}'","username":"administrator@'${NAME_LOWER}.${ROOT_DOMAIN}'"}' https://sddc.${NAME_LOWER}.${ROOT_DOMAIN}/v1/tokens | jq .accessToken | sed 's/"//g')
+TOKEN=$(get_sddc_token "${NAME_LOWER}" "${PASSWORD}" )
+#TOKEN=$(curl -s -k -X POST -H "Content-Type: application/json" -d '{"password":"'${PASSWORD}'","username":"administrator@'${NAME_LOWER}.${ROOT_DOMAIN}'"}' https://sddc.${NAME_LOWER}.${ROOT_DOMAIN}/v1/tokens | jq .accessToken | sed 's/"//g')
 
 echo
 echo "Listing Hosts"

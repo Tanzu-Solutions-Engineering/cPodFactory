@@ -109,22 +109,11 @@ loop_wait_validation(){
 }
 
 loop_wait_commissioning(){
-
     COMMISSIONID="${1}"
-    # RESPONSE=$(get_commission_status "${COMMISSIONID}")
-    # if [[ "${RESPONSE}" == *"ERROR"* ]] || [[ "${RESPONSE}" == "" ]]
-    # then
-    #     echo
-    #     echo "problem getting initial commissioning ${COMMISSIONID} status : "
-    #     echo "${RESPONSE}"
-    #     exit
-    # else
-    #     STATUS=$(echo "${RESPONSE}" | jq -r '.status')
-    #     echo "${STATUS}"
-    # fi
     STATUS=""
     CURRENTSTEP=""
     CURRENTMAINTASK=""
+    FINALSTATUS=""
     while [[ "${STATUS}" != "Successful" ]]
     do      
         RESPONSE=$(get_commission_status "${COMMISSIONID}")
@@ -148,10 +137,7 @@ loop_wait_commissioning(){
                 printf "\n\t%s" "${MAINTASK}"
                 CURRENTMAINTASK="${TASKNAME}"
             fi	
-#            printf "\n\t\t%s" "${MAINTASK}"
-#            CURRENTSTEP="${SUBTASK}"
-#            CURRENTMAINTASK="${MAINTASK}"
-        
+             printf '.' >/dev/tty
         fi
         if [[ "${STATUS}" == "FAILED" ]] 
         then 
@@ -161,12 +147,10 @@ loop_wait_commissioning(){
             echo "stopping script"
             exit 1
         fi
-        printf '.' >/dev/tty
         sleep 2
     done
     RESPONSE=$(get_commission_status "${COMMISSIONID}")
     RESULTSTATUS=$(echo "${RESPONSE}" | jq -r '.status')
-
     echo
     echo "Host Commisioning Result Status : $RESULTSTATUS"    
 }

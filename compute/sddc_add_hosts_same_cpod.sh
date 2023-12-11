@@ -91,9 +91,9 @@ for ESX in ${CPODHOSTS}; do
 done
 echo "]" >> ${HOSTSSCRIPT}
 
-echo
-echo "host json produced :"
-cat "${HOSTSSCRIPT}" | jq . 
+# echo
+# echo "host json produced :"
+# cat "${HOSTSSCRIPT}" | jq . 
 
 echo
 echo "Submitting host validation"
@@ -102,98 +102,8 @@ VALIDATIONID=$(echo "${VALIDATIONJSON}" | jq -r '.id')
 #echo ${VALIDATIONID}
 
 echo "Querying validation result"
-
-# VALIDATIONRESULT=$(curl -s -k -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}" -X GET  https://sddc.${NAME_LOWER}.${ROOT_DOMAIN}/v1/hosts/validations/${VALIDATIONID})
-# EXECUTIONSTATUS=$(echo ${VALIDATIONRESULT} | jq .executionStatus | sed 's/"//g')
-
-# while [[ "${EXECUTIONSTATUS}" != "COMPLETED" ]]
-# do
-# 	case  ${EXECUTIONSTATUS} in 
-# 		IN_PROGRESS)
-# 			echo "IN_PROGRESS"
-# 			;;
-# 		FAILED)
-# 			echo "FAILED"
-# 			echo ${VALIDATIONRESULT} | jq .
-# 			echo "stopping script"
-# 			exit 1
-# 			;;
-# 		*)
-# 			echo ${EXECUTIONSTATUS}
-# 			;;
-# 	esac
-# 	sleep 10
-# 	VALIDATIONRESULT=$(curl -s -k -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}" -X GET  https://sddc.${NAME_LOWER}.${ROOT_DOMAIN}/v1/hosts/validations/${VALIDATIONID})
-# 	EXECUTIONSTATUS=$(echo ${VALIDATIONRESULT} | jq .executionStatus | sed 's/"//g')
-# done
-
-####
-
-RESPONSE=$(get_validation_status "${VALIDATIONID}")
-if [[ "${RESPONSE}" == *"ERROR - HTTPSTATUS"* ]] || [[ "${RESPONSE}" == "" ]]
-then
-	echo "problem getting initial validation ${VALIDATIONID} status : "
-	echo "${RESPONSE}"
-else
-	STATUS=$(echo "${RESPONSE}" | jq -r '.executionStatus')
-	echo "${STATUS}"
-fi
-
-CURRENTSTATE=${STATUS}
-CURRENTSTEP=""
-CURRENTMAINTASK=""
-while [[ "$STATUS" != "COMPLETED" ]]
-do      
-	RESPONSE=$(get_validation_status "${VALIDATIONID}")
-	#echo "${RESPONSE}" |jq .
-	if [[ "${RESPONSE}" == *"ERROR"* ]] || [[ "${RESPONSE}" == "" ]]
-	then
-		echo
-		echo "problem getting deployment ${VALIDATIONID} status : "
-		echo "${RESPONSE}"		
-	else
-		STATUS=$(echo "${RESPONSE}" | jq -r '.executionStatus')
-		MAINTASK=$(echo "${RESPONSE}" | jq -r '.description')
-		SUBTASK=$(echo "${RESPONSE}" | jq -r '.validationChecks[] | select ( .resultStatus | contains("IN_PROGRESS")) |.name')
-
-		if [[ "${MAINTASK}" != "${CURRENTMAINTASK}" ]] 
-		then
-			printf "\t%s" "${MAINTASK}"
-			CURRENTMAINTASK="${MAINTASK}"
-		fi	
-		if [[ "${SUBTASK}" != "${CURRENTSTEP}" ]] 
-		then
-			if [ "${CURRENTSTEP}" != ""  ]
-			then
-				FINALSTATUS=$(echo "${RESPONSE}" | jq -r '.validationChecks[]| select ( .name == "'"${CURRENTSTEP}"'") |.status')
-				printf "\t%s" "${FINALSTATUS}"
-			fi
-			printf "\n\t\t%s" "${SUBTASK}"
-			CURRENTSTEP="${SUBTASK}"
-		fi
-	fi
-	if [[ "${STATUS}" == "FAILED" ]] 
-	then 
-		echo
-		echo "FAILED"
-		echo "${VALIDATIONRESULT}" | jq .
-		echo "stopping script"
-		exit 1
-	fi
-	printf '.' >/dev/tty
-	sleep 2
-done
-RESPONSE=$(get_validation_status "${VALIDATIONID}")
-RESULTSTATUS=$(echo "${RESPONSE}" | jq -r '.resultStatus')
-
 echo
-echo "Host Validation Result Status : $RESULTSTATUS"
-
-if [ "${RESULTSTATUS}" != "SUCCEEDED" ]
-then
-	echo "Validation not succesful. Quitting"
-	exit
-fi
+loop_wait_validation "${VALIDATIONID}"
 
 ####
 
@@ -206,68 +116,8 @@ echo "Commissioning ID : ${COMMISSIONID}"
 
 echo
 echo "Querying commisioning result"
-
-
-RESPONSE=$(get_commission_status "${COMMISSIONID}")
-if [[ "${RESPONSE}" == *"ERROR"* ]] || [[ "${RESPONSE}" == "" ]]
-then
-	echo
-	echo "problem getting initial commissioning ${COMMISSIONID} status : "
-	echo "${RESPONSE}"
-	exit
-else
-	STATUS=$(echo "${RESPONSE}" | jq -r '.status')
-	echo "${STATUS}"
-fi
-
-CURRENTSTATE=${STATUS}
-CURRENTSTEP=""
-CURRENTMAINTASK=""
-while [[ "${STATUS}" != "Successful" ]]
-do      
-	RESPONSE=$(get_commission_status "${COMMISSIONID}")
-	#echo "${RESPONSE}" |jq .
-	if [[ "${RESPONSE}" == *"ERROR"* ]] || [[ "${RESPONSE}" == "" ]]
-	then
-		echo "problem getting deployment ${COMMISSIONID} status : "
-		echo "${RESPONSE}"		
-	else
-		STATUS=$(echo "${RESPONSE}" | jq -r '.status')
-		MAINTASK=$(echo "${RESPONSE}" | jq -r '.subTasks[] | select ( .status | contains("IN_PROGRESS")) |.description')
-		SUBTASK=$(echo "${RESPONSE}" | jq -r '.subTasks[] | select ( .status | contains("IN_PROGRESS")) |.name')
-
-		if [[ "${MAINTASK}" != "${CURRENTMAINTASK}" ]] 
-		then
-			printf "\t%s" "${MAINTASK}"
-			CURRENTMAINTASK="${MAINTASK}"
-		fi	
-		if [[ "${SUBTASK}" != "${CURRENTSTEP}" ]] 
-		then
-			if [ "${CURRENTSTEP}" != ""  ]
-			then
-				FINALSTATUS=$(echo "${RESPONSE}" | jq -r '.subTasks[]| select ( .name == "'"${CURRENTSTEP}"'") |.status')
-				printf "\t%s" "${FINALSTATUS}"
-			fi
-			printf "\n\t\t%s" "${SUBTASK}"
-			CURRENTSTEP="${SUBTASK}"
-		fi
-	fi
-	if [[ "${STATUS}" == "FAILED" ]] 
-	then 
-		echo
-		echo "FAILED"
-		echo "${RESPONSE}" | jq .
-		echo "stopping script"
-		exit 1
-	fi
-	printf '.' >/dev/tty
-	sleep 2
-done
-RESPONSE=$(get_commission_status "${COMMISSIONID}")
-RESULTSTATUS=$(echo "${RESPONSE}" | jq -r '.status')
-
 echo
-echo "Host Commisioning Result Status : $RESULTSTATUS"
+loop_wait_commissioning  "${COMMISSIONID}"
 
 ####
 

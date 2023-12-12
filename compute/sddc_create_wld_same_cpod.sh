@@ -7,7 +7,7 @@
 
 . ./env
 
-[ "$1" == "" -o "$2" == "" ] && echo "usage: $0 <name_of_vcf_cpod> wldname"  && echo "usage example: $0 vcf45 wld01" && exit 1
+[ "$1" == "" ] || [ "$2" == "" ] || [ "$3" == "" ] && echo "usage: $0 <name_of_vcf_cpod> wldname clustername"  && echo "usage example: $0 vcf45 wld01 cl01" && exit 1
 
 source ./extra/functions.sh
 
@@ -25,6 +25,7 @@ SUBNET=$( ./${COMPUTE_DIR}/cpod_ip.sh ${1} )
 VLAN_SHIFT=$( expr ${VLAN} + ${VLAN_SHIFT} )
 
 WLDNAME="${2}"
+CLUSTERNAME="${3}"
 
 SCRIPT_DIR=/tmp/scripts
 mkdir -p ${SCRIPT_DIR} 
@@ -54,6 +55,9 @@ else
 	exit
 fi
 
+LICENSEKEYS=$(get_license_keys_full "${NAME_LOWER}" "${TOKEN}")
+ESXLICENSE=$(echo "${LICENSEKEYS}" |jq '.elements[] | select (.productType == "ESXI" )')
+
 DOMAINJSON="${SCRIPT_DIR}/cloudbuilder-domains-$$.json"
 cp "${DOMAIN_JSON_TEMPLATE}" "${DOMAINJSON}"
 NEWDOMAINJSON=$(cat  "${DOMAINJSON}")
@@ -69,16 +73,16 @@ for HOSTID in ${UNASSIGNEDID}; do
                     {
                     "id": "vmnic0",
                     "uplink": "uplink1",
-                    "vdsName": "###WLD_NAME###-###CLUSTERNAME###-vds-01"
+                    "vdsName": "'"${WLDNAME}-${CLUSTERNAME}"'-vds-01"
                     },
                     {
                     "id": "vmnic1",
                     "uplink": "uplink2",
-                    "vdsName": "###WLD_NAME###-###CLUSTERNAME###-vds-01"
+                    "vdsName": "'"${WLDNAME}-${CLUSTERNAME}"'-vds-01"
                     }
                 ]
                 },
-                "licenseKey": "###LIC_ESX###"
+                "licenseKey": "'"${ESXLICENSE}"'"
             }'
     
     NEWDOMAINJSON=$(echo "${NEWDOMAINJSON}" |jq '.computeSpec.clusterSpecs[].hostSpecs += ['"${HOSTJSON}"']')

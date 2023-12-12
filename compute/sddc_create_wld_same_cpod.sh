@@ -115,7 +115,7 @@ sed -i -e "s/###WLD_NAME###/${WLDNAME}/g" \
         -e "s/###NSX01BIP###/${PASSWORD}/g" \
         -e "s/###NSX01CIP###/${PASSWORD}/g" \
         -e "s/###VCENTERIP###/${PASSWORD}/g" \
-		${HOSTSSCRIPT}
+		${DOMAINJSON}
 
 NEWDOMAINJSON=$(cat  "${DOMAINJSON}")
 

@@ -85,6 +85,8 @@ for HOSTID in ${UNASSIGNEDID}; do
                 "licenseKey": "'"${ESXLICENSE}"'"
             }'
     
+    jq . "${HOSTJSON}"
+
     NEWDOMAINJSON=$(echo "${NEWDOMAINJSON}" |jq '.computeSpec.clusterSpecs[].hostSpecs += ['"${HOSTJSON}"']')
 done
 echo "${NEWDOMAINJSON}"  >  "${DOMAINJSON}"

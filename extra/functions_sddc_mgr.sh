@@ -179,8 +179,3 @@ loop_wait_commissioning(){
 }
 
 ###################
-
-curl 'https://sddc.cpod-vcf51.az-lhr.cloud-garage.net/ui/api/v1/license-keys?'
- -H 'User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:120.0) Gecko/20100101 Firefox/120.0' -H 'Accept: application/json, text/plain, */*' -H 'Accept-Language: en-US-US' -H 'Accept-Encoding: gzip, deflate, br'
-  -H 'Connection: keep-alive' -H 'Cookie: session=s%3AsdRTVrdEgYBpRtLPikI7Xp48eobHTXBD.H5z8Qwv69G5KpK6qG%2BmpARbq6o%2FcPZGA2yM2EUoFXH4; XSRF-TOKEN=8AMQcVIG-xD-iF3lMQIak1Ho3LyFUwsihobY; _pk_ses..a6ae=0' -H 'Sec-Fetch-Dest: empty' -H 'Sec-Fetch-Mode: cors' -H 'Sec-Fetch-Site: same-origin'
-

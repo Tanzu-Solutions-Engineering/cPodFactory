@@ -40,7 +40,7 @@ UNASSIGNEDHOSTS=$(get_hosts_unassigned "${NAME_LOWER}" "${TOKEN}")
 
 HOSTSSCRIPT=/tmp/scripts/cloudbuilder-hosts-${NAME_LOWER}.json
 
-UNASSIGNEDHOSTSCOUNT=$(echo "${UNASSIGNEDHOSTS}" |wc -l )
+UNASSIGNEDHOSTSCOUNT=$(echo -n "${UNASSIGNEDHOSTS}" |wc -l )
 if [[ $UNASSIGNEDHOSTSCOUNT -gt 0 ]]
 then
 	echo "$UNASSIGNEDHOSTSCOUNT hosts to decommission"

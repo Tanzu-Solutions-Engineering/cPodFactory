@@ -107,7 +107,7 @@ restart_cpodrouter_dnsmasq ${NAME_LOWER}
 sed -i -e "s/###WLD_NAME###/${WLDNAME}/g" \
 		-e "s/###CLUSTERNAME###/${CLUSTERNAME}/g" \
         -e "s/###CPOD###/${NAME_LOWER}/g" \
-        -e "s/###DOMAIN###/${DOMAIN}/g" \
+        -e "s/###DOMAIN###/${ROOT_DOMAIN}/g" \
 		-e "s/###LIC_VSAN###/${VSANLICENSE}/g" \
         -e "s/###LIC_NSXT###/${NSXLICENSE}/g" \
 		-e "s/###PASSWORD###/${PASSWORD}/g" \
@@ -158,6 +158,7 @@ echo "${DOMAINJSON}"
 echo
 echo "Submitting domain validation"
 VALIDATIONJSON=$(curl -s -k -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}" -d @${DOMAINJSON} -X POST  https://sddc.${NAME_LOWER}.${ROOT_DOMAIN}/v1/domains/validations)
+
 VALIDATIONID=$(echo "${VALIDATIONJSON}" | jq -r '.id')
 echo "${VALIDATIONID}"
 

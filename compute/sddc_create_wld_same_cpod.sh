@@ -157,14 +157,14 @@ echo "${DOMAINJSON}"
 
 echo
 echo "Submitting domain validation"
-VALIDATIONJSON=$(curl -s -k -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}" -d @${DOMAINJSON} -X POST  https://sddc.${NAME_LOWER}.${ROOT_DOMAIN}/v1/domains/validations)
+#VALIDATIONJSON=$(curl -s -k -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}" -d @${DOMAINJSON} -X POST  https://sddc.${NAME_LOWER}.${ROOT_DOMAIN}/v1/domains/validations)
 
-VALIDATIONID=$(echo "${VALIDATIONJSON}" | jq -r '.id')
+VALIDATIONID=$(post_domain_validation "${NAME_LOWER}" "${TOKEN}" "${DOMAINJSON}" )
 echo "${VALIDATIONID}"
 
 echo "Querying validation result"
 echo
-loop_wait_hosts_validation "${VALIDATIONID}"
+#loop_wait_hosts_validation "${VALIDATIONID}"
 
 
 # curl -k 'https://sddc.cpod-vcf51.az-lhr.cloud-garage.net/ui/api/v1/domains' -X POST -H 'User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:120.0) Gecko/20100101 Firefox/120.0' -H 'Accept: application/json, text/plain, */*'  -H 'Accept-Language: en-US-US' -H 'Accept-Encoding: gzip, deflate, br' -H 'X-XSRF-TOKEN: tVur7sxf-XcKLodgMgZXNQSeggISbZPn0b2A' -H 'Content-Type: application/json'   -H 'Origin: https://sddc.cpod-vcf51.az-lhr.cloud-garage.net' -H 'Connection: keep-alive' -H 'Cookie: session=s%3AA9NuYKZcS5_EPx5W4fWBxUDnl4f18uKK.ecW%2FzXy9hpMXJwQNFaY6KLzhZnt4eRv3NVqEyd2LMww; XSRF-TOKEN=tVur7sxf-XcKLodgMgZXNQSeggISbZPn0b2A'    -H 'Sec-Fetch-Dest: empty' -H 'Sec-Fetch-Mode: cors' -H 'Sec-Fetch-Site: same-origin' 

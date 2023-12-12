@@ -33,7 +33,8 @@ TOKEN=$(get_sddc_token "${NAME_LOWER}" "${PASSWORD}" )
 
 echo
 echo "Listing Hosts"
-get_hosts "${NAME_LOWER}" "${TOKEN}"
+SDDCHOSTS=$(get_hosts_fqdn "${NAME_LOWER}" "${TOKEN}")
+echo "${SDDCHOSTS}"
 
 echo
 echo "Listing Network Pools"

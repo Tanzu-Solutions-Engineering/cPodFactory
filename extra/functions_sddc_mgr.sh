@@ -17,12 +17,27 @@ get_network_pools(){
     echo "$SDDCNETPOOLS"
 }
 
-get_hosts(){
+get_hosts_full(){
+    NAME_LOWER="${1}"
+    TOKEN="${2}"
+    SDDCHOSTS=$(curl -s -k -X GET -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}" https://sddc.${NAME_LOWER}.${ROOT_DOMAIN}/v1/hosts)
+    echo "$SDDCHOSTS"
+}
+
+get_hosts_fqdn(){
     NAME_LOWER="${1}"
     TOKEN="${2}"
     SDDCHOSTS=$(curl -s -k -X GET -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}" https://sddc.${NAME_LOWER}.${ROOT_DOMAIN}/v1/hosts | jq -r '.elements[].fqdn')
     echo "$SDDCHOSTS"
 }
+
+get_hosts_unassigned(){
+    NAME_LOWER="${1}"
+    TOKEN="${2}"
+    VALIDATIONRESULT=$(curl -s -k -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}" -X GET  'https://sddc.'${NAME_LOWER}.${ROOT_DOMAIN}'/v1/hosts?status=UNASSIGNED_USEABLE')
+    echo "${VALIDATIONRESULT}" | jq -r '.elements[].fqdn'
+}
+
 
 get_validation_status(){
 	VALIDATIONID="${1}"

@@ -11,6 +11,8 @@
 
 source ./extra/functions.sh
 
+source ./extra/functions_sddc_mgr.sh
+
 NEWHOSTS_JSON_TEMPLATE=cloudbuilder-hosts.json
 DOMAIN_JSON_TEMPLATE=./compute/cloudbuilder-domains-v5.json
 

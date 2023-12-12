@@ -32,6 +32,18 @@ mkdir -p ${SCRIPT_DIR}
 
 PASSWORD=$( ${EXTRA_DIR}/passwd_for_cpod.sh ${CPOD_NAME} ) 
 
+# Check WLD exists in DNS entries
+
+DNSCOUNT=$(ssh -o LogLevel=error -o StrictHostKeyChecking=no "${NAME_LOWER}" "cat /etc/hosts" |grep -c "${WLDNAME}")
+if [[ $DNSCOUNT -gt 0 ]]
+then
+	echo "$DNSCOUNT dns entries found for ${WLDNAME}"
+	echo "bailing out"
+	exit
+else
+	echo "no dns entries found for ${WLDNAME} - proceeding"
+fi
+
 #USERNAME="administrator@${NAME_LOWER}.${ROOT_DOMAIN}"
 echo
 echo "Getting VCF API Token"
@@ -51,13 +63,60 @@ else
 	echo "hostcount <=0 : $UNASSIGNEDCOUNT"
 	echo "bailing out"
 	exit
+
 fi
 
 LICENSEKEYS=$(get_license_keys_full "${NAME_LOWER}" "${TOKEN}")
 ESXLICENSE=$(echo "${LICENSEKEYS}" |jq -r '.elements[] | select (.productType == "ESXI" )| .key')
+VSANLICENSE=$(echo "${LICENSEKEYS}" |jq -r '.elements[] | select (.productType == "VSAN" )| .key')
+NSXLICENSE=$(echo "${LICENSEKEYS}" |jq -r '.elements[] | select (.productType == "NSXT" )| .key')
+VCENTERLICENSE=$(echo "${LICENSEKEYS}" |jq -r '.elements[] | select (.productType == "VCENTER" )| .key')
 
 DOMAINJSON="${SCRIPT_DIR}/cloudbuilder-domains-$$.json"
 cp "${DOMAIN_JSON_TEMPLATE}" "${DOMAINJSON}"
+
+#check and generate IPs
+echo "Adding host entries into hosts of ${NAME_LOWER}."
+LASTIP=$(get_last_ip  ${SUBNET}  ${NAME_LOWER})
+[[ $LASTIP -lt 50 ]] && LASTIP=50
+IPADDRESS=$((${LASTIP}+1))
+VCENTERIP="${SUBNET}.${IPADDRESS}"
+add_entry_cpodrouter_hosts "${VCENTERIP}" "vcsa-"${WLDNAME} ${NAME_LOWER} 
+IPADDRESS=$((IPADDRESS+1))
+NSXTVIP="${SUBNET}.${IPADDRESS}"
+add_entry_cpodrouter_hosts "${NSXTVIP}" "nsx01-"${WLDNAME} ${NAME_LOWER} 
+IPADDRESS=$((IPADDRESS+1))
+NSX01AIP="${SUBNET}.${IPADDRESS}"
+add_entry_cpodrouter_hosts "${NSX01AIP}" "nsx01a-"${WLDNAME} ${NAME_LOWER} 
+IPADDRESS=$((IPADDRESS+1))
+NSX01BIP="${SUBNET}.${IPADDRESS}"
+add_entry_cpodrouter_hosts "${NSX01BIP}" "nsx01b-"${WLDNAME} ${NAME_LOWER} 
+IPADDRESS=$((IPADDRESS+1))
+NSX01CIP="${SUBNET}.${IPADDRESS}"
+add_entry_cpodrouter_hosts "${NSX01CIP}" "nsx01c-"${WLDNAME} ${NAME_LOWER} 
+IPADDRESS=$((IPADDRESS+1))
+EN01VIP="${SUBNET}.${IPADDRESS}"
+add_entry_cpodrouter_hosts "${EN01VIP}" "en01-"${WLDNAME} ${NAME_LOWER} 
+IPADDRESS=$((IPADDRESS+1))
+EN02VIP="${SUBNET}.${IPADDRESS}"
+add_entry_cpodrouter_hosts "${EN02VIP}" "en02-"${WLDNAME} ${NAME_LOWER} 
+
+restart_cpodrouter_dnsmasq ${NAME_LOWER} 
+
+#Replace Values
+sed -i -e "s/###WLD_NAME###/${WLDNAME}/g" \
+		-e "s/###CLUSTERNAME###/${CLUSTERNAME}/g" \
+        -e "s/###CPOD###/${NAME_LOWER}/g" \
+        -e "s/###DOMAIN###/${DOMAIN}/g" \
+		-e "s/###LIC_VSAN###/${VSANLICENSE}/g" \
+		-e "s/###PASSWORD###/${PASSWORD}/g" \
+        -e "s/###NSXTVIP###/${PASSWORD}/g" \
+        -e "s/###NSX01AIP###/${PASSWORD}/g" \
+        -e "s/###NSX01BIP###/${PASSWORD}/g" \
+        -e "s/###NSX01CIP###/${PASSWORD}/g" \
+        -e "s/###VCENTERIP###/${PASSWORD}/g" \
+		${HOSTSSCRIPT}
+
 NEWDOMAINJSON=$(cat  "${DOMAINJSON}")
 
 for HOSTID in ${UNASSIGNEDID}; do
@@ -94,25 +153,6 @@ jq . "${DOMAINJSON}"
 echo
 echo "${DOMAINJSON}"
 
-# echo "Adding host entries into hosts of ${NAME_LOWER}."
-# LASTIP=$(get_last_ip  ${SUBNET}  ${NAME_LOWER})
-# [[ $LASTIP -lt 50 ]] && LASTIP=50
-# IPADDRESS=$((${LASTIP}+1))
-# add_entry_cpodrouter_hosts "${SUBNET}.${IPADDRESS}" "vcsa-"${WLDNAME} ${NAME_LOWER} 
-# IPADDRESS=$((${IPADDRESS}+1))
-# add_entry_cpodrouter_hosts "${SUBNET}.${IPADDRESS}" "nsx01-"${WLDNAME} ${NAME_LOWER} 
-# IPADDRESS=$((${IPADDRESS}+1))
-# add_entry_cpodrouter_hosts "${SUBNET}.${IPADDRESS}" "nsx01a-"${WLDNAME} ${NAME_LOWER} 
-# IPADDRESS=$((${IPADDRESS}+1))
-# add_entry_cpodrouter_hosts "${SUBNET}.${IPADDRESS}" "nsx01b-"${WLDNAME} ${NAME_LOWER} 
-# IPADDRESS=$((${IPADDRESS}+1))
-# add_entry_cpodrouter_hosts "${SUBNET}.${IPADDRESS}" "nsx01c-"${WLDNAME} ${NAME_LOWER} 
-# IPADDRESS=$((${IPADDRESS}+1))
-# add_entry_cpodrouter_hosts "${SUBNET}.${IPADDRESS}" "en01-"${WLDNAME} ${NAME_LOWER} 
-# IPADDRESS=$((${IPADDRESS}+1))
-# add_entry_cpodrouter_hosts "${SUBNET}.${IPADDRESS}" "en02-"${WLDNAME} ${NAME_LOWER} 
-
-# restart_cpodrouter_dnsmasq ${NAME_LOWER} 
 
 # curl -k 'https://sddc.cpod-vcf51.az-lhr.cloud-garage.net/ui/api/v1/domains' -X POST -H 'User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:120.0) Gecko/20100101 Firefox/120.0' -H 'Accept: application/json, text/plain, */*'  -H 'Accept-Language: en-US-US' -H 'Accept-Encoding: gzip, deflate, br' -H 'X-XSRF-TOKEN: tVur7sxf-XcKLodgMgZXNQSeggISbZPn0b2A' -H 'Content-Type: application/json'   -H 'Origin: https://sddc.cpod-vcf51.az-lhr.cloud-garage.net' -H 'Connection: keep-alive' -H 'Cookie: session=s%3AA9NuYKZcS5_EPx5W4fWBxUDnl4f18uKK.ecW%2FzXy9hpMXJwQNFaY6KLzhZnt4eRv3NVqEyd2LMww; XSRF-TOKEN=tVur7sxf-XcKLodgMgZXNQSeggISbZPn0b2A'    -H 'Sec-Fetch-Dest: empty' -H 'Sec-Fetch-Mode: cors' -H 'Sec-Fetch-Site: same-origin' 
 #     --data-raw 

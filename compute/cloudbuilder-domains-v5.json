@@ -122,13 +122,13 @@
     "licenseKey": "###LIC_NSXT###",
     "nsxManagerAdminPassword": "###PASSWORD###",
     "nsxManagerAuditPassword": "###PASSWORD###",
-    "vip": "###SUBNET###.57",
+    "vip": "###NSXTVIP###",
     "vipFqdn": "nsx01-###WLD_NAME###.###CPOD###.###DOMAIN###",
     "nsxManagerSpecs": [
       {
         "name": "nsx01a-###WLD_NAME###",
         "networkDetailsSpec": {
-          "ipAddress": "###SUBNET###.53",
+          "ipAddress": "###NSX01AIP###",
           "dnsName": "nsx01a-###WLD_NAME###.###CPOD###.###DOMAIN###",
           "gateway": "###SUBNET###.1",
           "subnetMask": "255.255.255.0"
@@ -137,7 +137,7 @@
       {
         "name": "nsx01b-###WLD_NAME###",
         "networkDetailsSpec": {
-          "ipAddress": "###SUBNET###.54",
+          "ipAddress": "###NSX01BIP###",
           "dnsName": "nsx01b-###WLD_NAME###.###CPOD###.###DOMAIN###",
           "gateway": "###SUBNET###.1",
           "subnetMask": "255.255.255.0"
@@ -146,7 +146,7 @@
       {
         "name": "nsx01c-###WLD_NAME###",
         "networkDetailsSpec": {
-          "ipAddress": "###SUBNET###.55",
+          "ipAddress": "###NSX01CIP###",
           "dnsName": "nsx01c-###WLD_NAME###.###CPOD###.###DOMAIN###",
           "gateway": "###SUBNET###.1",
           "subnetMask": "255.255.255.0"
@@ -160,7 +160,7 @@
     "rootPassword": "###PASSWORD###",
     "datacenterName": "###WLD_NAME###-DC",
     "networkDetailsSpec": {
-      "ipAddress": "###SUBNET###.56",
+      "ipAddress": "###VCENTERIP###",
       "dnsName": "vcsa-###WLD_NAME###.###CPOD###.###DOMAIN###",
       "gateway": "###SUBNET###.1",
       "subnetMask": "255.255.255.0"

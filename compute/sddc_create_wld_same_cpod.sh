@@ -50,10 +50,10 @@ echo "Getting VCF API Token"
 TOKEN=$(get_sddc_token "${NAME_LOWER}" "${PASSWORD}" )
 
 echo
-echo "Listing Hosts"
+echo "Listing Unassigned Hosts IDs"
 SDDCHOSTS=$(get_hosts_full "${NAME_LOWER}" "${TOKEN}")
 UNASSIGNEDID=$(echo "$SDDCHOSTS" |jq -r '.elements[]| select ( .status == "UNASSIGNED_USEABLE")| .id')
-echo "$UNASSIGNEDID" |jq .
+echo "$UNASSIGNEDID"
 UNASSIGNEDCOUNT=$(echo "${UNASSIGNEDID}" | wc -l)
 
 if [[ $UNASSIGNEDCOUNT -gt 0 ]]
@@ -109,6 +109,7 @@ sed -i -e "s/###WLD_NAME###/${WLDNAME}/g" \
         -e "s/###CPOD###/${NAME_LOWER}/g" \
         -e "s/###DOMAIN###/${DOMAIN}/g" \
 		-e "s/###LIC_VSAN###/${VSANLICENSE}/g" \
+        -e "s/###LIC_NSXT###/${NSXLICENSE}/g" \
 		-e "s/###PASSWORD###/${PASSWORD}/g" \
         -e "s/###SUBNET###/${SUBNET}/g" \
         -e "s/###NSXTVIP###/${NSXTVIP}/g" \

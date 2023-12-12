@@ -110,11 +110,12 @@ sed -i -e "s/###WLD_NAME###/${WLDNAME}/g" \
         -e "s/###DOMAIN###/${DOMAIN}/g" \
 		-e "s/###LIC_VSAN###/${VSANLICENSE}/g" \
 		-e "s/###PASSWORD###/${PASSWORD}/g" \
-        -e "s/###NSXTVIP###/${PASSWORD}/g" \
-        -e "s/###NSX01AIP###/${PASSWORD}/g" \
-        -e "s/###NSX01BIP###/${PASSWORD}/g" \
-        -e "s/###NSX01CIP###/${PASSWORD}/g" \
-        -e "s/###VCENTERIP###/${PASSWORD}/g" \
+        -e "s/###SUBNET###/${SUBNET}/g" \
+        -e "s/###NSXTVIP###/${NSXTVIP}/g" \
+        -e "s/###NSX01AIP###/${NSX01AIP}/g" \
+        -e "s/###NSX01BIP###/${NSX01BIP}/g" \
+        -e "s/###NSX01CIP###/${NSX01CIP}/g" \
+        -e "s/###VCENTERIP###/${VCENTERIP}/g" \
 		${DOMAINJSON}
 
 NEWDOMAINJSON=$(cat  "${DOMAINJSON}")

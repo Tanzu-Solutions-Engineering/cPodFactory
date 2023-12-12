@@ -90,6 +90,29 @@ post_domain_validation() {
     esac
 }
 
+post_domain_creation() {
+    NAME_LOWER="${1}"
+    TOKEN="${2}"
+    DOMAINJSON="${3}"
+    #returns json
+    RESPONSE=$(curl -s -k  -w '####%{response_code}' -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}" -d @${DOMAINJSON} -X POST  https://sddc.${NAME_LOWER}.${ROOT_DOMAIN}/v1/domains)
+    HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+    case $HTTPSTATUS in
+
+            200)    
+                    echo ${RESPONSE} |awk -F '####' '{print $1}'  | jq .
+                    ;;
+
+            503)    
+                    echo "Not Ready"
+                    ;;
+            *)      
+                        echo ${RESPONSE} |awk -F '####' '{print $1}'
+                    ;;
+
+    esac
+}
+
 
 loop_wait_domain_validation(){
     VALIDATIONID="${1}"

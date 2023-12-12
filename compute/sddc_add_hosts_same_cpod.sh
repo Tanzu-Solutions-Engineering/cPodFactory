@@ -104,7 +104,7 @@ VALIDATIONID=$(echo "${VALIDATIONJSON}" | jq -r '.id')
 
 echo "Querying validation result"
 echo
-loop_wait_validation "${VALIDATIONID}"
+loop_wait_hosts_validation "${VALIDATIONID}"
 
 ####
 

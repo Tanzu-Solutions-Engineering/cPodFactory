@@ -38,11 +38,18 @@ get_hosts_unassigned(){
     echo "${VALIDATIONRESULT}" | jq -r '.elements[].fqdn'
 }
 
+get_domain_validation_status(){
+	VALIDATIONID="${1}"
+	VALIDATIONRESULT=$(curl -s -k -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}" -X GET  https://sddc.${NAME_LOWER}.${ROOT_DOMAIN}/v1/domains/validations/${VALIDATIONID})
+	echo "${VALIDATIONRESULT}" > /tmp/scripts/domain-validation-test.json
+	echo "${VALIDATIONRESULT}"
+}
 
-get_validation_status(){
+
+get_hosts_validation_status(){
 	VALIDATIONID="${1}"
 	VALIDATIONRESULT=$(curl -s -k -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}" -X GET  https://sddc.${NAME_LOWER}.${ROOT_DOMAIN}/v1/hosts/validations/${VALIDATIONID})
-	echo "${VALIDATIONRESULT}" > /tmp/scripts/validation-test.json
+	echo "${VALIDATIONRESULT}" > /tmp/scripts/hosts-validation-test.json
 	echo "${VALIDATIONRESULT}"
 }
 
@@ -60,10 +67,9 @@ get_license_keys_full(){
     echo "$SDDCHOSTS"
 }
 
-
-loop_wait_validation(){
+loop_wait_domain_validation(){
     VALIDATIONID="${1}"
-    RESPONSE=$(get_validation_status "${VALIDATIONID}")
+    RESPONSE=$(get_domain_validation_status "${VALIDATIONID}")
     if [[ "${RESPONSE}" == *"ERROR - HTTPSTATUS"* ]] || [[ "${RESPONSE}" == "" ]]
     then
         echo "problem getting initial validation ${VALIDATIONID} status : "
@@ -78,7 +84,7 @@ loop_wait_validation(){
     CURRENTMAINTASK=""
     while [[ "$STATUS" != "COMPLETED" ]]
     do      
-        RESPONSE=$(get_validation_status "${VALIDATIONID}")
+        RESPONSE=$(get_domain_validation_status "${VALIDATIONID}")
         #echo "${RESPONSE}" |jq .
         if [[ "${RESPONSE}" == *"ERROR"* ]] || [[ "${RESPONSE}" == "" ]]
         then
@@ -117,7 +123,77 @@ loop_wait_validation(){
         printf '.' >/dev/tty
         sleep 2
     done
-    RESPONSE=$(get_validation_status "${VALIDATIONID}")
+    RESPONSE=$(get_domain_validation_status "${VALIDATIONID}")
+    RESULTSTATUS=$(echo "${RESPONSE}" | jq -r '.resultStatus')
+
+    echo
+    echo "Host Validation Result Status : $RESULTSTATUS"
+
+    if [ "${RESULTSTATUS}" != "SUCCEEDED" ]
+    then
+        echo "Domain Validation not succesful. Quitting"
+        exit
+    fi
+
+}
+
+loop_wait_hosts_validation(){
+    VALIDATIONID="${1}"
+    RESPONSE=$(get_hosts_validation_status "${VALIDATIONID}")
+    if [[ "${RESPONSE}" == *"ERROR - HTTPSTATUS"* ]] || [[ "${RESPONSE}" == "" ]]
+    then
+        echo "problem getting initial validation ${VALIDATIONID} status : "
+        echo "${RESPONSE}"
+    else
+        STATUS=$(echo "${RESPONSE}" | jq -r '.executionStatus')
+        echo "${STATUS}"
+    fi
+
+    CURRENTSTATE=${STATUS}
+    CURRENTSTEP=""
+    CURRENTMAINTASK=""
+    while [[ "$STATUS" != "COMPLETED" ]]
+    do      
+        RESPONSE=$(get_hosts_validation_status "${VALIDATIONID}")
+        #echo "${RESPONSE}" |jq .
+        if [[ "${RESPONSE}" == *"ERROR"* ]] || [[ "${RESPONSE}" == "" ]]
+        then
+            echo
+            echo "problem getting deployment ${VALIDATIONID} status : "
+            echo "${RESPONSE}"		
+        else
+            STATUS=$(echo "${RESPONSE}" | jq -r '.executionStatus')
+            MAINTASK=$(echo "${RESPONSE}" | jq -r '.description')
+            SUBTASK=$(echo "${RESPONSE}" | jq -r '.validationChecks[] | select ( .resultStatus | contains("IN_PROGRESS")) |.name')
+
+            if [[ "${MAINTASK}" != "${CURRENTMAINTASK}" ]] 
+            then
+                printf "\t%s" "${MAINTASK}"
+                CURRENTMAINTASK="${MAINTASK}"
+            fi	
+            if [[ "${SUBTASK}" != "${CURRENTSTEP}" ]] 
+            then
+                if [ "${CURRENTSTEP}" != ""  ]
+                then
+                    FINALSTATUS=$(echo "${RESPONSE}" | jq -r '.validationChecks[]| select ( .name == "'"${CURRENTSTEP}"'") |.status')
+                    printf "\t%s" "${FINALSTATUS}"
+                fi
+                printf "\n\t\t%s" "${SUBTASK}"
+                CURRENTSTEP="${SUBTASK}"
+            fi
+        fi
+        if [[ "${STATUS}" == "FAILED" ]] 
+        then 
+            echo
+            echo "FAILED"
+            echo "${VALIDATIONRESULT}" | jq .
+            echo "stopping script"
+            exit 1
+        fi
+        printf '.' >/dev/tty
+        sleep 2
+    done
+    RESPONSE=$(get_hosts_validation_status "${VALIDATIONID}")
     RESULTSTATUS=$(echo "${RESPONSE}" | jq -r '.resultStatus')
 
     echo

@@ -123,7 +123,7 @@ loop_wait_commissioning  "${COMMISSIONID}"
 ####
 
 echo "Getting list of unassigned hosts"
-VALIDATIONRESULT=$(curl -s -k -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}" -X GET  'https://sddc.'${NAME_LOWER}.${ROOT_DOMAIN}'/v1/hosts?status=UNASSIGNED_USEABLE')
-echo "${VALIDATIONRESULT}" | jq '.elements[].fqdn'
+UNASSIGNEDHOSTS=$(get_hosts_unassigned "${NAME_LOWER}" "${TOKEN}")
+echo "${UNASSIGNEDHOSTS}" 
 
 echo "Done."

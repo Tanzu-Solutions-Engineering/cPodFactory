@@ -251,7 +251,7 @@ loop_wait_commissioning(){
     RESPONSE=$(get_commission_status "${COMMISSIONID}")
     RESULTSTATUS=$(echo "${RESPONSE}" | jq -r '.status')
     echo
-    echo "Host Commisioning Result Status : $RESULTSTATUS"    
+    echo "Commisioning Result Status : $RESULTSTATUS"    
 }
 
 ###################

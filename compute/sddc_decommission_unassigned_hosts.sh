@@ -10,6 +10,7 @@
 [ "$1" == "" ] && echo "usage: $0 <name_of_vcf_cpod> "  && echo "usage example: $0 vcf45" && exit 1
 
 source ./extra/functions.sh
+source ./extra/functions_sddc_mgr.sh
 
 NEWHOSTS_JSON_TEMPLATE=cloudbuilder-hosts.json
 
@@ -27,16 +28,15 @@ mkdir -p ${SCRIPT_DIR}
 
 PASSWORD=$( ${EXTRA_DIR}/passwd_for_cpod.sh ${CPOD_NAME} ) 
 
-#USERNAME="administrator@${NAME_LOWER}.${ROOT_DOMAIN}"
 echo
 echo "Getting VCF API Token"
-TOKEN=$(curl -s -k -X POST -H "Content-Type: application/json" -d '{"password":"'${PASSWORD}'","username":"administrator@'${NAME_LOWER}.${ROOT_DOMAIN}'"}' https://sddc.${NAME_LOWER}.${ROOT_DOMAIN}/v1/tokens | jq .accessToken | sed 's/"//g')
+TOKEN=$(get_sddc_token "${NAME_LOWER}" "${PASSWORD}" )
 
 echo
-
 echo "Getting list of unassigned hosts"
-VALIDATIONRESULT=$(curl -s -k -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}" -X GET  'https://sddc.'${NAME_LOWER}.${ROOT_DOMAIN}'/v1/hosts?status=UNASSIGNED_USEABLE')
-UNASSIGNEDHOSTS=$(echo "${VALIDATIONRESULT}" | jq -r '.elements[].fqdn')
+# VALIDATIONRESULT=$(curl -s -k -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}" -X GET  'https://sddc.'${NAME_LOWER}.${ROOT_DOMAIN}'/v1/hosts?status=UNASSIGNED_USEABLE')
+# UNASSIGNEDHOSTS=$(echo "${VALIDATIONRESULT}" | jq -r '.elements[].fqdn')
+UNASSIGNEDHOSTS=$(get_hosts_unassigned "${NAME_LOWER}" "${TOKEN}")
 
 HOSTSSCRIPT=/tmp/scripts/cloudbuilder-hosts-${NAME_LOWER}.json
 
@@ -76,79 +76,78 @@ echo "Commissioning ID : ${COMMISSIONID}"
 echo
 echo "Querying commisioning result"
 
-get_commission_status(){
-	COMMISSIONID="${1}"
-	COMMISSIONRESULT=$(curl -s -k -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}" -X GET  https://sddc.${NAME_LOWER}.${ROOT_DOMAIN}/v1/tasks/${COMMISSIONID})
-	echo "${COMMISSIONRESULT}" > /tmp/scripts/commissionresult.json
-	echo "${COMMISSIONRESULT}"
-}
-
-RESPONSE=$(get_commission_status "${COMMISSIONID}")
-if [[ "${RESPONSE}" == *"ERROR"* ]] || [[ "${RESPONSE}" == "" ]]
-then
-	echo
-	echo "problem getting initial commissioning ${COMMISSIONID} status : "
-	echo "${RESPONSE}"
-	exit
-else
-	STATUS=$(echo "${RESPONSE}" | jq -r '.status')
-	echo "${STATUS}"
-fi
-
-CURRENTSTATE=${STATUS}
-CURRENTSTEP=""
-CURRENTMAINTASK=""
-while [[ "${STATUS}" != "Successful" ]]
-do      
-	RESPONSE=$(get_commission_status "${COMMISSIONID}")
-	#echo "${RESPONSE}" |jq .
-	if [[ "${RESPONSE}" == *"ERROR"* ]] || [[ "${RESPONSE}" == "" ]]
-	then
-		echo "problem getting deployment ${COMMISSIONID} status : "
-		echo "${RESPONSE}"		
-	else
-		STATUS=$(echo "${RESPONSE}" | jq -r '.status')
-		MAINTASK=$(echo "${RESPONSE}" | jq -r '.subTasks[] | select ( .status | contains("IN_PROGRESS")) |.description')
-		SUBTASK=$(echo "${RESPONSE}" | jq -r '.subTasks[] | select ( .status | contains("IN_PROGRESS")) |.name')
-
-		if [[ "${MAINTASK}" != "${CURRENTMAINTASK}" ]] 
-		then
-			printf "\t%s" "${MAINTASK}"
-			CURRENTMAINTASK="${MAINTASK}"
-		fi	
-		if [[ "${SUBTASK}" != "${CURRENTSTEP}" ]] 
-		then
-			if [ "${CURRENTSTEP}" != ""  ]
-			then
-				FINALSTATUS=$(echo "${RESPONSE}" | jq -r '.subTasks[]| select ( .name == "'"${CURRENTSTEP}"'") |.status')
-				printf "\t%s" "${FINALSTATUS}"
-			fi
-			printf "\n\t\t%s" "${SUBTASK}"
-			CURRENTSTEP="${SUBTASK}"
-		fi
-	fi
-	if [[ "${STATUS}" == "FAILED" ]] 
-	then 
-		echo
-		echo "FAILED"
-		echo "${RESPONSE}" | jq .
-		echo "stopping script"
-		exit 1
-	fi
-	printf '.' >/dev/tty
-	sleep 2
-done
-RESPONSE=$(get_commission_status "${COMMISSIONID}")
-RESULTSTATUS=$(echo "${RESPONSE}" | jq -r '.status')
-
 echo
-echo "Host Commisioning Result Status : $RESULTSTATUS"
+echo "Querying commisioning result"
+echo
+loop_wait_commissioning  "${COMMISSIONID}"
+
+
+# RESPONSE=$(get_commission_status "${COMMISSIONID}")
+# if [[ "${RESPONSE}" == *"ERROR"* ]] || [[ "${RESPONSE}" == "" ]]
+# then
+# 	echo
+# 	echo "problem getting initial commissioning ${COMMISSIONID} status : "
+# 	echo "${RESPONSE}"
+# 	exit
+# else
+# 	STATUS=$(echo "${RESPONSE}" | jq -r '.status')
+# 	echo "${STATUS}"
+# fi
+
+# CURRENTSTATE=${STATUS}
+# CURRENTSTEP=""
+# CURRENTMAINTASK=""
+# while [[ "${STATUS}" != "Successful" ]]
+# do      
+# 	RESPONSE=$(get_commission_status "${COMMISSIONID}")
+# 	#echo "${RESPONSE}" |jq .
+# 	if [[ "${RESPONSE}" == *"ERROR"* ]] || [[ "${RESPONSE}" == "" ]]
+# 	then
+# 		echo "problem getting deployment ${COMMISSIONID} status : "
+# 		echo "${RESPONSE}"		
+# 	else
+# 		STATUS=$(echo "${RESPONSE}" | jq -r '.status')
+# 		MAINTASK=$(echo "${RESPONSE}" | jq -r '.subTasks[] | select ( .status | contains("IN_PROGRESS")) |.description')
+# 		SUBTASK=$(echo "${RESPONSE}" | jq -r '.subTasks[] | select ( .status | contains("IN_PROGRESS")) |.name')
+
+# 		if [[ "${MAINTASK}" != "${CURRENTMAINTASK}" ]] 
+# 		then
+# 			printf "\t%s" "${MAINTASK}"
+# 			CURRENTMAINTASK="${MAINTASK}"
+# 		fi	
+# 		if [[ "${SUBTASK}" != "${CURRENTSTEP}" ]] 
+# 		then
+# 			if [ "${CURRENTSTEP}" != ""  ]
+# 			then
+# 				FINALSTATUS=$(echo "${RESPONSE}" | jq -r '.subTasks[]| select ( .name == "'"${CURRENTSTEP}"'") |.status')
+# 				printf "\t%s" "${FINALSTATUS}"
+# 			fi
+# 			printf "\n\t\t%s" "${SUBTASK}"
+# 			CURRENTSTEP="${SUBTASK}"
+# 		fi
+# 	fi
+# 	if [[ "${STATUS}" == "FAILED" ]] 
+# 	then 
+# 		echo
+# 		echo "FAILED"
+# 		echo "${RESPONSE}" | jq .
+# 		echo "stopping script"
+# 		exit 1
+# 	fi
+# 	printf '.' >/dev/tty
+# 	sleep 2
+# done
+# RESPONSE=$(get_commission_status "${COMMISSIONID}")
+# RESULTSTATUS=$(echo "${RESPONSE}" | jq -r '.status')
+
+# echo
+# echo "Host Commisioning Result Status : $RESULTSTATUS"
 
 ####
 
 echo "Getting list of unassigned hosts"
-VALIDATIONRESULT=$(curl -s -k -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}" -X GET  'https://sddc.'${NAME_LOWER}.${ROOT_DOMAIN}'/v1/hosts?status=UNASSIGNED_USEABLE')
-echo "${VALIDATIONRESULT}" | jq '.elements[].fqdn'
+UNASSIGNEDHOSTS=$(get_hosts_unassigned "${NAME_LOWER}" "${TOKEN}")
+echo "${UNASSIGNEDHOSTS}" 
 
 echo "Done."
 

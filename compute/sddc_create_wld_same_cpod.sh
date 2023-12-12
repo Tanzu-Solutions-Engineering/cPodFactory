@@ -40,10 +40,8 @@ TOKEN=$(get_sddc_token "${NAME_LOWER}" "${PASSWORD}" )
 echo
 echo "Listing Hosts"
 SDDCHOSTS=$(get_hosts_full "${NAME_LOWER}" "${TOKEN}")
-
-#SDDCHOSTS=$(curl -s -k -X GET -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}" https://sddc.${NAME_LOWER}.${ROOT_DOMAIN}/v1/hosts | jq .elements[].fqdn)
-echo "$SDDCHOSTS" |jq .
 UNASSIGNEDID=$(echo "$SDDCHOSTS" |jq -r '.elements[]| select ( .status == "UNASSIGNED_USEABLE")| .id')
+echo "$UNASSIGNEDID" |jq .
 UNASSIGNEDCOUNT=$(echo "${UNASSIGNEDID}" | wc -l)
 
 if [[ $UNASSIGNEDCOUNT -gt 0 ]]
@@ -56,7 +54,7 @@ else
 fi
 
 LICENSEKEYS=$(get_license_keys_full "${NAME_LOWER}" "${TOKEN}")
-ESXLICENSE=$(echo "${LICENSEKEYS}" |jq '.elements[] | select (.productType == "ESXI" )')
+ESXLICENSE=$(echo "${LICENSEKEYS}" |jq -r '.elements[] | select (.productType == "ESXI" )| .key')
 
 DOMAINJSON="${SCRIPT_DIR}/cloudbuilder-domains-$$.json"
 cp "${DOMAIN_JSON_TEMPLATE}" "${DOMAINJSON}"
@@ -89,6 +87,7 @@ for HOSTID in ${UNASSIGNEDID}; do
 
     NEWDOMAINJSON=$(echo "${NEWDOMAINJSON}" |jq '.computeSpec.clusterSpecs[].hostSpecs += ['"${HOSTJSON}"']')
 done
+echo "creating domain json file : ${DOMAINJSON}"
 echo "${NEWDOMAINJSON}"  >  "${DOMAINJSON}"
 
 jq . "${DOMAINJSON}"

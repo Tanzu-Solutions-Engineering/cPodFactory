@@ -37,8 +37,8 @@ check_sddc_ready(){
             INPROGRESS=$(get_sddc_status "${NAME_LOWER}" "${PASSWORD}")
             if [ "${INPROGRESS}" != "${CURRENTSTATE}" ] 
             then 
-                    printf "\n\t%s" ${INPROGRESS}
-                    CURRENTSTATE=${INPROGRESS}
+                    printf "\n\t%s" "${INPROGRESS}"
+                    CURRENTSTATE="${INPROGRESS}"
             fi
             if [ "$INPROGRESS" != "READY" ]
             then

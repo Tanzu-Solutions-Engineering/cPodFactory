@@ -46,6 +46,8 @@ check_sddc_ready(){
                 sleep 10
             fi
         done
+    echo
+    echo
     echo "SDDC manager READY"
 }
 

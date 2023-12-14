@@ -30,20 +30,23 @@ check_sddc_ready(){
     PASSWORD="${2}"
 
     printf "\t connecting to sddc mgr ."
-    INPROGRESS=$(get_sddc_status "${NAME_LOWER}" "${PASSWORD}")
+    INPROGRESS=""
     CURRENTSTATE=${INPROGRESS}
     while [[ "$INPROGRESS" != "READY" ]]
     do      
-            printf '.' >/dev/tty
-            sleep 10
-            INPROGRESS=$(get_sddc_status)
+            INPROGRESS=$(get_sddc_status "${NAME_LOWER}" "${PASSWORD}")
             if [ "${INPROGRESS}" != "${CURRENTSTATE}" ] 
             then 
                     printf "\n\t%s" ${INPROGRESS}
                     CURRENTSTATE=${INPROGRESS}
             fi
-    done
-
+            if [ "$INPROGRESS" != "READY" ]
+            then
+                printf '.' >/dev/tty
+                sleep 10
+            fi
+        done
+    echo "SDDC manager READY"
 }
 
 get_sddc_token(){

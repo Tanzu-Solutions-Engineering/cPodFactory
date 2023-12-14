@@ -19,13 +19,40 @@ DOMAIN_JSON_TEMPLATE=./compute/cloudbuilder-domains-v5.json
 #Management Domain CPOD
 CPOD_NAME=$( echo ${1} | tr '[:lower:]' '[:upper:]' )
 NAME_LOWER=$( echo ${HEADER}-${CPOD_NAME} | tr '[:upper:]' '[:lower:]' )
+
 VLAN=$( grep -m 1 "${NAME_LOWER}\s" /etc/hosts | awk '{print $1}' | cut -d "." -f 4 )
 VLAN_MGMT="${VLAN}"
 SUBNET=$( ./${COMPUTE_DIR}/cpod_ip.sh ${1} )
 VLAN_SHIFT=$( expr ${VLAN} + ${VLAN_SHIFT} )
 
+case "${BACKEND_NETWORK}" in
+NSX-T)
+	echo "NSX-T Backend"
+	echo "VLAN_MGMT=0"
+	VLAN_MGMT="0"
+	;;
+VLAN)
+	VLANID=$( expr ${BACKEND_VLAN_OFFSET} + ${VLAN_MGMT} )
+	VLAN_MGMT=${VLANID}
+	echo "VLAN Backend"
+	echo "VLAN_MGMT=${VLANID}"
+	;;
+esac
+
+if [ ${VLAN} -gt 40 ]; then
+	VMOTIONVLANID=${VLAN}1
+	VSANVLANID=${VLAN}2
+	TRANSPORTVLANID=${VLAN}3
+else
+	VMOTIONVLANID=${VLAN}01
+	VSANVLANID=${VLAN}02
+	TRANSPORTVLANID=${VLAN}03
+fi
+
+
 WLDNAME="${2}"
 CLUSTERNAME="${3}"
+
 
 SCRIPT_DIR=/tmp/scripts
 mkdir -p ${SCRIPT_DIR} 
@@ -120,6 +147,11 @@ sed -i -e "s/###WLD_NAME###/${WLDNAME}/g" \
 		${DOMAINJSON}
 
 NEWDOMAINJSON=$(cat  "${DOMAINJSON}")
+
+NEWDOMAINJSON=$(echo "${NEWDOMAINJSON}" |jq '.computeSpec.clusterSpecs[].networkSpec.nsxClusterSpec.nsxTClusterSpec.uplinkProfiles[].transportVlan = '"${TRANSPORTVLANID}"'')
+
+CLUSTERIMAGEID=$(get_personalities_full "${NAME_LOWER}" "${TOKEN}" |jq -r .elements[].personalityId)
+NEWDOMAINJSON=$(echo "${NEWDOMAINJSON}" |jq '.computeSpec.clusterSpecs[].clusterImageId = '"${CLUSTERIMAGEID}"'')
 
 for HOSTID in ${UNASSIGNEDID}; do
     echo $HOSTID

@@ -3,6 +3,49 @@
 
 ### SDDC Mgr functions ####
 
+get_sddc_status() {
+    NAME_LOWER="${1}"
+    PASSWORD="${2}"
+
+    #returns json
+    RESPONSE=$(curl -s -k -w '####%{response_code}' -X POST -H "Content-Type: application/json" -d '{"password":"'${PASSWORD}'","username":"administrator@'${NAME_LOWER}.${ROOT_DOMAIN}'"}' https://sddc.${NAME_LOWER}.${ROOT_DOMAIN}/v1/tokens )
+    HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+    case $HTTPSTATUS in
+
+            20[0-9])    
+                    echo "READY"
+                    ;;
+            50[0-9])    
+                    echo "Not Ready"
+                    ;;
+            *)      
+                    echo ${RESPONSE} |awk -F '####' '{print $1}'
+                    ;;
+
+        esac
+}
+
+check_sddc_ready(){
+    NAME_LOWER="${1}"
+    PASSWORD="${2}"
+
+    printf "\t connecting to sddc mgr ."
+    INPROGRESS=$(get_sddc_status "${NAME_LOWER}" "${PASSWORD}")
+    CURRENTSTATE=${INPROGRESS}
+    while [[ "$INPROGRESS" != "READY" ]]
+    do      
+            printf '.' >/dev/tty
+            sleep 10
+            INPROGRESS=$(get_sddc_status)
+            if [ "${INPROGRESS}" != "${CURRENTSTATE}" ] 
+            then 
+                    printf "\n\t%s" ${INPROGRESS}
+                    CURRENTSTATE=${INPROGRESS}
+            fi
+    done
+
+}
+
 get_sddc_token(){
     NAME_LOWER="${1}"
     PASSWORD="${2}"
@@ -21,6 +64,13 @@ get_hosts_full(){
     NAME_LOWER="${1}"
     TOKEN="${2}"
     SDDCHOSTS=$(curl -s -k -X GET -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}" https://sddc.${NAME_LOWER}.${ROOT_DOMAIN}/v1/hosts)
+    echo "$SDDCHOSTS"
+}
+
+get_personalities_full(){
+    NAME_LOWER="${1}"
+    TOKEN="${2}"
+    SDDCHOSTS=$(curl -s -k -X GET -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}" https://sddc.${NAME_LOWER}.${ROOT_DOMAIN}/v1/personalities)
     echo "$SDDCHOSTS"
 }
 

@@ -153,7 +153,7 @@ NEWDOMAINJSON=$(cat  "${DOMAINJSON}")
 NEWDOMAINJSON=$(echo "${NEWDOMAINJSON}" |jq '.computeSpec.clusterSpecs[].networkSpec.nsxClusterSpec.nsxTClusterSpec.uplinkProfiles[].transportVlan = '"${TRANSPORTVLANID}"'')
 
 CLUSTERIMAGEID=$(get_personalities_full "${NAME_LOWER}" "${TOKEN}" |jq -r .elements[].personalityId)
-NEWDOMAINJSON=$(echo "${NEWDOMAINJSON}" |jq '.computeSpec.clusterSpecs[].clusterImageId = '"${CLUSTERIMAGEID}"'')
+NEWDOMAINJSON=$(echo "${NEWDOMAINJSON}" |jq '.computeSpec.clusterSpecs[].clusterImageId = "'"${CLUSTERIMAGEID}"'"')
 
 for HOSTID in ${UNASSIGNEDID}; do
     echo $HOSTID

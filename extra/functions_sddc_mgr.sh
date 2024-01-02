@@ -1,6 +1,71 @@
 #!/bin/bash
 #edewitte@vmware.com
 
+
+### CLOUDBUILDER functions ####
+
+get_cloudbuilder_status() {
+    NAME_LOWER="${1}"
+    PASSWORD="${2}"
+    #make the curl more readable
+    URL="https://cloudbuilder.${NAME_LOWER}.${ROOT_DOMAIN}"
+    AUTH="admin:${PASSWORD}"
+
+    # while [ -z "$APICHECK" ]
+    # do  
+    #     echo "checking if the API on cloudbuilder ${URL} is ready yet..."
+    #     APICHECK=$(curl -s -k -w '####%{response_code}' -u ${AUTH} -X GET ${URL}/v1/sddcs/validations)
+    #     sleep 10
+    #     TIMEOUT=$((TIMEOUT + 1))
+    #     if [ $TIMEOUT -ge 48 ]; then
+    #         echo "bailing out..."
+    #         exit 1
+    #     fi 
+    # done
+    #returns json
+    RESPONSE=$(curl -s -k -w '####%{response_code}' -u ${AUTH} -X GET ${URL}/v1/sddcs/validations )
+    HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+    case $HTTPSTATUS in
+
+            20[0-9])    
+                    echo "READY"
+                    ;;
+            50[0-9])    
+                    echo "Not Ready"
+                    ;;
+            *)      
+                    echo ${RESPONSE} |awk -F '####' '{print $1}'
+                    ;;
+
+        esac
+}
+
+check_cloudbuilder_ready(){
+    NAME_LOWER="${1}"
+    PASSWORD="${2}"
+
+    printf "\t connecting to cloudbuilder ."
+    INPROGRESS=""
+    CURRENTSTATE=${INPROGRESS}
+    while [[ "$INPROGRESS" != "READY" ]]
+    do      
+            INPROGRESS=$(get_cloudbuilder_status "${NAME_LOWER}" "${PASSWORD}")
+            if [ "${INPROGRESS}" != "${CURRENTSTATE}" ] 
+            then 
+                    printf "\n\t%s" "${INPROGRESS}"
+                    CURRENTSTATE="${INPROGRESS}"
+            fi
+            if [ "$INPROGRESS" != "READY" ]
+            then
+                printf '.' >/dev/tty
+                sleep 10
+            fi
+        done
+    echo
+    echo
+    echo "Cloudbuilder API : READY"
+}
+
 ### SDDC Mgr functions ####
 
 get_sddc_status() {

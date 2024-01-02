@@ -146,6 +146,8 @@ sed -i -e "s/###WLD_NAME###/${WLDNAME}/g" \
         -e "s/###VCENTERIP###/${VCENTERIP}/g" \
 		${DOMAINJSON}
 
+cp "${DOMAINJSON}" "${SCRIPT_DIR}/cloudbuilder-domains-sed.json"
+
 NEWDOMAINJSON=$(cat  "${DOMAINJSON}")
 
 NEWDOMAINJSON=$(echo "${NEWDOMAINJSON}" |jq '.computeSpec.clusterSpecs[].networkSpec.nsxClusterSpec.nsxTClusterSpec.uplinkProfiles[].transportVlan = '"${TRANSPORTVLANID}"'')

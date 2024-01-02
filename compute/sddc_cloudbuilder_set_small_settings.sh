@@ -30,7 +30,7 @@ echo "prepping cloudbuilder"
 #wait for ESXCLI to become available 
 while [ "$SSHOK" != 0 ]
 do  
-	SSHOK=$( sshpass -p "${PASSWORD}" ssh -o "StrictHostKeyChecking=no" -o "ConnectTimeout=5" -o "UserKnownHostsFile=/dev/null" -o "LogLevel=error" admin@sddc.${NAME_LOWER}.${ROOT_DOMAIN} exit >/dev/null 2>&1; echo $? ) 
+	SSHOK=$( sshpass -p "${PASSWORD}" ssh -o "StrictHostKeyChecking=no" -o "ConnectTimeout=5" -o "UserKnownHostsFile=/dev/null" -o "LogLevel=error" admin@cloudbuilder.${NAME_LOWER}.${ROOT_DOMAIN} exit >/dev/null 2>&1; echo $? ) 
 	echo "SSH status ===$SSHOK==="
 	sleep 2
 	TIMEOUT=$((TIMEOUT + 1))

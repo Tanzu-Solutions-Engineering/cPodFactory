@@ -40,7 +40,7 @@ do
 	fi 
 done
 echo "scp script"
-sshpass -p "${PASSWORD}" scp  -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" ./compute/cloudbuilder_lab_settings.sh admin@sddc.${NAME_LOWER}.${ROOT_DOMAIN}:/home/admin
+sshpass -p "${PASSWORD}" scp  -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" ./compute/cloudbuilder_lab_settings.sh admin@cloudbuilder.${NAME_LOWER}.${ROOT_DOMAIN}:/home/admin
 BUILDERVM=$(govc ls vm | grep -i ${NAME_LOWER} | grep cloudbuilder)
 echo "execute script"
 govc guest.run -vm "${BUILDERVM}" -l root:"${PASSWORD}" sh /home/admin/cloudbuilder_lab_settings.sh

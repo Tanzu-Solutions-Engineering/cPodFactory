@@ -57,7 +57,7 @@ export MYSCRIPT=/tmp/$$
 cat << EOF > ${MYSCRIPT}
 export LANG=en_US.UTF-8
 cd /root/cPodFactory/ovftool
-./ovftool --acceptAllEulas --X:injectOvfEnv --allowExtraConfig --powerOn  --sourceType=OVA  \
+./ovftool --acceptAllEulas --X:injectOvfEnv --allowExtraConfig --sourceType=OVA  \
 --X:logFile=/tmp/ovftool.log --X:logLevel=verbose --X:logTransferHeaderData \
 --name=${NAME} --datastore=${VCENTER_DATASTORE} --noSSLVerify \
 --diskMode=thin \
@@ -81,3 +81,8 @@ sh ${MYSCRIPT}
 
 echo "Adding entries into hosts of ${CPOD_NAME_LOWER}."
 add_to_cpodrouter_hosts ${IP} ${HOSTNAME} ${CPOD_NAME_LOWER}
+
+echo "creating snapshot"
+GOVCVMNAME=$(govc ls vm |grep "${NAME}")
+govc snapshot.create -vm "${GOVCVMNAME}" "initial-deployment"
+govc vm.power -on "${GOVCVMNAME}"

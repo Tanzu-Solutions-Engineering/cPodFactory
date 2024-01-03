@@ -380,6 +380,7 @@ loop_wait_commissioning(){
     CURRENTSTEP=""
     CURRENTMAINTASK=""
     FINALSTATUS=""
+    TOKENTIMER=0
     while [[ "${STATUS}" != "Successful" ]]
     do      
         RESPONSE=$(get_commission_status "${COMMISSIONID}")
@@ -412,6 +413,11 @@ loop_wait_commissioning(){
             echo "${RESPONSE}" | jq .
             echo "stopping script"
             exit 1
+        fi
+        TOKENTIMER=$((TOKENTIMER+1))
+        if [[ $TOKENTIMER -gt 150 ]]
+        then
+            TOKEN=$(get_sddc_token "${NAME_LOWER}" "${PASSWORD}" )
         fi
         sleep 2
     done

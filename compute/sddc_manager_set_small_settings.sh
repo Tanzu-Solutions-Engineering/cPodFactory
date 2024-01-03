@@ -41,7 +41,14 @@ do
 done
 echo "scp script"
 sshpass -p "${PASSWORD}" scp  -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" ./compute/sddc_manager_lab_settings.sh vcf@sddc.${NAME_LOWER}.${ROOT_DOMAIN}:/home/vcf
-SDDCVM=$(govc ls vm | grep -i ${NAME_LOWER} | grep sddc)
+
+export GOVC_USERNAME="administrator@${NAME_LOWER}.${ROOT_DOMAIN}"
+export GOVC_PASSWORD="${PASSWORD}"
+export GOVC_URL="https://vcsa.${NAME_LOWER}.${ROOT_DOMAIN}"
+export GOVC_INSECURE=1
+export GOVC_DATACENTER=""
+
+SDDCVM=$(govc find -type m |grep -i sddc)
 echo "execute script"
 govc guest.run -vm "${SDDCVM}" -l root:"${PASSWORD}" sh /home/vcf/sddc_manager_lab_settings.sh
 

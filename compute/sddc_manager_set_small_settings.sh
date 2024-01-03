@@ -21,16 +21,16 @@ SCRIPT_DIR=/tmp/scripts
 
 mkdir -p ${SCRIPT_DIR} 
 
-# Check cloudbuilder is ready"
-check_cloudbuilder_ready  "${NAME_LOWER}" "${PASSWORD}"
+# Check SDDC Mgr is ready"
+check_sddc_ready  "${NAME_LOWER}" "${PASSWORD}"
 
-# Check cloudbuilder lab settings"
+# Check SDDC lab settings"
 echo
-echo "prepping cloudbuilder"
+echo "prepping SDDC Manager"
 #wait for ESXCLI to become available 
 while [ "$SSHOK" != 0 ]
 do  
-	SSHOK=$( sshpass -p "${PASSWORD}" ssh -o "StrictHostKeyChecking=no" -o "ConnectTimeout=5" -o "UserKnownHostsFile=/dev/null" -o "LogLevel=error" admin@sddc.${NAME_LOWER}.${ROOT_DOMAIN} exit >/dev/null 2>&1; echo $? ) 
+	SSHOK=$( sshpass -p "${PASSWORD}" ssh -o "StrictHostKeyChecking=no" -o "ConnectTimeout=5" -o "UserKnownHostsFile=/dev/null" -o "LogLevel=error" vcf@sddc.${NAME_LOWER}.${ROOT_DOMAIN} exit >/dev/null 2>&1; echo $? ) 
 	echo "SSH status ===$SSHOK==="
 	sleep 2
 	TIMEOUT=$((TIMEOUT + 1))
@@ -45,9 +45,9 @@ SDDCVM=$(govc ls vm | grep -i ${NAME_LOWER} | grep sddc)
 echo "execute script"
 govc guest.run -vm "${SDDCVM}" -l root:"${PASSWORD}" sh /home/vcf/sddc_manager_lab_settings.sh
 
-# Check cloudbuilder is ready"
-check_cloudbuilder_ready  "${NAME_LOWER}" "${PASSWORD}"
+# Check SDDC Mgr is ready"
+check_sddc_ready  "${NAME_LOWER}" "${PASSWORD}"
 
 echo 
-echo "Cloudbuilder configuration completed"
+echo "SDDC Manager configuration completed"
 echo

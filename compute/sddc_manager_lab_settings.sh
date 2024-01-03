@@ -15,5 +15,5 @@ echo "nsxt.manager.cluster.size=1" >> ${SETTINGSFILE}
 echo "nsxt.management.resources.validation.skip=true" >> ${SETTINGSFILE}
 chmod 400 "${SETTINGSFILE}"
 systemctl restart domainmanager
-touch /home/admin/labsettings_done
+touch /home/vcf/labsettings_done
 cat ${SETTINGSFILE}

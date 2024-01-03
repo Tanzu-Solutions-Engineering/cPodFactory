@@ -78,6 +78,9 @@ cpodctl cloudbuilder $NAME $3
 ./compute/sddc_cloudbuilder_set_small_settings.sh $NAME
 ./compute/sddc_generate_ems.sh $NAME
 ./compute/sddc_deploy_wld0_CB.sh $NAME
+./add_host.sh $NAME 4 $3
+./compute/sddc_add_hosts_same_cpod.sh  $NAME
+./compute/sddc_create_wld_same_cpod_light.sh $NAME wld01 cl01
 
 #get data
 CPOD_NAME=$( echo ${NAME} | tr '[:lower:]' '[:upper:]' )

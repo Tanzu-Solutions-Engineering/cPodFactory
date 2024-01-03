@@ -30,7 +30,7 @@ echo "prepping cloudbuilder"
 #wait for ESXCLI to become available 
 while [ "$SSHOK" != 0 ]
 do  
-	SSHOK=$( sshpass -p "${PASSWORD}" ssh -o "StrictHostKeyChecking=no" -o "ConnectTimeout=5" -o "UserKnownHostsFile=/dev/null" -o "LogLevel=error" admin@cloudbuilder.${NAME_LOWER}.${ROOT_DOMAIN} exit >/dev/null 2>&1; echo $? ) 
+	SSHOK=$( sshpass -p "${PASSWORD}" ssh -o "StrictHostKeyChecking=no" -o "ConnectTimeout=5" -o "UserKnownHostsFile=/dev/null" -o "LogLevel=error" admin@sddc.${NAME_LOWER}.${ROOT_DOMAIN} exit >/dev/null 2>&1; echo $? ) 
 	echo "SSH status ===$SSHOK==="
 	sleep 2
 	TIMEOUT=$((TIMEOUT + 1))
@@ -40,10 +40,10 @@ do
 	fi 
 done
 echo "scp script"
-sshpass -p "${PASSWORD}" scp  -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" ./compute/sddc_cloudbuilder_lab_settings.sh admin@cloudbuilder.${NAME_LOWER}.${ROOT_DOMAIN}:/home/admin
-BUILDERVM=$(govc ls vm | grep -i ${NAME_LOWER} | grep cloudbuilder)
+sshpass -p "${PASSWORD}" scp  -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" ./compute/sddc_manager_lab_settings.sh admin@sddc.${NAME_LOWER}.${ROOT_DOMAIN}:/home/admin
+SDDCVM=$(govc ls vm | grep -i ${NAME_LOWER} | grep sddc)
 echo "execute script"
-govc guest.run -vm "${BUILDERVM}" -l root:"${PASSWORD}" sh /home/admin/cloudbuilder_lab_settings.sh
+govc guest.run -vm "${SDDCVM}" -l root:"${PASSWORD}" sh /home/admin/sddc_manager_lab_settings.sh
 
 # Check cloudbuilder is ready"
 check_cloudbuilder_ready  "${NAME_LOWER}" "${PASSWORD}"

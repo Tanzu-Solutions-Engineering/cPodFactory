@@ -83,11 +83,11 @@ UNASSIGNEDID=$(echo "$SDDCHOSTS" |jq -r '.elements[]| select ( .status == "UNASS
 echo "$UNASSIGNEDID"
 UNASSIGNEDCOUNT=$(echo "${UNASSIGNEDID}" | wc -l)
 
-if [[ $UNASSIGNEDCOUNT -gt 0 ]]
+if [[ $UNASSIGNEDCOUNT -gt 2 ]]
 then
 	echo "$UNASSIGNEDCOUNT hosts to add"
 else
-	echo "hostcount <=0 : $UNASSIGNEDCOUNT"
+	echo "hostcount <=3 : $UNASSIGNEDCOUNT"
 	echo "bailing out"
 	exit
 
@@ -145,8 +145,6 @@ sed -i -e "s/###WLD_NAME###/${WLDNAME}/g" \
         -e "s/###NSX01CIP###/${NSX01CIP}/g" \
         -e "s/###VCENTERIP###/${VCENTERIP}/g" \
 		${DOMAINJSON}
-
-cp "${DOMAINJSON}" "${SCRIPT_DIR}/cloudbuilder-domains-sed.json"
 
 NEWDOMAINJSON=$(cat  "${DOMAINJSON}")
 

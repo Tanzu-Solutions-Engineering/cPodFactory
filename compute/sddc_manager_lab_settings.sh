@@ -2,7 +2,7 @@
 #edewitte@vmware.com
 # Script to be executed on cloudbuilder via vmtools remote exec.
 
-[ -f /home/admin/labsettings_done ] && echo "Lab settings already set" && exit 
+[ -f /home/vcf/labsettings_done ] && echo "Lab settings already set" && exit 
 
 SETTINGSFILE="/etc/vmware/vcf/domainmanager/application.properties"
 echo "${SETTINGSFILE}"

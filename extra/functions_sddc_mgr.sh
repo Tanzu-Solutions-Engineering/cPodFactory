@@ -71,7 +71,7 @@ get_deployment_status() {
     NAME_LOWER=$1
     PASSWORD=$2
     DEPLOYMENTID=$3
-    
+
 	RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} -H 'Content-Type: application/json' -H 'Accept: application/json' -X GET https://cloudbuilder.${NAME_LOWER}.${ROOT_DOMAIN}/v1/sddcs/${DEPLOYMENTID})
 	HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
 	case $HTTPSTATUS in
@@ -87,6 +87,57 @@ get_deployment_status() {
 			echo ${RESPONSE} |awk -F '####' '{print $1}'
 			;;
 	esac
+}
+
+Loop_wait_deployment_status(){
+
+    NAME_LOWER=$1
+    PASSWORD=$2
+    DEPLOYMENTID=$3
+
+    CURRENTSTATE=""
+    CURRENTSTEP=""
+    CURRENTMAINTASK=""
+    while [[ "$STATUS" != "COMPLETED" ]]
+    do      
+        RESPONSE=$(get_deployment_status "${NAME_LOWER}" "${PASSWORD}" "${DEPLOYMENTID}")
+        if [[ "${RESPONSE}" == *"ERROR - HTTPSTATUS"* ]] || [[ "${RESPONSE}" == "" ]]
+        then
+            echo "problem getting deployment ${DEPLOYMENTID} status : "
+            echo "${RESPONSE}"		
+        else
+            STATUS=$(echo "${RESPONSE}" | jq -r '.status')
+            MAINTASK=$(echo "${RESPONSE}" | jq -r '.sddcSubTasks[] | select ( .status | contains("IN_PROGRESS")) |.description')
+            SUBTASK=$(echo "${RESPONSE}" | jq -r '.sddcSubTasks[] | select ( .status | contains("IN_PROGRESS")) |.name')
+
+            if [[ "${MAINTASK}" != "${CURRENTMAINTASK}" ]] 
+            then
+                printf "\t%s" "${MAINTASK}"
+                CURRENTMAINTASK="${MAINTASK}"
+            fi	
+            if [[ "${SUBTASK}" != "${CURRENTSTEP}" ]] 
+            then
+                if [ "${CURRENTSTEP}" != ""  ]
+                then
+                    FINALSTATUS=$(echo "${RESPONSE}" | jq -r '.sddcSubTasks[]| select ( .name == "'"${CURRENTSTEP}"'") |.status')
+                    printf "\t%s" "${FINALSTATUS}"
+                fi
+                printf "\n\t\t%s" "${SUBTASK}"
+                CURRENTSTEP="${SUBTASK}"
+            fi
+        fi
+        if [[ "${STATUS}" == "FAILED" ]] 
+        then 
+            echo
+            echo "FAILED"
+            echo ${VALIDATIONRESULT} | jq .
+            echo "stopping script"
+            exit 1
+        fi
+        printf '.' >/dev/tty
+        sleep 2
+    done
+    
 }
 
 

@@ -98,7 +98,7 @@ Loop_wait_deployment_status(){
     CURRENTSTATE=""
     CURRENTSTEP=""
     CURRENTMAINTASK=""
-    while [[ "$STATUS" != "COMPLETED" ]]
+    while [[ "$STATUS" != "COMPLETED_WITH_SUCCESS" ]]
     do      
         RESPONSE=$(get_deployment_status "${NAME_LOWER}" "${PASSWORD}" "${DEPLOYMENTID}")
         if [[ "${RESPONSE}" == *"ERROR - HTTPSTATUS"* ]] || [[ "${RESPONSE}" == "" ]]
@@ -112,7 +112,7 @@ Loop_wait_deployment_status(){
 
             if [[ "${MAINTASK}" != "${CURRENTMAINTASK}" ]] 
             then
-                printf "\t%s" "${MAINTASK}"
+                printf "\n%s" "${MAINTASK}"
                 CURRENTMAINTASK="${MAINTASK}"
             fi	
             if [[ "${SUBTASK}" != "${CURRENTSTEP}" ]] 

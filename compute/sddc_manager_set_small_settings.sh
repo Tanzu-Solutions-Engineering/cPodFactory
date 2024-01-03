@@ -40,10 +40,10 @@ do
 	fi 
 done
 echo "scp script"
-sshpass -p "${PASSWORD}" scp  -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" ./compute/sddc_manager_lab_settings.sh admin@sddc.${NAME_LOWER}.${ROOT_DOMAIN}:/home/admin
+sshpass -p "${PASSWORD}" scp  -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" ./compute/sddc_manager_lab_settings.sh vcf@sddc.${NAME_LOWER}.${ROOT_DOMAIN}:/home/vcf
 SDDCVM=$(govc ls vm | grep -i ${NAME_LOWER} | grep sddc)
 echo "execute script"
-govc guest.run -vm "${SDDCVM}" -l root:"${PASSWORD}" sh /home/admin/sddc_manager_lab_settings.sh
+govc guest.run -vm "${SDDCVM}" -l root:"${PASSWORD}" sh /home/vcf/sddc_manager_lab_settings.sh
 
 # Check cloudbuilder is ready"
 check_cloudbuilder_ready  "${NAME_LOWER}" "${PASSWORD}"

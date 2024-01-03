@@ -16,6 +16,9 @@
             "licenseKey": "###LIC_VSAN###",
             "datastoreName": "###WLD_NAME###-###CLUSTERNAME###-vsan01",
             "failuresToTolerate": 1,
+            "esaConfig" : {
+              "enabled" : false
+            },
             "dedupAndCompressionEnabled": false
           }
         },
@@ -35,7 +38,7 @@
                       "standByUplinks": null
                     }
                   ],
-                  "transportVlan": 1373
+                  "transportVlan": 9999
                 }
               ]
             }
@@ -124,6 +127,8 @@
     "nsxManagerAuditPassword": "###PASSWORD###",
     "vip": "###NSXTVIP###",
     "vipFqdn": "nsx01-###WLD_NAME###.###CPOD###.###DOMAIN###",
+    "formFactor": "small",
+    "nsxtManagerSize": "small",
     "nsxManagerSpecs": [
       {
         "name": "nsx01a-###WLD_NAME###",
@@ -159,6 +164,8 @@
     "name": "vcsa-###WLD_NAME###",
     "rootPassword": "###PASSWORD###",
     "datacenterName": "###WLD_NAME###-DC",
+    "vmSize": "small",
+    "storageSize": "lstorage",
     "networkDetailsSpec": {
       "ipAddress": "###VCENTERIP###",
       "dnsName": "vcsa-###WLD_NAME###.###CPOD###.###DOMAIN###",

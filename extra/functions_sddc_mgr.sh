@@ -66,6 +66,30 @@ check_cloudbuilder_ready(){
     echo "Cloudbuilder API : READY"
 }
 
+get_deployment_status() {
+	#returns json
+    NAME_LOWER=$1
+    PASSWORD=$2
+    DEPLOYMENTID=$3
+    
+	RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} -H 'Content-Type: application/json' -H 'Accept: application/json' -X GET https://cloudbuilder.${NAME_LOWER}.${ROOT_DOMAIN}/v1/sddcs/${DEPLOYMENTID})
+	HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+	case $HTTPSTATUS in
+		200)    
+			VALIDATIONJSON=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+			EXECUTIONSTATUS=$(echo ${VALIDATIONJSON})
+			echo "${EXECUTIONSTATUS}"
+			;;
+		503)    
+			echo "Not Ready"
+			;;
+		*)      
+			echo ${RESPONSE} |awk -F '####' '{print $1}'
+			;;
+	esac
+}
+
+
 ### SDDC Mgr functions ####
 
 get_sddc_status() {

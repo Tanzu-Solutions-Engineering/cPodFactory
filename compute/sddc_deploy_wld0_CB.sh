@@ -123,7 +123,7 @@ fi
 echo "The deployment with id: ${BRINGUPID} has started"
 
 echo
-Loop_wait_deployment_status "${NAME_LOWER}" "${PASSWORD}" "${DEPLOYMENTID}"
+Loop_wait_deployment_status "${NAME_LOWER}" "${PASSWORD}" "${BRINGUPID}"
 
 # #check the bringup status via cURL 
 # BRINGUPSTATUS=$(curl -s -k -u ${AUTH} -X GET ${URL}/v1/sddcs | jq -r ".elements[] | select(.id == ${BRINGUPID}) | .status")

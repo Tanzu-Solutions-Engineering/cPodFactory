@@ -381,20 +381,22 @@ loop_wait_domain_validation(){
 
 loop_wait_hosts_validation(){
     VALIDATIONID="${1}"
-    RESPONSE=$(get_hosts_validation_status "${VALIDATIONID}")
-    if [[ "${RESPONSE}" == *"ERROR - HTTPSTATUS"* ]] || [[ "${RESPONSE}" == "" ]]
-    then
-        echo "problem getting initial validation ${VALIDATIONID} status : "
-        echo "${RESPONSE}"
-    else
-        STATUS=$(echo "${RESPONSE}" | jq -r '.executionStatus')
-        echo "${STATUS}"
-    fi
+    # RESPONSE=$(get_hosts_validation_status "${VALIDATIONID}")
+    # if [[ "${RESPONSE}" == *"ERROR - HTTPSTATUS"* ]] || [[ "${RESPONSE}" == "" ]]
+    # then
+    #     echo "problem getting initial validation ${VALIDATIONID} status : "
+    #     echo "${RESPONSE}"
+    # else
+    #     STATUS=$(echo "${RESPONSE}" | jq -r '.executionStatus')
+    #     echo "${STATUS}"
+    # fi
 
-    CURRENTSTATE=${STATUS}
+    CURRENTSTATE=""
     CURRENTSTEP=""
     CURRENTMAINTASK=""
-    while [[ "$STATUS" != "COMPLETED" ]]
+    EXECUTIONSTATUS=""
+    RESULTSTATUS=""
+    while [[ "$EXECUTIONSTATUS" != "COMPLETED" ]]
     do      
         RESPONSE=$(get_hosts_validation_status "${VALIDATIONID}")
         #echo "${RESPONSE}" |jq .
@@ -404,7 +406,8 @@ loop_wait_hosts_validation(){
             echo "problem getting deployment ${VALIDATIONID} status : "
             echo "${RESPONSE}"		
         else
-            STATUS=$(echo "${RESPONSE}" | jq -r '.executionStatus')
+            EXECUTIONSTATUS=$(echo "${RESPONSE}" | jq -r '.executionStatus')
+            RESULTSTATUS=$(echo "${RESPONSE}" | jq -r '.resultStatus')
             MAINTASK=$(echo "${RESPONSE}" | jq -r '.description')
             SUBTASK=$(echo "${RESPONSE}" | jq -r '.validationChecks[] | select ( .resultStatus | contains("IN_PROGRESS")) |.name')
 
@@ -424,7 +427,7 @@ loop_wait_hosts_validation(){
                 CURRENTSTEP="${SUBTASK}"
             fi
         fi
-        if [[ "${STATUS}" == "FAILED" ]] 
+        if [[ "${RESULTSTATUS}" == "FAILED" ]] 
         then 
             echo
             echo "FAILED"

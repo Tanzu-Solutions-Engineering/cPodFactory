@@ -175,7 +175,7 @@ Loop_wait_validation_status(){
     CURRENTSTATE=""
     CURRENTSTEP=""
     CURRENTMAINTASK=""
-    while [[ "$STATUS" != "COMPLETED_WITH_SUCCESS" ]]
+    while [[ "$STATUS" != "COMPLETED" ]]
     do      
         RESPONSE=$(get_validation_status "${NAME_LOWER}" "${PASSWORD}" "${VALIDATIONID}")
         if [[ "${RESPONSE}" == *"ERROR - HTTPSTATUS"* ]] || [[ "${RESPONSE}" == "" ]]
@@ -193,7 +193,7 @@ Loop_wait_validation_status(){
                     FINALSTATUS=$(echo "${RESPONSE}" | jq -r '.validationChecks[]| select ( .description == "'"${CURRENTMAINTASK}"'") |.resultStatus')
                     printf "\t%s" "${FINALSTATUS}"
                 fi
-                printf "\n%s" "${MAINTASK}"
+                printf "\n\t%s" "${MAINTASK}"
                 CURRENTMAINTASK="${MAINTASK}"
             fi
         fi

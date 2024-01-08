@@ -92,23 +92,25 @@ if [ -z "$VALIDATIONSTATUS" ]; then
 fi
 
 echo "The validation with id: ${VALIDATIONID} has the status ${VALIDATIONSTATUS}..."
+echo 
+Loop_wait_validation_status "${NAME_LOWER}" "${PASSWORD}" "${VALIDATIONID}"
 
-#wait for the validation to finish
-while [ ${VALIDATIONSTATUS} != "SUCCEEDED" ]
-	do
-	VALIDATIONSTATUS=$(curl -s -k -u ${AUTH} -X GET ${URL}/v1/sddcs/validations | jq -r ".elements[] | select(.id == ${VALIDATIONID}) | .resultStatus")
-	echo "The validation with id: ${VALIDATIONID} has the status ${VALIDATIONSTATUS}..."
-	sleep 10
-	TIMEOUT=$((TIMEOUT + 1))
-	if [ $TIMEOUT -ge 48 ]; then
-		echo "bailing out..."
-		exit 1
-	fi
-	if [ "$VALIDATIONSTATUS" == "FAILED" ]; then
-		echo "bailing out..."
-		exit 1
-	fi
-done
+# #wait for the validation to finish
+# while [ ${VALIDATIONSTATUS} != "SUCCEEDED" ]
+# 	do
+# 	VALIDATIONSTATUS=$(curl -s -k -u ${AUTH} -X GET ${URL}/v1/sddcs/validations | jq -r ".elements[] | select(.id == ${VALIDATIONID}) | .resultStatus")
+# 	echo "The validation with id: ${VALIDATIONID} has the status ${VALIDATIONSTATUS}..."
+# 	sleep 10
+# 	TIMEOUT=$((TIMEOUT + 1))
+# 	if [ $TIMEOUT -ge 48 ]; then
+# 		echo "bailing out..."
+# 		exit 1
+# 	fi
+# 	if [ "$VALIDATIONSTATUS" == "FAILED" ]; then
+# 		echo "bailing out..."
+# 		exit 1
+# 	fi
+# done
 
 #proceeding with deployment
 echo "Proceeding with Bringup using ${SCRIPT}."

@@ -100,7 +100,9 @@ echo
 echo "Submitting host validation"
 VALIDATIONJSON=$(curl -s -k -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}" -d @${HOSTSSCRIPT} -X POST  https://sddc.${NAME_LOWER}.${ROOT_DOMAIN}/v1/hosts/validations)
 VALIDATIONID=$(echo "${VALIDATIONJSON}" | jq -r '.id')
-#echo ${VALIDATIONID}
+
+echo
+echo "Validation ID : ${VALIDATIONID}"
 
 echo "Querying validation result"
 echo

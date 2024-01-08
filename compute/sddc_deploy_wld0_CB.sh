@@ -121,29 +121,32 @@ fi
 
 echo "The deployment with id: ${BRINGUPID} has started"
 
-#check the bringup status via cURL 
-BRINGUPSTATUS=$(curl -s -k -u ${AUTH} -X GET ${URL}/v1/sddcs | jq -r ".elements[] | select(.id == ${BRINGUPID}) | .status")
+echo
+Loop_wait_deployment_status "${NAME_LOWER}" "${PASSWORD}" "${DEPLOYMENTID}"
 
-if [ -z "$BRINGUPSTATUS" ]; then
-  echo "Error: The bringup status is empty..."
-  exit 1
-fi
+# #check the bringup status via cURL 
+# BRINGUPSTATUS=$(curl -s -k -u ${AUTH} -X GET ${URL}/v1/sddcs | jq -r ".elements[] | select(.id == ${BRINGUPID}) | .status")
 
-while [ ${BRINGUPSTATUS} != "COMPLETED_WITH_SUCCESS" ]
-do
-	#check the bringup status via cURL
-	BRINGUPSTATUS=$(curl -s -k -u ${AUTH} -X GET ${URL}/v1/sddcs | jq -r ".elements[] | select(.id == ${BRINGUPID}) | .status")
-	echo "The bringup with id: ${BRINGUPID} has the status ${BRINGUPSTATUS}...."
-	sleep 10
-	TIMEOUT=$((TIMEOUT + 1))
-	if [ $TIMEOUT -ge 1440 ]; then
-		echo "this is taking over 4 hours, bailing out..."
-		exit 1
-	fi
-	if [ "$BRINGUPSTATUS" == "COMPLETED_WITH_FAILURE" ]; then
-		echo "The deployment failed..."
-		exit 1
-	fi
-done
+# if [ -z "$BRINGUPSTATUS" ]; then
+#   echo "Error: The bringup status is empty..."
+#   exit 1
+# fi
+
+# while [ ${BRINGUPSTATUS} != "COMPLETED_WITH_SUCCESS" ]
+# do
+# 	#check the bringup status via cURL
+# 	BRINGUPSTATUS=$(curl -s -k -u ${AUTH} -X GET ${URL}/v1/sddcs | jq -r ".elements[] | select(.id == ${BRINGUPID}) | .status")
+# 	echo "The bringup with id: ${BRINGUPID} has the status ${BRINGUPSTATUS}...."
+# 	sleep 10
+# 	TIMEOUT=$((TIMEOUT + 1))
+# 	if [ $TIMEOUT -ge 1440 ]; then
+# 		echo "this is taking over 4 hours, bailing out..."
+# 		exit 1
+# 	fi
+# 	if [ "$BRINGUPSTATUS" == "COMPLETED_WITH_FAILURE" ]; then
+# 		echo "The deployment failed..."
+# 		exit 1
+# 	fi
+# done
 
 echo "all done... do i get a cookie now?"

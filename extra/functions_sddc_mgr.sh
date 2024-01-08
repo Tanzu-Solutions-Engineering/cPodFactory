@@ -186,8 +186,9 @@ Loop_wait_validation_status(){
             echo "${RESPONSE}"		
         else
             STATUS=$(echo "${RESPONSE}" | jq -r '.executionStatus')
+            [ $? -gt 0 ] && echo "Status parsing error"
             MAINTASK=$(echo "${RESPONSE}" | jq -r '.validationChecks[] | select ( .resultStatus | contains("IN_PROGRESS")) |.description')
-    
+            [ $? -gt 0 ] && echo "maintask  parsing error"
             if [[ "${MAINTASK}" != "${CURRENTMAINTASK}" ]] 
             then
                 if [ "${CURRENTMAINTASK}" != ""  ]

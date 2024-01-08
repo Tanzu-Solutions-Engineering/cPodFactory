@@ -172,6 +172,8 @@ Loop_wait_validation_status(){
     PASSWORD=$2
     VALIDATIONID=$3
 
+    echo "debug : $NAME_LOWER - $PASSWORD - $VALIDATIONID"
+    
     CURRENTSTATE=""
     CURRENTSTEP=""
     CURRENTMAINTASK=""

@@ -80,6 +80,7 @@ cpodctl cloudbuilder $NAME $3
 ./compute/sddc_deploy_wld0_CB.sh $NAME
 ./compute/sddc_manager_set_small_settings.sh  $NAME
 ./add_host.sh $NAME 4 $3
+sleep 30
 ./compute/sddc_add_hosts_same_cpod.sh  $NAME
 ./compute/sddc_create_wld_same_cpod_light.sh $NAME wld01 cl01
 

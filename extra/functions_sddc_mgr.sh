@@ -75,12 +75,12 @@ get_deployment_status() {
 	RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} -H 'Content-Type: application/json' -H 'Accept: application/json' -X GET https://cloudbuilder.${NAME_LOWER}.${ROOT_DOMAIN}/v1/sddcs/${DEPLOYMENTID})
 	HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
 	case $HTTPSTATUS in
-		200)    
+		2[0-9][0-9])    
 			VALIDATIONJSON=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
 			EXECUTIONSTATUS=$(echo ${VALIDATIONJSON})
 			echo "${EXECUTIONSTATUS}"
 			;;
-		503)    
+		5[0-9][0-9])    
 			echo "Not Ready"
 			;;
 		*)      
@@ -405,6 +405,7 @@ loop_wait_hosts_validation(){
             echo
             echo "problem getting deployment ${VALIDATIONID} status : "
             echo "${RESPONSE}"		
+            RESULTSTATUS=$(echo "${RESPONSE}" | jq -r '.resultStatus')
         else
             EXECUTIONSTATUS=$(echo "${RESPONSE}" | jq -r '.executionStatus')
             RESULTSTATUS=$(echo "${RESPONSE}" | jq -r '.resultStatus')

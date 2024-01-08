@@ -95,12 +95,13 @@ get_validation_status() {
     PASSWORD=$2
     VALIDATIONID=$3
 
-	RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} -H 'Content-Type: application/json' -H 'Accept: application/json' -X GET https://cloudbuilder.${NAME_LOWER}.${ROOT_DOMAIN}/v1/sddcs/validations/${VALIDATIONID})
+	RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} -H 'Content-Type: application/json' -H 'Accept: application/json' -X GET https://cloudbuilder.${NAME_LOWER}.${ROOT_DOMAIN}/v1/sddcs/validations)
+
 	HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
 	case $HTTPSTATUS in
 		2[0-9][0-9])    
-			VALIDATIONJSON=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
-			EXECUTIONSTATUS=$(echo ${VALIDATIONJSON})
+			VALIDATIONJSON=$(echo "${RESPONSE}" |awk -F '####' '{print $1}')
+			EXECUTIONSTATUS=$(echo "${VALIDATIONJSON}" | jq -r ".elements[] | select(.id == ${VALIDATIONID})")
 			echo "${EXECUTIONSTATUS}"
 			;;
 		5[0-9][0-9])    
@@ -164,6 +165,57 @@ Loop_wait_deployment_status(){
     
 }
 
+
+Loop_wait_validation_status(){
+
+    NAME_LOWER=$1
+    PASSWORD=$2
+    VALIDATIONID=$3
+
+    CURRENTSTATE=""
+    CURRENTSTEP=""
+    CURRENTMAINTASK=""
+    while [[ "$STATUS" != "COMPLETED_WITH_SUCCESS" ]]
+    do      
+        RESPONSE=$(get_validation_status "${NAME_LOWER}" "${PASSWORD}" "${VALIDATIONID}")
+        if [[ "${RESPONSE}" == *"ERROR - HTTPSTATUS"* ]] || [[ "${RESPONSE}" == "" ]]
+        then
+            echo "problem getting validation  ${VALIDATIONID} status : "
+            echo "${RESPONSE}"		
+        else
+            STATUS=$(echo "${RESPONSE}" | jq -r '.status')
+            MAINTASK=$(echo "${RESPONSE}" | jq -r '.sddcSubTasks[] | select ( .status | contains("IN_PROGRESS")) |.description')
+            SUBTASK=$(echo "${RESPONSE}" | jq -r '.sddcSubTasks[] | select ( .status | contains("IN_PROGRESS")) |.name')
+
+            if [[ "${MAINTASK}" != "${CURRENTMAINTASK}" ]] 
+            then
+                printf "\n%s" "${MAINTASK}"
+                CURRENTMAINTASK="${MAINTASK}"
+            fi	
+            if [[ "${SUBTASK}" != "${CURRENTSTEP}" ]] 
+            then
+                if [ "${CURRENTSTEP}" != ""  ]
+                then
+                    FINALSTATUS=$(echo "${RESPONSE}" | jq -r '.sddcSubTasks[]| select ( .name == "'"${CURRENTSTEP}"'") |.status')
+                    printf "\t%s" "${FINALSTATUS}"
+                fi
+                printf "\n\t\t%s" "${SUBTASK}"
+                CURRENTSTEP="${SUBTASK}"
+            fi
+        fi
+        if [[ "${STATUS}" == "FAILED" ]] 
+        then 
+            echo
+            echo "FAILED"
+            echo ${VALIDATIONRESULT} | jq .
+            echo "stopping script"
+            exit 1
+        fi
+        printf '.' >/dev/tty
+        sleep 2
+    done
+    
+}
 
 ### SDDC Mgr functions ####
 

@@ -172,7 +172,7 @@ Loop_wait_validation_status(){
     PASSWORD=$2
     VALIDATIONID=$3
 
-    echo "debug : $NAME_LOWER - $PASSWORD - $VALIDATIONID"
+    echo "Checking validationID: $VALIDATIONID"
 
     STATUS=""
     CURRENTSTEP=""
@@ -210,7 +210,12 @@ Loop_wait_validation_status(){
         printf '.' >/dev/tty
         sleep 2
     done
-    
+
+    EXECSTATUS=$(echo "${RESPONSE}" | jq -r '.executionStatus')
+
+    RESULTSTATUS=$(echo "${RESPONSE}" | jq -r '.resultStatus')
+
+    echo "Validation  ${VALIDATIONID} : Execution : ${RESEXECSTATUSPONSE} - Result : ${RESULTSTATUS} "   
 }
 
 ### SDDC Mgr functions ####

@@ -83,15 +83,15 @@ if [ -z "$VALIDATIONID" ]; then
 fi
 echo "The validation with id: ${VALIDATIONID} has started"
 
-#check the validation
-VALIDATIONSTATUS=$(curl -s -k -u ${AUTH} -X GET ${URL}/v1/sddcs/validations | jq -r ".elements[] | select(.id == ${VALIDATIONID}) | .resultStatus")
+# #check the validation
+# VALIDATIONSTATUS=$(curl -s -k -u ${AUTH} -X GET ${URL}/v1/sddcs/validations | jq -r ".elements[] | select(.id == ${VALIDATIONID}) | .resultStatus")
 
-if [ -z "$VALIDATIONSTATUS" ]; then
-  echo "Error: The validation status is empty..."
-  exit 1
-fi
+# if [ -z "$VALIDATIONSTATUS" ]; then
+#   echo "Error: The validation status is empty..."
+#   exit 1
+# fi
 
-echo "The validation with id: ${VALIDATIONID} has the status ${VALIDATIONSTATUS}..."
+# echo "The validation with id: ${VALIDATIONID} has the status ${VALIDATIONSTATUS}..."
 echo 
 Loop_wait_validation_status "${NAME_LOWER}" "${PASSWORD}" "${VALIDATIONID}"
 

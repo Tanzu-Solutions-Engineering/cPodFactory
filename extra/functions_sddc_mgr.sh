@@ -95,14 +95,15 @@ get_validation_status() {
     PASSWORD=$2
     VALIDATIONID=$3
 
-	RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} -H 'Content-Type: application/json' -H 'Accept: application/json' -X GET https://cloudbuilder.${NAME_LOWER}.${ROOT_DOMAIN}/v1/sddcs/validations)
+	RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} -H 'Content-Type: application/json' -H 'Accept: application/json' -X GET https://cloudbuilder.${NAME_LOWER}.${ROOT_DOMAIN}/v1/sddcs/validations/${VALIDATIONID})
 
 	HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
 	case $HTTPSTATUS in
 		2[0-9][0-9])    
 			VALIDATIONJSON=$(echo "${RESPONSE}" |awk -F '####' '{print $1}')
-			EXECUTIONSTATUS=$(echo "${VALIDATIONJSON}" | jq -r ".elements[] | select(.id == ${VALIDATIONID})")
-			echo "${EXECUTIONSTATUS}"
+#			EXECUTIONSTATUS=$(echo "${VALIDATIONJSON}")
+#			echo "${EXECUTIONSTATUS}"
+			echo "${VALIDATIONJSON}"
 			;;
 		5[0-9][0-9])    
 			echo "Not Ready"
@@ -165,7 +166,6 @@ Loop_wait_deployment_status(){
     
 }
 
-
 Loop_wait_validation_status(){
 
     NAME_LOWER=$1
@@ -183,24 +183,18 @@ Loop_wait_validation_status(){
             echo "problem getting validation  ${VALIDATIONID} status : "
             echo "${RESPONSE}"		
         else
-            STATUS=$(echo "${RESPONSE}" | jq -r '.status')
-            MAINTASK=$(echo "${RESPONSE}" | jq -r '.sddcSubTasks[] | select ( .status | contains("IN_PROGRESS")) |.description')
-            SUBTASK=$(echo "${RESPONSE}" | jq -r '.sddcSubTasks[] | select ( .status | contains("IN_PROGRESS")) |.name')
-
+            STATUS=$(echo "${RESPONSE}" | jq -r '.executionStatus')
+            MAINTASK=$(echo "${RESPONSE}" | jq -r '.validationChecks[] | select ( .resultStatus | contains("IN_PROGRESS")) |.description')
+    
             if [[ "${MAINTASK}" != "${CURRENTMAINTASK}" ]] 
             then
-                printf "\n%s" "${MAINTASK}"
-                CURRENTMAINTASK="${MAINTASK}"
-            fi	
-            if [[ "${SUBTASK}" != "${CURRENTSTEP}" ]] 
-            then
-                if [ "${CURRENTSTEP}" != ""  ]
+                if [ "${CURRENTMAINTASK}" != ""  ]
                 then
-                    FINALSTATUS=$(echo "${RESPONSE}" | jq -r '.sddcSubTasks[]| select ( .name == "'"${CURRENTSTEP}"'") |.status')
+                    FINALSTATUS=$(echo "${RESPONSE}" | jq -r '.validationChecks[]| select ( .description == "'"${CURRENTMAINTASK}"'") |.resultStatus')
                     printf "\t%s" "${FINALSTATUS}"
                 fi
-                printf "\n\t\t%s" "${SUBTASK}"
-                CURRENTSTEP="${SUBTASK}"
+                printf "\n%s" "${MAINTASK}"
+                CURRENTMAINTASK="${MAINTASK}"
             fi
         fi
         if [[ "${STATUS}" == "FAILED" ]] 

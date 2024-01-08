@@ -7,6 +7,7 @@
 # source helper functions
 . ./env
 source ./extra/functions.sh
+source ./extra/functions_sddc_mgr.sh
 
 #input validation check
 if [ $# -ne 1 ]; then

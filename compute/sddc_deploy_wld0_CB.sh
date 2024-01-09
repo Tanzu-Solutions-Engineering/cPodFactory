@@ -88,7 +88,7 @@ fi
 
 VALIDATIONID=$(curl -s -k -u ${AUTH} -H 'Content-Type: application/json' -H 'Accept: application/json' -d @${SCRIPT} -X POST ${URL}/v1/sddcs/validations)
 #echo "The validation returns: ${VALIDATIONID}"
-VALIDATIONID=$(echo $VALIDATIONID | jq .id)
+VALIDATIONID=$(echo $VALIDATIONID | jq -r .id)
 #echo "The validation after jq returns: ${VALIDATIONID}"
 if [ -z "$VALIDATIONID" ]; then
   echo "Error: The validation ID is empty..."

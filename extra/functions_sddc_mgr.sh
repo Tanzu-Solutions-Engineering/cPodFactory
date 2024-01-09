@@ -80,8 +80,15 @@ get_deployment_status() {
 			EXECUTIONSTATUS=$(echo ${VALIDATIONJSON})
 			echo "${EXECUTIONSTATUS}"
 			;;
+		4[0-9][0-9])    
+            DUMPFILE="/tmp/scripts/cloudbuilder-deployment-httpstatus-4xx-$$.txt"
+            echo "${RESPONSE}" > "${DUMPFILE}"
+            echo "PARAMS - ${NAME_LOWER} ${PASSWORD} ${DEPLOYMENTID} " >>  "${DUMPFILE}"
+   			echo "{executionStatus: \"$HTTPSTATUS - Bad Request\"}"
+			;;
 		5[0-9][0-9])    
-			echo "Not Ready"
+            echo "${RESPONSE}" > /tmp/scripts/cloudbuilder-deployment-httpstatus-5xx-$$.txt
+   			echo "{executionStatus: \"$HTTPSTATUS - Server Error \"}"
 			;;
 		*)      
 			echo ${RESPONSE} |awk -F '####' '{print $1}'
@@ -105,17 +112,14 @@ get_validation_status() {
 			echo "${VALIDATIONJSON}"
 			;;
 		4[0-9][0-9])    
-#			echo "Not Ready"
             DUMPFILE="/tmp/scripts/cloudbuilder-validation-httpstatus-4xx-$$.txt"
             echo "${RESPONSE}" > "${DUMPFILE}"
             echo "PARAMS - ${NAME_LOWER} ${PASSWORD} ${VALIDATIONID} " >>  "${DUMPFILE}"
-   			echo "{executionStatus: \"Not Ready\"}"
+   			echo "{executionStatus: \"$HTTPSTATUS - Bad Request\"}"
 			;;
 		5[0-9][0-9])    
-#			echo "Not Ready"
             echo "${RESPONSE}" > /tmp/scripts/cloudbuilder-validation-httpstatus-5xx-$$.txt
-   			echo "{executionStatus: \"Not Ready\"}"
-
+   			echo "{executionStatus: \"$HTTPSTATUS - Server Error \"}"
 			;;
 		*)      
 			echo ${RESPONSE} |awk -F '####' '{print $1}'

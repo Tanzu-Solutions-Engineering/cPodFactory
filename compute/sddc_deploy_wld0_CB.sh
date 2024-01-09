@@ -26,6 +26,12 @@ SUBNET=$( ./"${COMPUTE_DIR}"/cpod_ip.sh "${1}" )
 PASSWORD=$( ${EXTRA_DIR}/passwd_for_cpod.sh ${CPOD_NAME} ) 
 SCRIPT_DIR=/tmp/scripts
 SCRIPT=/tmp/scripts/cloudbuilder-${NAME_LOWER}.json
+
+if [ ! -f "$SCRIPT" ]; then
+    echo "$SCRIPT does not exist."
+	exit 1
+fi
+
 TIMEOUT=0
 
 # with NSX, VLAN Management is untagged
@@ -71,8 +77,8 @@ sleep 10
 
 echo "API on cloudbuilder ${URL} is ready..."
 
-echo "Checking running validations"
 echo
+echo "Checking running validations"
 VALIDATIONLIST=$(Check_validation_list  "${NAME_LOWER}" "${PASSWORD}")
 #echo "${VALIDATIONLIST}"
 VALIDATIONINPROGRESS=$(echo "$VALIDATIONLIST" | jq '. |select (.status == "IN_PROGRESS")| .id')
@@ -82,7 +88,7 @@ then
 	echo "Bailing out ..."
 	exit 1
 else
-	echo " thunderbirds are go!"
+	echo "thunderbirds are go!"
 fi
 #validate the EMS.json - for some reason this has to be done in 2 steps
 
@@ -95,41 +101,13 @@ if [ -z "$VALIDATIONID" ]; then
   exit 1
 fi
 echo "The validation with id: ${VALIDATIONID} has started"
-
-# #check the validation
-# VALIDATIONSTATUS=$(curl -s -k -u ${AUTH} -X GET ${URL}/v1/sddcs/validations | jq -r ".elements[] | select(.id == ${VALIDATIONID}) | .resultStatus")
-
-# if [ -z "$VALIDATIONSTATUS" ]; then
-#   echo "Error: The validation status is empty..."
-#   exit 1
-# fi
-
-# echo "The validation with id: ${VALIDATIONID} has the status ${VALIDATIONSTATUS}..."
-
 echo 
 Loop_wait_validation_status "${NAME_LOWER}" "${PASSWORD}" "${VALIDATIONID}"
 
-# #wait for the validation to finish
-# while [ ${VALIDATIONSTATUS} != "SUCCEEDED" ]
-# 	do
-# 	VALIDATIONSTATUS=$(curl -s -k -u ${AUTH} -X GET ${URL}/v1/sddcs/validations | jq -r ".elements[] | select(.id == ${VALIDATIONID}) | .resultStatus")
-# 	echo "The validation with id: ${VALIDATIONID} has the status ${VALIDATIONSTATUS}..."
-# 	sleep 10
-# 	TIMEOUT=$((TIMEOUT + 1))
-# 	if [ $TIMEOUT -ge 48 ]; then
-# 		echo "bailing out..."
-# 		exit 1
-# 	fi
-# 	if [ "$VALIDATIONSTATUS" == "FAILED" ]; then
-# 		echo "bailing out..."
-# 		exit 1
-# 	fi
-# done
-exit
 #proceeding with deployment
 echo "Proceeding with Bringup using ${SCRIPT}."
 
-BRINGUPID=$(curl -s -k -u ${AUTH} -H 'Content-Type: application/json' -H 'Accept: application/json' -d @${SCRIPT} -X POST ${URL}/v1/sddcs | jq '.id')
+BRINGUPID=$(curl -s -k -u ${AUTH} -H 'Content-Type: application/json' -H 'Accept: application/json' -d @${SCRIPT} -X POST ${URL}/v1/sddcs | jq -r '.id')
 
 if [ -z "$BRINGUPID" ]; then
   echo "Error: The bringup id  is empty..."
@@ -140,30 +118,5 @@ echo "The deployment with id: ${BRINGUPID} has started"
 
 echo
 Loop_wait_deployment_status "${NAME_LOWER}" "${PASSWORD}" "${BRINGUPID}"
-
-# #check the bringup status via cURL 
-# BRINGUPSTATUS=$(curl -s -k -u ${AUTH} -X GET ${URL}/v1/sddcs | jq -r ".elements[] | select(.id == ${BRINGUPID}) | .status")
-
-# if [ -z "$BRINGUPSTATUS" ]; then
-#   echo "Error: The bringup status is empty..."
-#   exit 1
-# fi
-
-# while [ ${BRINGUPSTATUS} != "COMPLETED_WITH_SUCCESS" ]
-# do
-# 	#check the bringup status via cURL
-# 	BRINGUPSTATUS=$(curl -s -k -u ${AUTH} -X GET ${URL}/v1/sddcs | jq -r ".elements[] | select(.id == ${BRINGUPID}) | .status")
-# 	echo "The bringup with id: ${BRINGUPID} has the status ${BRINGUPSTATUS}...."
-# 	sleep 10
-# 	TIMEOUT=$((TIMEOUT + 1))
-# 	if [ $TIMEOUT -ge 1440 ]; then
-# 		echo "this is taking over 4 hours, bailing out..."
-# 		exit 1
-# 	fi
-# 	if [ "$BRINGUPSTATUS" == "COMPLETED_WITH_FAILURE" ]; then
-# 		echo "The deployment failed..."
-# 		exit 1
-# 	fi
-# done
 
 echo "all done... do i get a cookie now?"

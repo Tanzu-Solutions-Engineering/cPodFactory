@@ -69,13 +69,19 @@ done
 echo "sleeping a bit to make sure the API is ready."
 sleep 10
 
-echo "API on cloudbuilder ${URL} is ready... thunderbirds are go!"
+echo "API on cloudbuilder ${URL} is ready..."
 
 echo "Checking running validations"
 echo
 VALIDATIONLIST=$(Check_validation_list  "${NAME_LOWER}" "${PASSWORD}")
 echo "${VALIDATIONLIST}"
-
+VALIDATIONINPROGRESS=$(echo "$VALIDATIONLIST" | jq '. |select (.status == "IN_PROGRESS")| .id')
+if [ "$VALIDATIONINPROGRESS" != "" ]
+then
+	echo "Current validation in progress ID : $VALIDATIONINPROGRESS"
+else
+	echo " thunderbirds are go!"
+fi
 #validate the EMS.json - for some reason this has to be done in 2 steps
 
 VALIDATIONID=$(curl -s -k -u ${AUTH} -H 'Content-Type: application/json' -H 'Accept: application/json' -d @${SCRIPT} -X POST ${URL}/v1/sddcs/validations)

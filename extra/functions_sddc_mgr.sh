@@ -101,7 +101,7 @@ get_validation_status() {
 	case $HTTPSTATUS in
 		2[0-9][0-9])    
 			VALIDATIONJSON=$(echo "${RESPONSE}" |awk -F '####' '{print $1}')
-            echo "${VALIDATIONJSON}" > /tmp/scripts/cloudbuilder-validation-status.json
+            echo "${VALIDATIONJSON}" > /tmp/scripts/cloudbuilder-validation-status-$$.json
 			echo "${VALIDATIONJSON}"
 			;;
 		5[0-9][0-9])    

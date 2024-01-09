@@ -212,7 +212,7 @@ Loop_wait_validation_status(){
             STATUS=$(echo "${RESPONSE}" | jq -r '.executionStatus')
             [ $? -gt 0 ] && echo "Status parsing error"
             MAINTASK=$(echo "${RESPONSE}" | jq -r '.validationChecks[] | select ( .resultStatus | contains("IN_PROGRESS")) |.description')
-            [ $? -gt 0 ] && echo "maintask  parsing error"
+            [ $? -gt 0 ] && echo "maintask  parsing error" && echo "${RESPONSE}" 
             if [[ "${MAINTASK}" != "${CURRENTMAINTASK}" ]] 
             then
                 if [ "${CURRENTMAINTASK}" != ""  ]
@@ -235,12 +235,10 @@ Loop_wait_validation_status(){
         printf '.' >/dev/tty
         sleep 2
     done
-
     EXECSTATUS=$(echo "${RESPONSE}" | jq -r '.executionStatus')
-
     RESULTSTATUS=$(echo "${RESPONSE}" | jq -r '.resultStatus')
-
-    echo "Validation  ${VALIDATIONID} : Execution : ${RESEXECSTATUSPONSE} - Result : ${RESULTSTATUS} "   
+    echo
+    echo "Validation  ${VALIDATIONID} - Execution : ${EXECSTATUS} - Result : ${RESULTSTATUS} "   
 }
 
 ### SDDC Mgr functions ####

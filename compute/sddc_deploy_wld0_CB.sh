@@ -74,11 +74,13 @@ echo "API on cloudbuilder ${URL} is ready..."
 echo "Checking running validations"
 echo
 VALIDATIONLIST=$(Check_validation_list  "${NAME_LOWER}" "${PASSWORD}")
-echo "${VALIDATIONLIST}"
+#echo "${VALIDATIONLIST}"
 VALIDATIONINPROGRESS=$(echo "$VALIDATIONLIST" | jq '. |select (.status == "IN_PROGRESS")| .id')
 if [ "$VALIDATIONINPROGRESS" != "" ]
 then
 	echo "Current validation in progress ID : $VALIDATIONINPROGRESS"
+	echo "Bailing out ..."
+	exit 1
 else
 	echo " thunderbirds are go!"
 fi

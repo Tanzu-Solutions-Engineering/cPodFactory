@@ -71,6 +71,11 @@ sleep 10
 
 echo "API on cloudbuilder ${URL} is ready... thunderbirds are go!"
 
+echo "Checking running validations"
+echo
+VALIDATIONLIST=$(Check_validation_list  "${NAME_LOWER}" "${PASSWORD}")
+echo "${VALIDATIONLIST}"
+
 #validate the EMS.json - for some reason this has to be done in 2 steps
 
 VALIDATIONID=$(curl -s -k -u ${AUTH} -H 'Content-Type: application/json' -H 'Accept: application/json' -d @${SCRIPT} -X POST ${URL}/v1/sddcs/validations)
@@ -92,6 +97,7 @@ echo "The validation with id: ${VALIDATIONID} has started"
 # fi
 
 # echo "The validation with id: ${VALIDATIONID} has the status ${VALIDATIONSTATUS}..."
+
 echo 
 Loop_wait_validation_status "${NAME_LOWER}" "${PASSWORD}" "${VALIDATIONID}"
 
@@ -111,7 +117,7 @@ Loop_wait_validation_status "${NAME_LOWER}" "${PASSWORD}" "${VALIDATIONID}"
 # 		exit 1
 # 	fi
 # done
-
+exit
 #proceeding with deployment
 echo "Proceeding with Bringup using ${SCRIPT}."
 

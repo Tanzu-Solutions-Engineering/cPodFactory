@@ -101,8 +101,7 @@ get_validation_status() {
 	case $HTTPSTATUS in
 		2[0-9][0-9])    
 			VALIDATIONJSON=$(echo "${RESPONSE}" |awk -F '####' '{print $1}')
-#			EXECUTIONSTATUS=$(echo "${VALIDATIONJSON}")
-#			echo "${EXECUTIONSTATUS}"
+            echo "${VALIDATIONJSON}" > /tmp/scripts/cloudbuilder-validation-status.json
 			echo "${VALIDATIONJSON}"
 			;;
 		5[0-9][0-9])    
@@ -114,6 +113,28 @@ get_validation_status() {
 	esac
 }
 
+Check_validation_list(){
+    	#returns json
+    NAME_LOWER=$1
+    PASSWORD=$2
+
+	RESPONSE=$(curl -s -k -w '####%{response_code}' -u admin:${PASSWORD} -H 'Content-Type: application/json' -H 'Accept: application/json' -X GET https://cloudbuilder.${NAME_LOWER}.${ROOT_DOMAIN}/v1/sddcs/validations)
+
+	HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+	case $HTTPSTATUS in
+		2[0-9][0-9])    
+			VALIDATIONJSON=$(echo "${RESPONSE}" |awk -F '####' '{print $1}')
+			echo "${VALIDATIONJSON}" | jq '.elements[] | {id: .id, status: .executionStatus}'
+			;;
+		5[0-9][0-9])    
+			echo "Not Ready"
+			;;
+		*)      
+			echo ${RESPONSE} |awk -F '####' '{print $1}'
+			;;
+	esac
+
+}
 
 Loop_wait_deployment_status(){
 

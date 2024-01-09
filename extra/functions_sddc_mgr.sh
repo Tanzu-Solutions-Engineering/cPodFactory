@@ -104,6 +104,13 @@ get_validation_status() {
             echo "${VALIDATIONJSON}" > /tmp/scripts/cloudbuilder-validation-status-$$.json
 			echo "${VALIDATIONJSON}"
 			;;
+		4[0-9][0-9])    
+#			echo "Not Ready"
+            DUMPFILE="/tmp/scripts/cloudbuilder-validation-httpstatus-4xx-$$.txt"
+            echo "${RESPONSE}" > "${DUMPFILE}"
+            echo "PARAMS - ${NAME_LOWER} ${PASSWORD} ${VALIDATIONID} " >>  "${DUMPFILE}"
+   			echo "{executionStatus: \"Not Ready\"}"
+			;;
 		5[0-9][0-9])    
 #			echo "Not Ready"
             echo "${RESPONSE}" > /tmp/scripts/cloudbuilder-validation-httpstatus-5xx-$$.txt

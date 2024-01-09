@@ -105,7 +105,10 @@ get_validation_status() {
 			echo "${VALIDATIONJSON}"
 			;;
 		5[0-9][0-9])    
-			echo "Not Ready"
+#			echo "Not Ready"
+            echo "${RESPONSE}" > /tmp/scripts/cloudbuilder-validation-httpstatus-5xx-$$.txt
+   			echo "{executionStatus: \"Not Ready\"}"
+
 			;;
 		*)      
 			echo ${RESPONSE} |awk -F '####' '{print $1}'
@@ -127,7 +130,7 @@ Check_validation_list(){
 			echo "${VALIDATIONJSON}" | jq '.elements[] | {id: .id, status: .executionStatus}'
 			;;
 		5[0-9][0-9])    
-			echo "Not Ready"
+			echo '{status: "Not Ready"}'
 			;;
 		*)      
 			echo ${RESPONSE} |awk -F '####' '{print $1}'

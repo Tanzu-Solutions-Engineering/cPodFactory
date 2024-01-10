@@ -68,9 +68,9 @@ echo
 test_params_file ${VERSION}
 
 echo
-echo "====================================="
-echo "=== creating cpod / vsan / NLB  ==="
-echo "====================================="
+echo "=================================="
+echo "=== creating cpod / VCF / WLD  ==="
+echo "=================================="
 echo
 
 cpodctl create $NAME 4 $3
@@ -82,7 +82,7 @@ cpodctl cloudbuilder $NAME $3
 ./add_host.sh $NAME 4 $3
 sleep 30
 ./compute/sddc_add_hosts_same_cpod.sh  $NAME
-./compute/sddc_create_wld_same_cpod_light.sh $NAME wld01 cl01
+./compute/sddc_create_wld_same_cpod_light.sh $NAME wld01 wld-cl01
 
 #get data
 CPOD_NAME=$( echo ${NAME} | tr '[:lower:]' '[:upper:]' )

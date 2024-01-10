@@ -596,7 +596,7 @@ loop_wait_commissioning(){
             fi	
              printf '.' >/dev/tty
         fi
-        if [[ "${STATUS}" == "FAILED" ]] 
+        if [[ "${STATUS}" == "FAILED" ]] || [[ "${STATUS}" == "Failed" ]]
         then 
             echo
             echo "FAILED"

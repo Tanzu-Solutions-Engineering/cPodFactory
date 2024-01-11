@@ -74,11 +74,11 @@ fi
 #USERNAME="administrator@${NAME_LOWER}.${ROOT_DOMAIN}"
 echo
 echo "Getting VCF API Token"
-TOKEN=$(get_sddc_token "${NAME_LOWER}" "${PASSWORD}" )
+TOKEN=$(sddc_get_token "${NAME_LOWER}" "${PASSWORD}" )
 
 echo
 echo "Listing Unassigned Hosts IDs"
-SDDCHOSTS=$(get_hosts_full "${NAME_LOWER}" "${TOKEN}")
+SDDCHOSTS=$(sddc_get_hosts_full "${NAME_LOWER}" "${TOKEN}")
 UNASSIGNEDID=$(echo "$SDDCHOSTS" |jq -r '.elements[]| select ( .status == "UNASSIGNED_USEABLE")| .id')
 echo "$UNASSIGNEDID"
 UNASSIGNEDCOUNT=$(echo "${UNASSIGNEDID}" | wc -l)
@@ -93,7 +93,7 @@ else
 
 fi
 
-LICENSEKEYS=$(get_license_keys_full "${NAME_LOWER}" "${TOKEN}")
+LICENSEKEYS=$(sddc_get_license_keys_full "${NAME_LOWER}" "${TOKEN}")
 ESXLICENSE=$(echo "${LICENSEKEYS}" |jq -r '.elements[] | select (.productType == "ESXI" )| .key')
 VSANLICENSE=$(echo "${LICENSEKEYS}" |jq -r '.elements[] | select (.productType == "VSAN" )| .key')
 NSXLICENSE=$(echo "${LICENSEKEYS}" |jq -r '.elements[] | select (.productType == "NSXT" )| .key')

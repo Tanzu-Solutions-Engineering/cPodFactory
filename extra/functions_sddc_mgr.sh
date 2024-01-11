@@ -239,7 +239,8 @@ Loop_wait_validation_status(){
         then 
             echo
             echo "FAILED"
-            echo ${VALIDATIONRESULT} | jq .
+            echo "${RESPONSE}" | jq .
+            echo ""
             echo "stopping script"
             exit 1
         fi
@@ -600,9 +601,16 @@ loop_wait_commissioning(){
         then 
             echo
             echo "FAILED"
-            echo "${RESPONSE}" | jq .
-            echo "stopping script"
-            exit 1
+            echo "${RESPONSE}" | jq -r '["Name","Status"],["----","------"],(.subTasks[] | select ( .status | contains("FAILED")) | [.name,.status] )| @tsv' | column -t -s $'\t'
+            RETRYABLE=$(echo "${RESPONSE}" | jq '.isRetryable')
+            if [[ "${RETRYABLE}" == "true" ]]
+            then
+                echo "Retrying"
+                retry_commission "${COMMISSIONID}"
+            else
+                echo "Not retryable - stopping script"
+                exit 1
+            fi
         fi
         TOKENTIMER=$((TOKENTIMER+1))
         if [[ $TOKENTIMER -gt 150 ]]
@@ -615,6 +623,63 @@ loop_wait_commissioning(){
     RESULTSTATUS=$(echo "${RESPONSE}" | jq -r '.status')
     echo
     echo "Commisioning Result Status : $RESULTSTATUS"    
+}
+
+get_commission_result_table(){
+    COMMISSIONID="${1}"
+    RESPONSE=$(get_commission_status "${COMMISSIONID}")
+
+    echo
+    echo "Succesfull tasks"
+    echo
+    echo "${RESPONSE}" | jq -r '["Name","Status"],["----","------"],(.subTasks[] | select ( .status | contains("SUCCESSFUL")) | [.name,.status] )| @tsv' | column -t -s $'\t'
+
+    echo
+    echo "Pending tasks"
+    echo
+    echo "${RESPONSE}" | jq -r '["Name","Status"],["----","------"],(.subTasks[] | select ( .status | contains("PENDING")) | [.name,.status] )| @tsv' | column -t -s $'\t'
+
+    echo
+    echo "Failed tasks"
+    echo
+    echo "${RESPONSE}" | jq -r '["Name","Status"],["----","------"],(.subTasks[] | select ( .status | contains("FAILED")) | [.name,.status] )| @tsv' | column -t -s $'\t'
+
+    
+    echo
+    echo "Commission Status"
+    echo
+    echo "${RESPONSE}" | jq -r '.status,.resolutionStatus,.isRetryable'
+
+    
+
+
+}
+
+retry_commission(){
+    COMMISSIONID="${1}"
+
+	RESPONSE=$(curl -s -k -w '####%{response_code}' -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}" -X PATCH  https://sddc.${NAME_LOWER}.${ROOT_DOMAIN}/v1/tasks/${COMMISSIONID})
+	HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+	RESULT=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+
+	case $HTTPSTATUS in
+		2[0-9][0-9])    
+			echo "${RESULT}"
+			;;
+		4[0-9][0-9])    
+            DUMPFILE="/tmp/scripts/sddc-task-retry-httpstatus-4xx-$$.txt"
+            echo "${RESULT}" > "${DUMPFILE}"
+            echo "PARAMS - ${COMMISSIONID}" >>  "${DUMPFILE}"
+   			echo "{executionStatus: \"$HTTPSTATUS - Bad Request\"}"
+			;;
+		5[0-9][0-9])    
+            echo "${RESULT}" > /tmp/scripts/sddc-task-retry-httpstatus-5xx-$$.txt
+   			echo "{executionStatus: \"$HTTPSTATUS - Server Error \"}"
+			;;
+		*)      
+			echo ${RESULT} |awk -F '####' '{print $1}'
+			;;
+	esac
 }
 
 ###################

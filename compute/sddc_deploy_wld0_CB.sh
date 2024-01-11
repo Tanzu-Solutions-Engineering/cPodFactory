@@ -79,7 +79,7 @@ echo "API on cloudbuilder ${URL} is ready..."
 
 echo
 echo "Checking running validations"
-VALIDATIONLIST=$(Check_validation_list  "${NAME_LOWER}" "${PASSWORD}")
+VALIDATIONLIST=$(cloudbuilder_check_validation_list  "${NAME_LOWER}" "${PASSWORD}")
 #echo "${VALIDATIONLIST}"
 VALIDATIONINPROGRESS=$(echo "$VALIDATIONLIST" | jq '. |select (.status == "IN_PROGRESS")| .id')
 if [ "$VALIDATIONINPROGRESS" != "" ]
@@ -102,7 +102,7 @@ if [ -z "$VALIDATIONID" ]; then
 fi
 echo "The validation with id: ${VALIDATIONID} has started"
 echo 
-Loop_wait_validation_status "${NAME_LOWER}" "${PASSWORD}" "${VALIDATIONID}"
+cloudbuilder_loop_wait_validation_status "${NAME_LOWER}" "${PASSWORD}" "${VALIDATIONID}"
 
 #proceeding with deployment
 echo "Proceeding with Bringup using ${SCRIPT}."
@@ -117,6 +117,6 @@ fi
 echo "The deployment with id: ${BRINGUPID} has started"
 
 echo
-Loop_wait_deployment_status "${NAME_LOWER}" "${PASSWORD}" "${BRINGUPID}"
+cloudbuilder_loop_wait_deployment_status "${NAME_LOWER}" "${PASSWORD}" "${BRINGUPID}"
 
 echo "all done... do i get a cookie now?"

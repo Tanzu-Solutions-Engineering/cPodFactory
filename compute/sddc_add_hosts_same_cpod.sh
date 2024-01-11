@@ -29,16 +29,16 @@ PASSWORD=$( ${EXTRA_DIR}/passwd_for_cpod.sh ${CPOD_NAME} )
 #USERNAME="administrator@${NAME_LOWER}.${ROOT_DOMAIN}"
 echo
 echo "Getting VCF API Token"
-TOKEN=$(get_sddc_token "${NAME_LOWER}" "${PASSWORD}" )
+TOKEN=$(sddc_get_token "${NAME_LOWER}" "${PASSWORD}" )
 
 echo
 echo "Listing Hosts"
-SDDCHOSTS=$(get_hosts_fqdn "${NAME_LOWER}" "${TOKEN}")
+SDDCHOSTS=$(sddc_get_hosts_fqdn "${NAME_LOWER}" "${TOKEN}")
 echo "${SDDCHOSTS}"
 
 echo
 echo "Listing Network Pools"
-get_network_pools "${NAME_LOWER}" "${TOKEN}"
+sddc_get_network_pools "${NAME_LOWER}" "${TOKEN}"
 
 #SDDCNETPOOLS=$(curl -s -k -X GET -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}" https://sddc.${NAME_LOWER}.${ROOT_DOMAIN}/v1/network-pools | jq '.elements[] | {id, name}')
 #echo "$SDDCNETPOOLS"
@@ -125,7 +125,7 @@ loop_wait_commissioning  "${COMMISSIONID}"
 ####
 
 echo "Getting list of unassigned hosts"
-UNASSIGNEDHOSTS=$(get_hosts_unassigned "${NAME_LOWER}" "${TOKEN}")
+UNASSIGNEDHOSTS=$(sddc_get_hosts_unassigned "${NAME_LOWER}" "${TOKEN}")
 echo "${UNASSIGNEDHOSTS}" 
 
 echo "Done."

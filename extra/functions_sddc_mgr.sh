@@ -2,7 +2,7 @@
 #edewitte@vmware.com
 
 
-### CLOUDBUILDER functions ####
+### cloudbuilder functions ####
 
 get_cloudbuilder_status() {
     NAME_LOWER="${1}"
@@ -40,7 +40,7 @@ get_cloudbuilder_status() {
         esac
 }
 
-check_cloudbuilder_ready(){
+cloudbuilder_check_ready(){
     NAME_LOWER="${1}"
     PASSWORD="${2}"
 
@@ -63,10 +63,10 @@ check_cloudbuilder_ready(){
         done
     echo
     echo
-    echo "Cloudbuilder API : READY"
+    echo "cloudbuilder API : READY"
 }
 
-get_deployment_status() {
+cloudbuilder_get_deployment_status() {
 	#returns json
     NAME_LOWER=$1
     PASSWORD=$2
@@ -96,7 +96,7 @@ get_deployment_status() {
 	esac
 }
 
-get_validation_status() {
+cloudbuilder_get_validation_status() {
 	#returns json
     NAME_LOWER=$1
     PASSWORD=$2
@@ -127,7 +127,7 @@ get_validation_status() {
 	esac
 }
 
-Check_validation_list(){
+cloudbuilder_check_validation_list(){
     	#returns json
     NAME_LOWER=$1
     PASSWORD=$2
@@ -150,7 +150,7 @@ Check_validation_list(){
 
 }
 
-Loop_wait_deployment_status(){
+cloudbuilder_loop_wait_deployment_status(){
 
     NAME_LOWER=$1
     PASSWORD=$2
@@ -161,7 +161,7 @@ Loop_wait_deployment_status(){
     CURRENTMAINTASK=""
     while [[ "$STATUS" != "COMPLETED_WITH_SUCCESS" ]]
     do      
-        RESPONSE=$(get_deployment_status "${NAME_LOWER}" "${PASSWORD}" "${DEPLOYMENTID}")
+        RESPONSE=$(cloudbuilder_get_deployment_status "${NAME_LOWER}" "${PASSWORD}" "${DEPLOYMENTID}")
         if [[ "${RESPONSE}" == *"ERROR - HTTPSTATUS"* ]] || [[ "${RESPONSE}" == "" ]]
         then
             echo "problem getting deployment ${DEPLOYMENTID} status : "
@@ -201,7 +201,7 @@ Loop_wait_deployment_status(){
     
 }
 
-Loop_wait_validation_status(){
+cloudbuilder_Loop_wait_validation_status(){
 
     NAME_LOWER=$1
     PASSWORD=$2
@@ -214,7 +214,7 @@ Loop_wait_validation_status(){
     CURRENTMAINTASK=""
     while [[ "$STATUS" != "COMPLETED" ]]
     do      
-        RESPONSE=$(get_validation_status "${NAME_LOWER}" "${PASSWORD}" "${VALIDATIONID}")
+        RESPONSE=$(cloudbuilder_get_validation_status "${NAME_LOWER}" "${PASSWORD}" "${VALIDATIONID}")
         if [[ "${RESPONSE}" == *"ERROR - HTTPSTATUS"* ]] || [[ "${RESPONSE}" == "" ]]
         then
             echo "problem getting validation  ${VALIDATIONID} status : "
@@ -303,49 +303,49 @@ check_sddc_ready(){
     echo "SDDC manager READY"
 }
 
-get_sddc_token(){
+sddc_get_token(){
     NAME_LOWER="${1}"
     PASSWORD="${2}"
     TOKEN=$(curl -s -k -X POST -H "Content-Type: application/json" -d '{"password":"'${PASSWORD}'","username":"administrator@'${NAME_LOWER}.${ROOT_DOMAIN}'"}' https://sddc.${NAME_LOWER}.${ROOT_DOMAIN}/v1/tokens | jq -r .accessToken)
     echo "${TOKEN}"
 }
 
-get_network_pools(){
+sddc_get_network_pools(){
     NAME_LOWER="${1}"
     TOKEN="${2}"
     SDDCNETPOOLS=$(curl -s -k -X GET -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}" https://sddc.${NAME_LOWER}.${ROOT_DOMAIN}/v1/network-pools | jq '.elements[] | {id, name}')
     echo "$SDDCNETPOOLS"
 }
 
-get_hosts_full(){
+sddc_get_hosts_full(){
     NAME_LOWER="${1}"
     TOKEN="${2}"
     SDDCHOSTS=$(curl -s -k -X GET -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}" https://sddc.${NAME_LOWER}.${ROOT_DOMAIN}/v1/hosts)
     echo "$SDDCHOSTS"
 }
 
-get_personalities_full(){
+sddc_get_personalities_full(){
     NAME_LOWER="${1}"
     TOKEN="${2}"
     SDDCHOSTS=$(curl -s -k -X GET -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}" https://sddc.${NAME_LOWER}.${ROOT_DOMAIN}/v1/personalities)
     echo "$SDDCHOSTS"
 }
 
-get_hosts_fqdn(){
+sddc_get_hosts_fqdn(){
     NAME_LOWER="${1}"
     TOKEN="${2}"
     SDDCHOSTS=$(curl -s -k -X GET -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}" https://sddc.${NAME_LOWER}.${ROOT_DOMAIN}/v1/hosts | jq -r '.elements[].fqdn')
     echo "$SDDCHOSTS"
 }
 
-get_hosts_unassigned(){
+sddc_get_hosts_unassigned(){
     NAME_LOWER="${1}"
     TOKEN="${2}"
     VALIDATIONRESULT=$(curl -s -k -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}" -X GET  'https://sddc.'${NAME_LOWER}.${ROOT_DOMAIN}'/v1/hosts?status=UNASSIGNED_USEABLE')
     echo "${VALIDATIONRESULT}" | jq -r '.elements[].fqdn'
 }
 
-get_domain_validation_status(){
+sddc_get_domain_validation_status(){
 	VALIDATIONID="${1}"
 	VALIDATIONRESULT=$(curl -s -k -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}" -X GET  https://sddc.${NAME_LOWER}.${ROOT_DOMAIN}/v1/domains/validations/${VALIDATIONID})
 	echo "${VALIDATIONRESULT}" > /tmp/scripts/domain-validation-test.json
@@ -353,21 +353,21 @@ get_domain_validation_status(){
 }
 
 
-get_hosts_validation_status(){
+sddc_get_hosts_validation_status(){
 	VALIDATIONID="${1}"
 	VALIDATIONRESULT=$(curl -s -k -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}" -X GET  https://sddc.${NAME_LOWER}.${ROOT_DOMAIN}/v1/hosts/validations/${VALIDATIONID})
 	echo "${VALIDATIONRESULT}" > /tmp/scripts/hosts-validation-test.json
 	echo "${VALIDATIONRESULT}"
 }
 
-get_commission_status(){
+sddc_get_commission_status(){
     COMMISSIONID="${1}"
 	COMMISSIONRESULT=$(curl -s -k -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}" -X GET  https://sddc.${NAME_LOWER}.${ROOT_DOMAIN}/v1/tasks/${COMMISSIONID})
 	echo "${COMMISSIONRESULT}" > /tmp/scripts/commissionresult.json
 	echo "${COMMISSIONRESULT}"
 }
 
-get_license_keys_full(){
+sddc_get_license_keys_full(){
     NAME_LOWER="${1}"
     TOKEN="${2}"
     SDDCHOSTS=$(curl -s -k -X GET -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}" https://sddc.${NAME_LOWER}.${ROOT_DOMAIN}/v1/license-keys)
@@ -420,10 +420,62 @@ post_domain_creation() {
     esac
 }
 
+sddc_get_commission_result_table(){
+    COMMISSIONID="${1}"
+    RESPONSE=$(sddc_get_commission_status "${COMMISSIONID}")
+
+    echo
+    echo "Succesfull tasks"
+    echo
+    echo "${RESPONSE}" | jq -r '["Name","Status"],["----","------"],(.subTasks[] | select ( .status | contains("SUCCESSFUL")) | [.name,.status] )| @tsv' | column -t -s $'\t'
+
+    echo
+    echo "Pending tasks"
+    echo
+    echo "${RESPONSE}" | jq -r '["Name","Status"],["----","------"],(.subTasks[] | select ( .status | contains("PENDING")) | [.name,.status] )| @tsv' | column -t -s $'\t'
+
+    echo
+    echo "Failed tasks"
+    echo
+    echo "${RESPONSE}" | jq -r '["Name","Status"],["----","------"],(.subTasks[] | select ( .status | contains("FAILED")) | [.name,.status] )| @tsv' | column -t -s $'\t'
+
+    echo
+    echo "Commission Status"
+    echo
+    echo "${RESPONSE}" | jq -r '["Name","Status"],[.status,.resolutionStatus,.isRetryable'
+}
+
+sddc_retry_commission(){
+    COMMISSIONID="${1}"
+
+	RESPONSE=$(curl -s -k -w '####%{response_code}' -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}" -X PATCH  https://sddc.${NAME_LOWER}.${ROOT_DOMAIN}/v1/tasks/${COMMISSIONID})
+	HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+	RESULT=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+
+	case $HTTPSTATUS in
+		2[0-9][0-9])    
+			echo "${RESULT}"
+			;;
+		4[0-9][0-9])    
+            DUMPFILE="/tmp/scripts/sddc-task-retry-httpstatus-4xx-$$.txt"
+            echo "${RESULT}" > "${DUMPFILE}"
+            echo "PARAMS - ${COMMISSIONID}" >>  "${DUMPFILE}"
+   			echo "{executionStatus: \"$HTTPSTATUS - Bad Request\"}"
+			;;
+		5[0-9][0-9])    
+            echo "${RESULT}" > /tmp/scripts/sddc-task-retry-httpstatus-5xx-$$.txt
+   			echo "{executionStatus: \"$HTTPSTATUS - Server Error \"}"
+			;;
+		*)      
+			echo ${RESULT} |awk -F '####' '{print $1}'
+			;;
+	esac
+}
+
 
 loop_wait_domain_validation(){
     VALIDATIONID="${1}"
-    RESPONSE=$(get_domain_validation_status "${VALIDATIONID}")
+    RESPONSE=$(sddc_get_domain_validation_status "${VALIDATIONID}")
     if [[ "${RESPONSE}" == *"ERROR - HTTPSTATUS"* ]] || [[ "${RESPONSE}" == "" ]]
     then
         echo "problem getting initial validation ${VALIDATIONID} status : "
@@ -438,7 +490,7 @@ loop_wait_domain_validation(){
     CURRENTMAINTASK=""
     while [[ "$STATUS" != "COMPLETED" ]]
     do      
-        RESPONSE=$(get_domain_validation_status "${VALIDATIONID}")
+        RESPONSE=$(sddc_get_domain_validation_status "${VALIDATIONID}")
         #echo "${RESPONSE}" |jq .
         if [[ "${RESPONSE}" == *"ERROR"* ]] || [[ "${RESPONSE}" == "" ]]
         then
@@ -477,7 +529,7 @@ loop_wait_domain_validation(){
         printf '.' >/dev/tty
         sleep 2
     done
-    RESPONSE=$(get_domain_validation_status "${VALIDATIONID}")
+    RESPONSE=$(sddc_get_domain_validation_status "${VALIDATIONID}")
     RESULTSTATUS=$(echo "${RESPONSE}" | jq -r '.resultStatus')
 
     echo
@@ -510,7 +562,7 @@ loop_wait_hosts_validation(){
     RESULTSTATUS=""
     while [[ "$EXECUTIONSTATUS" != "COMPLETED" ]]
     do      
-        RESPONSE=$(get_hosts_validation_status "${VALIDATIONID}")
+        RESPONSE=$(sddc_get_hosts_validation_status "${VALIDATIONID}")
         #echo "${RESPONSE}" |jq .
         if [[ "${RESPONSE}" == *"ERROR"* ]] || [[ "${RESPONSE}" == "" ]]
         then
@@ -551,7 +603,7 @@ loop_wait_hosts_validation(){
         printf '.' >/dev/tty
         sleep 2
     done
-    RESPONSE=$(get_hosts_validation_status "${VALIDATIONID}")
+    RESPONSE=$(sddc_get_hosts_validation_status "${VALIDATIONID}")
     RESULTSTATUS=$(echo "${RESPONSE}" | jq -r '.resultStatus')
 
     echo
@@ -574,7 +626,7 @@ loop_wait_commissioning(){
     TOKENTIMER=0
     while [[ "${STATUS}" != "Successful" ]]
     do      
-        RESPONSE=$(get_commission_status "${COMMISSIONID}")
+        RESPONSE=$(sddc_get_commission_status "${COMMISSIONID}")
         #echo "${RESPONSE}" |jq .
         if [[ "${RESPONSE}" == *"ERROR"* ]] || [[ "${RESPONSE}" == "" ]]
         then
@@ -606,7 +658,7 @@ loop_wait_commissioning(){
             if [[ "${RETRYABLE}" == "true" ]]
             then
                 echo "Retrying"
-                retry_commission "${COMMISSIONID}"
+                sddc_retry_commission "${COMMISSIONID}"
             else
                 echo "Not retryable - stopping script"
                 exit 1
@@ -615,71 +667,12 @@ loop_wait_commissioning(){
         TOKENTIMER=$((TOKENTIMER+1))
         if [[ $TOKENTIMER -gt 150 ]]
         then
-            TOKEN=$(get_sddc_token "${NAME_LOWER}" "${PASSWORD}" )
+            TOKEN=$(sddc_get_token "${NAME_LOWER}" "${PASSWORD}" )
         fi
         sleep 2
     done
-    RESPONSE=$(get_commission_status "${COMMISSIONID}")
-    RESULTSTATUS=$(echo "${RESPONSE}" | jq -r '.status')
-    echo
-    echo "Commisioning Result Status : $RESULTSTATUS"    
+    sddc_get_commission_result_table "${COMMISSIONID}"
 }
 
-get_commission_result_table(){
-    COMMISSIONID="${1}"
-    RESPONSE=$(get_commission_status "${COMMISSIONID}")
-
-    echo
-    echo "Succesfull tasks"
-    echo
-    echo "${RESPONSE}" | jq -r '["Name","Status"],["----","------"],(.subTasks[] | select ( .status | contains("SUCCESSFUL")) | [.name,.status] )| @tsv' | column -t -s $'\t'
-
-    echo
-    echo "Pending tasks"
-    echo
-    echo "${RESPONSE}" | jq -r '["Name","Status"],["----","------"],(.subTasks[] | select ( .status | contains("PENDING")) | [.name,.status] )| @tsv' | column -t -s $'\t'
-
-    echo
-    echo "Failed tasks"
-    echo
-    echo "${RESPONSE}" | jq -r '["Name","Status"],["----","------"],(.subTasks[] | select ( .status | contains("FAILED")) | [.name,.status] )| @tsv' | column -t -s $'\t'
-
-    
-    echo
-    echo "Commission Status"
-    echo
-    echo "${RESPONSE}" | jq -r '.status,.resolutionStatus,.isRetryable'
-
-    
-
-
-}
-
-retry_commission(){
-    COMMISSIONID="${1}"
-
-	RESPONSE=$(curl -s -k -w '####%{response_code}' -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}" -X PATCH  https://sddc.${NAME_LOWER}.${ROOT_DOMAIN}/v1/tasks/${COMMISSIONID})
-	HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
-	RESULT=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
-
-	case $HTTPSTATUS in
-		2[0-9][0-9])    
-			echo "${RESULT}"
-			;;
-		4[0-9][0-9])    
-            DUMPFILE="/tmp/scripts/sddc-task-retry-httpstatus-4xx-$$.txt"
-            echo "${RESULT}" > "${DUMPFILE}"
-            echo "PARAMS - ${COMMISSIONID}" >>  "${DUMPFILE}"
-   			echo "{executionStatus: \"$HTTPSTATUS - Bad Request\"}"
-			;;
-		5[0-9][0-9])    
-            echo "${RESULT}" > /tmp/scripts/sddc-task-retry-httpstatus-5xx-$$.txt
-   			echo "{executionStatus: \"$HTTPSTATUS - Server Error \"}"
-			;;
-		*)      
-			echo ${RESULT} |awk -F '####' '{print $1}'
-			;;
-	esac
-}
 
 ###################

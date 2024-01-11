@@ -22,7 +22,7 @@ SCRIPT_DIR=/tmp/scripts
 mkdir -p ${SCRIPT_DIR} 
 
 # Check cloudbuilder is ready"
-check_cloudbuilder_ready  "${NAME_LOWER}" "${PASSWORD}"
+cloudbuilder_check_ready  "${NAME_LOWER}" "${PASSWORD}"
 
 # Check cloudbuilder lab settings"
 echo
@@ -46,7 +46,7 @@ echo "execute script"
 govc guest.run -vm "${BUILDERVM}" -l root:"${PASSWORD}" sh /home/admin/sddc_cloudbuilder_lab_settings.sh
 
 # Check cloudbuilder is ready"
-check_cloudbuilder_ready  "${NAME_LOWER}" "${PASSWORD}"
+cloudbuilder_check_ready  "${NAME_LOWER}" "${PASSWORD}"
 
 echo 
 echo "Cloudbuilder configuration completed"

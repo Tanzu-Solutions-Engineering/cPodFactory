@@ -14,7 +14,7 @@ source ./extra/functions.sh
 source ./extra/functions_sddc_mgr.sh
 
 NEWHOSTS_JSON_TEMPLATE=cloudbuilder-hosts.json
-DOMAIN_JSON_TEMPLATE=./compute/cloudbuilder-domains-v5.json
+DOMAIN_JSON_TEMPLATE=./compute/cloudbuilder-domains-v5-light.json
 
 #Management Domain CPOD
 CPOD_NAME=$( echo ${1} | tr '[:lower:]' '[:upper:]' )
@@ -74,11 +74,11 @@ fi
 #USERNAME="administrator@${NAME_LOWER}.${ROOT_DOMAIN}"
 echo
 echo "Getting VCF API Token"
-TOKEN=$(sddc_get_token "${NAME_LOWER}" "${PASSWORD}" )
+TOKEN=$(get_sddc_token "${NAME_LOWER}" "${PASSWORD}" )
 
 echo
 echo "Listing Unassigned Hosts IDs"
-SDDCHOSTS=$(sddc_get_hosts_full "${NAME_LOWER}" "${TOKEN}")
+SDDCHOSTS=$(get_hosts_full "${NAME_LOWER}" "${TOKEN}")
 UNASSIGNEDID=$(echo "$SDDCHOSTS" |jq -r '.elements[]| select ( .status == "UNASSIGNED_USEABLE")| .id')
 echo "$UNASSIGNEDID"
 UNASSIGNEDCOUNT=$(echo "${UNASSIGNEDID}" | wc -l)
@@ -93,7 +93,7 @@ else
 
 fi
 
-LICENSEKEYS=$(sddc_get_license_keys_full "${NAME_LOWER}" "${TOKEN}")
+LICENSEKEYS=$(get_license_keys_full "${NAME_LOWER}" "${TOKEN}")
 ESXLICENSE=$(echo "${LICENSEKEYS}" |jq -r '.elements[] | select (.productType == "ESXI" )| .key')
 VSANLICENSE=$(echo "${LICENSEKEYS}" |jq -r '.elements[] | select (.productType == "VSAN" )| .key')
 NSXLICENSE=$(echo "${LICENSEKEYS}" |jq -r '.elements[] | select (.productType == "NSXT" )| .key')
@@ -116,12 +116,6 @@ IPADDRESS=$((IPADDRESS+1))
 NSX01AIP="${SUBNET}.${IPADDRESS}"
 add_entry_cpodrouter_hosts "${NSX01AIP}" "nsx01a-"${WLDNAME} ${NAME_LOWER} 
 IPADDRESS=$((IPADDRESS+1))
-NSX01BIP="${SUBNET}.${IPADDRESS}"
-add_entry_cpodrouter_hosts "${NSX01BIP}" "nsx01b-"${WLDNAME} ${NAME_LOWER} 
-IPADDRESS=$((IPADDRESS+1))
-NSX01CIP="${SUBNET}.${IPADDRESS}"
-add_entry_cpodrouter_hosts "${NSX01CIP}" "nsx01c-"${WLDNAME} ${NAME_LOWER} 
-IPADDRESS=$((IPADDRESS+1))
 EN01VIP="${SUBNET}.${IPADDRESS}"
 add_entry_cpodrouter_hosts "${EN01VIP}" "en01-"${WLDNAME} ${NAME_LOWER} 
 IPADDRESS=$((IPADDRESS+1))
@@ -141,8 +135,6 @@ sed -i -e "s/###WLD_NAME###/${WLDNAME}/g" \
         -e "s/###SUBNET###/${SUBNET}/g" \
         -e "s/###NSXTVIP###/${NSXTVIP}/g" \
         -e "s/###NSX01AIP###/${NSX01AIP}/g" \
-        -e "s/###NSX01BIP###/${NSX01BIP}/g" \
-        -e "s/###NSX01CIP###/${NSX01CIP}/g" \
         -e "s/###VCENTERIP###/${VCENTERIP}/g" \
 		${DOMAINJSON}
 

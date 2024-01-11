@@ -201,7 +201,7 @@ cloudbuilder_loop_wait_deployment_status(){
     
 }
 
-cloudbuilder_Loop_wait_validation_status(){
+cloudbuilder_loop_wait_validation_status(){
 
     NAME_LOWER=$1
     PASSWORD=$2
@@ -374,7 +374,7 @@ sddc_get_license_keys_full(){
     echo "$SDDCHOSTS"
 }
 
-post_domain_validation() {
+sddc_post_domain_validation() {
     NAME_LOWER="${1}"
     TOKEN="${2}"
     DOMAINJSON="${3}"
@@ -397,7 +397,7 @@ post_domain_validation() {
     esac
 }
 
-post_domain_creation() {
+sddc_post_domain_creation() {
     NAME_LOWER="${1}"
     TOKEN="${2}"
     DOMAINJSON="${3}"
@@ -442,7 +442,7 @@ sddc_get_commission_result_table(){
     echo
     echo "Commission Status"
     echo
-    echo "${RESPONSE}" | jq -r '["Name","Status"],[.status,.resolutionStatus,.isRetryable'
+    echo "${RESPONSE}" | jq -r '["Name","Status","Retryable"],[.status,.resolutionStatus,.isRetryable]| @tsv'  | column -t -s $'\t'
 }
 
 sddc_retry_commission(){
@@ -473,7 +473,7 @@ sddc_retry_commission(){
 }
 
 
-loop_wait_domain_validation(){
+sddc_loop_wait_domain_validation(){
     VALIDATIONID="${1}"
     RESPONSE=$(sddc_get_domain_validation_status "${VALIDATIONID}")
     if [[ "${RESPONSE}" == *"ERROR - HTTPSTATUS"* ]] || [[ "${RESPONSE}" == "" ]]
@@ -543,7 +543,7 @@ loop_wait_domain_validation(){
 
 }
 
-loop_wait_hosts_validation(){
+sddc_loop_wait_hosts_validation(){
     VALIDATIONID="${1}"
     # RESPONSE=$(get_hosts_validation_status "${VALIDATIONID}")
     # if [[ "${RESPONSE}" == *"ERROR - HTTPSTATUS"* ]] || [[ "${RESPONSE}" == "" ]]
@@ -617,7 +617,7 @@ loop_wait_hosts_validation(){
 
 }
 
-loop_wait_commissioning(){
+sddc_loop_wait_commissioning(){
     COMMISSIONID="${1}"
     STATUS=""
     CURRENTSTEP=""

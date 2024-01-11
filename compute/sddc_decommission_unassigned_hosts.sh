@@ -78,7 +78,7 @@ echo "Querying commisioning result"
 echo
 echo "Querying commisioning result"
 echo
-loop_wait_commissioning  "${COMMISSIONID}"
+sddc_loop_wait_commissioning  "${COMMISSIONID}"
 
 echo "Getting list of unassigned hosts"
 UNASSIGNEDHOSTS=$(sddc_get_hosts_unassigned "${NAME_LOWER}" "${TOKEN}")

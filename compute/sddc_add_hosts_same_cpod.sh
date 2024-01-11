@@ -106,7 +106,7 @@ echo "Validation ID : ${VALIDATIONID}"
 
 echo "Querying validation result"
 echo
-loop_wait_hosts_validation "${VALIDATIONID}"
+sddc_loop_wait_hosts_validation "${VALIDATIONID}"
 
 ####
 
@@ -120,7 +120,7 @@ echo "Commissioning ID : ${COMMISSIONID}"
 echo
 echo "Querying commisioning result"
 echo
-loop_wait_commissioning  "${COMMISSIONID}"
+sddc_loop_wait_commissioning  "${COMMISSIONID}"
 
 ####
 

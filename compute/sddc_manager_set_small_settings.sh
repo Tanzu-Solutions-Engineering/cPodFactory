@@ -22,7 +22,7 @@ SCRIPT_DIR=/tmp/scripts
 mkdir -p ${SCRIPT_DIR} 
 
 # Check SDDC Mgr is ready"
-check_sddc_ready  "${NAME_LOWER}" "${PASSWORD}"
+sddc_check_manager_ready  "${NAME_LOWER}" "${PASSWORD}"
 
 # Check SDDC lab settings"
 echo
@@ -53,7 +53,7 @@ echo "execute script"
 govc guest.run -vm "${SDDCVM}" -l root:"${PASSWORD}" sh /home/vcf/sddc_manager_lab_settings.sh
 
 # Check SDDC Mgr is ready"
-check_sddc_ready  "${NAME_LOWER}" "${PASSWORD}"
+sddc_check_manager_ready  "${NAME_LOWER}" "${PASSWORD}"
 
 echo 
 echo "SDDC Manager configuration completed"

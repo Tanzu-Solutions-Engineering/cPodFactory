@@ -1,7 +1,6 @@
 #!/bin/bash
 #edewitte@vmware.com
 
-
 ### cloudbuilder functions ####
 
 get_cloudbuilder_status() {
@@ -11,17 +10,6 @@ get_cloudbuilder_status() {
     URL="https://cloudbuilder.${NAME_LOWER}.${ROOT_DOMAIN}"
     AUTH="admin:${PASSWORD}"
 
-    # while [ -z "$APICHECK" ]
-    # do  
-    #     echo "checking if the API on cloudbuilder ${URL} is ready yet..."
-    #     APICHECK=$(curl -s -k -w '####%{response_code}' -u ${AUTH} -X GET ${URL}/v1/sddcs/validations)
-    #     sleep 10
-    #     TIMEOUT=$((TIMEOUT + 1))
-    #     if [ $TIMEOUT -ge 48 ]; then
-    #         echo "bailing out..."
-    #         exit 1
-    #     fi 
-    # done
     #returns json
     RESPONSE=$(curl -s -k -w '####%{response_code}' -u ${AUTH} -X GET ${URL}/v1/sddcs/validations )
     HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
@@ -44,7 +32,8 @@ cloudbuilder_check_ready(){
     NAME_LOWER="${1}"
     PASSWORD="${2}"
 
-    printf "\t connecting to cloudbuilder ."
+    echo
+    printf "Trying to connect to cloudbuilder ."
     INPROGRESS=""
     CURRENTSTATE=${INPROGRESS}
     while [[ "$INPROGRESS" != "READY" ]]
@@ -63,7 +52,7 @@ cloudbuilder_check_ready(){
         done
     echo
     echo
-    echo "cloudbuilder API : READY"
+    echo "Cloudbuilder API : READY"
 }
 
 cloudbuilder_get_deployment_status() {
@@ -150,6 +139,42 @@ cloudbuilder_check_validation_list(){
 
 }
 
+cloudbuilder_get_validation_result_table(){
+    NAME_LOWER=$1
+    PASSWORD=$2
+    VALIDATIONID=$3
+
+    RESPONSE=$(cloudbuilder_get_validation_status "${NAME_LOWER}" "${PASSWORD}" "${VALIDATIONID}")
+
+    echo
+    echo "Cloudbuilder Deployment tasks result overview"
+    echo
+    echo "${RESPONSE}" | jq -r '["Name","Status"],["----","------"],(.validationChecks[] | [.description,.resultStatus] )| @tsv' | column -t -s $'\t'
+
+    echo
+    echo "Cloudbuilder Deployment Status"
+    echo
+    echo "${RESPONSE}" | jq -r '["Name","Status","execution"],[.description,.resultStatus,.executionStatus]| @tsv'  | column -t -s $'\t'
+}
+
+cloudbuilder_get_deployment_result_table(){
+    NAME_LOWER=$1
+    PASSWORD=$2
+    DEPLOYMENTID=$3
+
+    RESPONSE=$(cloudbuilder_get_deployment_status "${NAME_LOWER}" "${PASSWORD}" "${DEPLOYMENTID}")
+
+    echo
+    echo "Cloudbuilder Validation tasks result overview"
+    echo
+    echo "${RESPONSE}" | jq -r '["Name","Status"],["----","------"],(.sddcSubTasks[] | [.name,.status] )| @tsv' | column -t -s $'\t'
+
+    echo
+    echo "Cloudbuilder Validation Status"
+    echo
+    echo "${RESPONSE}" | jq -r '["ID","Name","Status"],[.id,.name,.status]| @tsv'  | column -t -s $'\t'
+}
+
 cloudbuilder_loop_wait_deployment_status(){
 
     NAME_LOWER=$1
@@ -198,7 +223,7 @@ cloudbuilder_loop_wait_deployment_status(){
         printf '.' >/dev/tty
         sleep 2
     done
-    
+    cloudbuilder_get_deployment_result_table "${NAME_LOWER}" "${PASSWORD}" "${DEPLOYMENTID}"
 }
 
 cloudbuilder_loop_wait_validation_status(){
@@ -247,15 +272,13 @@ cloudbuilder_loop_wait_validation_status(){
         printf '.' >/dev/tty
         sleep 2
     done
-    EXECSTATUS=$(echo "${RESPONSE}" | jq -r '.executionStatus')
-    RESULTSTATUS=$(echo "${RESPONSE}" | jq -r '.resultStatus')
-    echo
-    echo "Validation  ${VALIDATIONID} - Execution : ${EXECSTATUS} - Result : ${RESULTSTATUS} "   
+    
+    cloudbuilder_get_validation_result_table "${NAME_LOWER}" "${PASSWORD}" "${VALIDATIONID}"
 }
 
 ### SDDC Mgr functions ####
 
-get_sddc_status() {
+sddc_get_manager_status() {
     NAME_LOWER="${1}"
     PASSWORD="${2}"
 
@@ -277,7 +300,7 @@ get_sddc_status() {
         esac
 }
 
-check_sddc_ready(){
+sddc_check_manager_ready(){
     NAME_LOWER="${1}"
     PASSWORD="${2}"
 
@@ -286,7 +309,7 @@ check_sddc_ready(){
     CURRENTSTATE=${INPROGRESS}
     while [[ "$INPROGRESS" != "READY" ]]
     do      
-            INPROGRESS=$(get_sddc_status "${NAME_LOWER}" "${PASSWORD}")
+            INPROGRESS=$(sddc_get_manager_status "${NAME_LOWER}" "${PASSWORD}")
             if [ "${INPROGRESS}" != "${CURRENTSTATE}" ] 
             then 
                     printf "\n\t%s" "${INPROGRESS}"
@@ -420,6 +443,31 @@ sddc_post_domain_creation() {
     esac
 }
 
+sddc_get_validation_result_table(){
+    VALIDATIONID="${1}"
+    RESPONSE=$(sddc_get_domain_validation_status "${VALIDATIONID}")
+
+    echo
+    echo "Succesfull tasks"
+    echo
+    echo "${RESPONSE}" | jq -r '["Name","Status"],["----","------"],(.subTasks[] | select ( .status | contains("SUCCESSFUL")) | [.name,.status] )| @tsv' | column -t -s $'\t'
+
+    echo
+    echo "Pending tasks"
+    echo
+    echo "${RESPONSE}" | jq -r '["Name","Status"],["----","------"],(.subTasks[] | select ( .status | contains("PENDING")) | [.name,.status] )| @tsv' | column -t -s $'\t'
+
+    echo
+    echo "Failed tasks"
+    echo
+    echo "${RESPONSE}" | jq -r '["Name","Status"],["----","------"],(.subTasks[] | select ( .status | contains("FAILED")) | [.name,.status] )| @tsv' | column -t -s $'\t'
+
+    echo
+    echo "Commission Status"
+    echo
+    echo "${RESPONSE}" | jq -r '["Name","Status","Retryable"],[.status,.resolutionStatus,.isRetryable]| @tsv'  | column -t -s $'\t'
+}
+
 sddc_get_commission_result_table(){
     COMMISSIONID="${1}"
     RESPONSE=$(sddc_get_commission_status "${COMMISSIONID}")
@@ -471,7 +519,6 @@ sddc_retry_commission(){
 			;;
 	esac
 }
-
 
 sddc_loop_wait_domain_validation(){
     VALIDATIONID="${1}"
@@ -545,15 +592,6 @@ sddc_loop_wait_domain_validation(){
 
 sddc_loop_wait_hosts_validation(){
     VALIDATIONID="${1}"
-    # RESPONSE=$(get_hosts_validation_status "${VALIDATIONID}")
-    # if [[ "${RESPONSE}" == *"ERROR - HTTPSTATUS"* ]] || [[ "${RESPONSE}" == "" ]]
-    # then
-    #     echo "problem getting initial validation ${VALIDATIONID} status : "
-    #     echo "${RESPONSE}"
-    # else
-    #     STATUS=$(echo "${RESPONSE}" | jq -r '.executionStatus')
-    #     echo "${STATUS}"
-    # fi
 
     CURRENTSTATE=""
     CURRENTSTEP=""
@@ -674,5 +712,29 @@ sddc_loop_wait_commissioning(){
     sddc_get_commission_result_table "${COMMISSIONID}"
 }
 
+sddc_edgecluster_get(){
+	#returns json
+    	RESPONSE=$(curl -s -k -w '####%{response_code}'  -H "Authorization: Bearer ${TOKEN}" -H 'Content-Type: application/json' -H 'Accept: application/json' -X GET https://sddc.${NAME_LOWER}.${ROOT_DOMAIN}/v1/edge-clusters)
 
-###################
+	HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+	case $HTTPSTATUS in
+		2[0-9][0-9])    
+			VALIDATIONJSON=$(echo "${RESPONSE}" |awk -F '####' '{print $1}')
+            echo "${VALIDATIONJSON}" > /tmp/scripts/cloudbuilder-validation-status-$$.json
+			echo "${VALIDATIONJSON}"
+			;;
+		4[0-9][0-9])    
+            DUMPFILE="/tmp/scripts/cloudbuilder-validation-httpstatus-4xx-$$.txt"
+            echo "${RESPONSE}" > "${DUMPFILE}"
+            echo "PARAMS - ${NAME_LOWER} ${PASSWORD} ${VALIDATIONID} " >>  "${DUMPFILE}"
+   			echo "{executionStatus: \"$HTTPSTATUS - Bad Request\"}"
+			;;
+		5[0-9][0-9])    
+            echo "${RESPONSE}" > /tmp/scripts/cloudbuilder-validation-httpstatus-5xx-$$.txt
+   			echo "{executionStatus: \"$HTTPSTATUS - Server Error \"}"
+			;;
+		*)      
+			echo ${RESPONSE} |awk -F '####' '{print $1}'
+			;;
+	esac
+}

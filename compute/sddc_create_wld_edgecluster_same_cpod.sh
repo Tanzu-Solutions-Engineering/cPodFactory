@@ -58,4 +58,22 @@ TOKEN=$(sddc_get_token "${NAME_LOWER}" "${PASSWORD}" )
 
 # Checking not running edgecluster
 EDGECLUSTERS=$(sddc_edgecluster_get)
-echo "${EDGECLUSTERS}" | jq .
+if [ $(echo "${EDGECLUSTERS}" | jq '.elements[]') != "" ]
+then
+        echo "There is an existing edge cluster defined"
+        echo
+        echo "${EDGECLUSTERS}" | jq '.elements[]'
+        exit 1
+
+fi
+
+exit
+echo
+echo "Creating Edge Cluster"
+EDGECREATE=$(sddc_edgecluster_create "${SCRIPT}")
+
+echo "$EDGECREATE" 
+echo
+EDGECREATEID=$(echo "${EDGECREATE}" | jq -r '.id')
+
+sddc_loop_wait_commissioning "${EDGECREATEID}"

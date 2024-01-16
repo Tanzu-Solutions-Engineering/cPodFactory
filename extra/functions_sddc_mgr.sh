@@ -73,11 +73,11 @@ cloudbuilder_get_deployment_status() {
             DUMPFILE="/tmp/scripts/cloudbuilder-deployment-httpstatus-4xx-$$.txt"
             echo "${RESPONSE}" > "${DUMPFILE}"
             echo "PARAMS - ${NAME_LOWER} ${PASSWORD} ${DEPLOYMENTID} " >>  "${DUMPFILE}"
-   			echo "{executionStatus: \"$HTTPSTATUS - Bad Request\"}"
+   			echo "{\"executionStatus\": \"$HTTPSTATUS - Bad Request\"}"
 			;;
 		5[0-9][0-9])    
             echo "${RESPONSE}" > /tmp/scripts/cloudbuilder-deployment-httpstatus-5xx-$$.txt
-   			echo "{executionStatus: \"$HTTPSTATUS - Server Error \"}"
+   			echo "{\"executionStatus\": \"$HTTPSTATUS - Server Error \"}"
 			;;
 		*)      
 			echo ${RESPONSE} |awk -F '####' '{print $1}'
@@ -104,11 +104,11 @@ cloudbuilder_get_validation_status() {
             DUMPFILE="/tmp/scripts/cloudbuilder-validation-httpstatus-4xx-$$.txt"
             echo "${RESPONSE}" > "${DUMPFILE}"
             echo "PARAMS - ${NAME_LOWER} ${PASSWORD} ${VALIDATIONID} " >>  "${DUMPFILE}"
-   			echo "{executionStatus: \"$HTTPSTATUS - Bad Request\"}"
+   			echo "{\"executionStatus\": \"$HTTPSTATUS - Bad Request\"}"
 			;;
 		5[0-9][0-9])    
             echo "${RESPONSE}" > /tmp/scripts/cloudbuilder-validation-httpstatus-5xx-$$.txt
-   			echo "{executionStatus: \"$HTTPSTATUS - Server Error \"}"
+   			echo "{\"executionStatus\": \"$HTTPSTATUS - Server Error \"}"
 			;;
 		*)      
 			echo ${RESPONSE} |awk -F '####' '{print $1}'
@@ -508,11 +508,11 @@ sddc_retry_commission(){
             DUMPFILE="/tmp/scripts/sddc-task-retry-httpstatus-4xx-$$.txt"
             echo "${RESULT}" > "${DUMPFILE}"
             echo "PARAMS - ${COMMISSIONID}" >>  "${DUMPFILE}"
-   			echo "{executionStatus: \"$HTTPSTATUS - Bad Request\"}"
+   			echo "{\"executionStatus\": \"$HTTPSTATUS - Bad Request\"}"
 			;;
 		5[0-9][0-9])    
             echo "${RESULT}" > /tmp/scripts/sddc-task-retry-httpstatus-5xx-$$.txt
-   			echo "{executionStatus: \"$HTTPSTATUS - Server Error \"}"
+   			echo "{\"executionStatus\": \"$HTTPSTATUS - Server Error \"}"
 			;;
 		*)      
 			echo ${RESULT} |awk -F '####' '{print $1}'
@@ -727,11 +727,40 @@ sddc_edgecluster_get(){
             DUMPFILE="/tmp/scripts/sddc-edgecluster-httpstatus-4xx-$$.txt"
             echo "${RESPONSE}" > "${DUMPFILE}"
             echo "PARAMS - ${NAME_LOWER} ${PASSWORD} ${VALIDATIONID} " >>  "${DUMPFILE}"
-   			echo "{executionStatus: \"$HTTPSTATUS - Bad Request\"}"
+   			echo "{\"executionStatus\": \"$HTTPSTATUS - Bad Request\"}"
 			;;
 		5[0-9][0-9])    
             echo "${RESPONSE}" > /tmp/scripts/sddc-edgecluster-httpstatus-5xx-$$.txt
-   			echo "{executionStatus: \"$HTTPSTATUS - Server Error \"}"
+   			echo "{\"executionStatus\": \"$HTTPSTATUS - Server Error \"}"
+			;;
+		*)      
+			echo ${RESPONSE} |awk -F '####' '{print $1}'
+			;;
+	esac
+}
+
+sddc_edgecluster_create(){
+    EDGECLUSTERJSONPATH="${1}"
+
+	#returns json
+    RESPONSE=$(curl -s -k -w '####%{response_code}'  -H "Authorization: Bearer ${TOKEN}" -H 'Content-Type: application/json' -H 'Accept: application/json'  -d @${EDGECLUSTERJSONPATH} -X POST https://sddc.${NAME_LOWER}.${ROOT_DOMAIN}/v1/edge-clusters)
+
+	HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+	case $HTTPSTATUS in
+		2[0-9][0-9])    
+			EDGECLUSTERJSON=$(echo "${RESPONSE}" |awk -F '####' '{print $1}')
+            echo "${EDGECLUSTERJSON}" > /tmp/scripts/sddc-edgecluster-create-status-$$.json
+			echo "${EDGECLUSTERJSON}"
+			;;
+		4[0-9][0-9])    
+            DUMPFILE="/tmp/scripts/sddc-edgecluster-httpstatus-create-4xx-$$.txt"
+            echo "${RESPONSE}" > "${DUMPFILE}"
+            echo "PARAMS - ${NAME_LOWER} ${PASSWORD} ${VALIDATIONID} " >>  "${DUMPFILE}"
+   			echo "{\"executionStatus\": \"$HTTPSTATUS - Bad Request\"}"
+			;;
+		5[0-9][0-9])    
+            echo "${RESPONSE}" > /tmp/scripts/sddc-edgecluster-httpstatus-create-5xx-$$.txt
+   			echo "{\"executionStatus\": \"$HTTPSTATUS - Server Error \"}"
 			;;
 		*)      
 			echo ${RESPONSE} |awk -F '####' '{print $1}'

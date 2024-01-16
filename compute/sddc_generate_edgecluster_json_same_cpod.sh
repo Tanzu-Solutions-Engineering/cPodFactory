@@ -228,7 +228,7 @@ sed -i -e "s/###EDGECLUSTERNAME###/${EDGECLUSTERNAME}/g" \
 -e "s/###T0ULGW01###/${T0ULGW01}/" \
 -e "s/###T0ULGW02###/${T0ULGW02}/" \
 -e "s/\"###CPODROUTERASN###\"/${ASNCPOD}/" \
--e "s/\"###CLUSTERID###\"/${CLUSTERID}/" \
+-e "s/###CLUSTERID###/${CLUSTERID}/" \
 -e "s/###T0NAME###/${T0NAME}/" \
 -e "s/###T1NAME###/${T1NAME}/" \
 ${SCRIPT}

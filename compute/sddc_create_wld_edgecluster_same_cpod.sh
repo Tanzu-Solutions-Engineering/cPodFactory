@@ -66,12 +66,12 @@ then
         echo "${EDGECLUSTERS}" | jq '.elements[]'
         exit 1
 else
-        echo "No existing edge cluster present. Proceeding to creation"
+        echo "No existing edge cluster present. Proceeding to validation"
 fi
 
 echo
-echo "Creating Edge Cluster"
-EDGECREATE=$(sddc_edgecluster_create "${SCRIPT}")
+echo "Validating Edge Cluster"
+EDGECREATE=$(sddc_edgecluster_validate "${SCRIPT}")
 
 echo "$EDGECREATE" 
 echo

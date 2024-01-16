@@ -57,6 +57,7 @@ echo "Getting VCF API Token"
 TOKEN=$(sddc_get_token "${NAME_LOWER}" "${PASSWORD}" )
 
 # Checking not running edgecluster
+echo
 EDGECLUSTERS=$(sddc_edgecluster_get)
 if [[ $(echo "${EDGECLUSTERS}" | jq '.elements[]') != "" ]]
 then
@@ -64,10 +65,10 @@ then
         echo
         echo "${EDGECLUSTERS}" | jq '.elements[]'
         exit 1
-
+else
+        echo "No existing edge cluster present. Proceeding to creation"
 fi
 
-exit
 echo
 echo "Creating Edge Cluster"
 EDGECREATE=$(sddc_edgecluster_create "${SCRIPT}")

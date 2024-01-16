@@ -37,22 +37,6 @@ case "${BACKEND_NETWORK}" in
         ;;
 esac
 
-if [ ${VLAN} -gt 40 ]; then
-	VMOTIONVLANID=${VLAN}1
-	VSANVLANID=${VLAN}2
-	TRANSPORTVLANID=${VLAN}3
-    EDGETEPVLANID=${VLAN}4
-    T0ULVLANID01=${VLAN}5
-    T0ULVLANID02=${VLAN}6
-else
-	VMOTIONVLANID=${VLAN}01
-	VSANVLANID=${VLAN}02
-	TRANSPORTVLANID=${VLAN}03
-    EDGETEPVLANID=${VLAN}04
-    T0ULVLANID01=${VLAN}05
-    T0ULVLANID02=${VLAN}06
-fi
-
 WLDNAME="${2}"
 #CLUSTERNAME="${3}"
 
@@ -77,6 +61,18 @@ fi
 # Edge TEP EDGETEPVLANID = 4
 # Tier 0 uplink T0ULVLANID01 = 5
 # Tier 0 uplink T0ULVLANID01 = 6
+T0ULVLAN01=5
+T0ULVLAN02=6
+
+if [ ${VLAN} -gt 40 ]; then
+        EDGETEPVLANID="${VLAN}4"
+        T0ULVLANID01="${VLAN}${T0ULVLAN01}"
+        T0ULVLANID02="${VLAN}${T0ULVLAN02}"
+else
+	EDGETEPVLANID="${VLAN}04"
+        T0ULVLANID01="${VLAN}0${T0ULVLAN01}"
+        T0ULVLANID02="${VLAN}0${T0ULVLAN02}"
+fi
 
 # edge nodes information
 EN01IP=$(ssh -o LogLevel=error -o StrictHostKeyChecking=no "${NAME_LOWER}" "cat /etc/hosts" |grep -i "${WLDNAME}" | grep -i "en01" | awk '{print $1}')
@@ -104,19 +100,19 @@ EN02IP_IP=$(echo "${EN02IP}" | rev | cut -d "." -f1 |rev )
 
 # Defining T0 interfaces
 
-T0IP01="10.${VLAN}.${T0ULVLANID01}.${EN01IP_IP}"
-T0IP02="10.${VLAN}.${T0ULVLANID01}.${EN02IP_IP}"
-T0IP03="10.${VLAN}.${T0ULVLANID02}.${EN01IP_IP}"
-T0IP04="10.${VLAN}.${T0ULVLANID02}.${EN02IP_IP}"
-T0ULGW01="10.${VLAN}.${T0ULVLANID01}.1"
-T0ULGW02="10.${VLAN}.${T0ULVLANID02}.1"
+T0IP01="10.${VLAN}.${T0ULVLAN01}.${EN01IP_IP}"
+T0IP02="10.${VLAN}.${T0ULVLAN01}.${EN02IP_IP}"
+T0IP03="10.${VLAN}.${T0ULVLAN02}.${EN01IP_IP}"
+T0IP04="10.${VLAN}.${T0ULVLAN02}.${EN02IP_IP}"
+T0ULGW01="10.${VLAN}.${T0ULVLAN01}.1"
+T0ULGW02="10.${VLAN}.${T0ULVLAN02}.1"
 
 # configure cpodrouter bgp:
 #
 echo
 echo checking bgp on cpodrouter
 echo
-WLDNAME
+
 ASNCPOD=$(get_cpod_asn ${CPOD_NAME_LOWER})
 ASNNSXT=$((ASNCPOD + 1000))
 CPODBGPTABLE=$(get_cpodrouter_bgp_neighbors_table ${CPOD_NAME_LOWER})

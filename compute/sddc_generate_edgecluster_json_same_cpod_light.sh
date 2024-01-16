@@ -18,8 +18,8 @@ EDGECLUSTER_JSON_TEMPLATE=./compute/sddc_edgecluster.json
 CPOD_NAME=$( echo ${1} | tr '[:lower:]' '[:upper:]' )
 NAME_LOWER=$( echo ${HEADER}-${CPOD_NAME} | tr '[:upper:]' '[:lower:]' )
 
-VLAN=$( grep -m 1 "${NAME_LOWER}\s" /etc/hosts | awk '{print $1}' | cut -d "." -f 4 )
-VLAN_MGMT="${VLAN}"
+VLAN=$( grep -m 1 "${NAME_LOWER}${SCRIPT}s" /etc/hosts | awk '{print $1}' | cut -d "." -f 4 )
+sed -i VLAN_MGMT="${VLAN}"
 SUBNET=$( ./${COMPUTE_DIR}/cpod_ip.sh ${1} )
 VLAN_SHIFT=$( expr ${VLAN} + ${VLAN_SHIFT} )
 
@@ -176,32 +176,32 @@ T0NAME="${WLDNAME}-t0"
 T1NAME="${WLDNAME}-t1"
 
 # Generate JSON for cloudbuilder
-sed -i -e "s/###EDGECLUSTERNAME###/${EDGECLUSTERNAME}/g" \
--e "s/###PASSWORD###/${PASSWORD}/" \
--e "s/\"###ASNNUMBER###\"/${ASNNSXT}/" \
--e "s/###EDGE01FQDN###/${EDGE01FQDN}/" \
--e "s/###EDGE02FQDN###/${EDGE02FQDN}/" \
--e "s/###EDGE01MGMTIP###/${EN01IP}/" \
--e "s/###EDGE02MGMTIP###/${EN02IP}/" \
--e "s/###MGMTGW###/${ENMGMTGW}/" \
--e "s/###MGMTPORTGROUPNAME###/${MGMTPORTGROUPNAME}/" \
--e "s/###EDGE01TEPIP01###/${EDGE01TEPIP01}/" \
--e "s/###EDGE01TEPIP02###/${EDGE01TEPIP02}/" \
--e "s/###EDGE02TEPIP01###/${EDGE02TEPIP01}/" \
--e "s/###EDGE02TEPIP02###/${EDGE02TEPIP02}/" \
--e "s/###EDGETEPGW###/${EDGETEPGW}/" \
--e "s/\"###EDGETEPVLANID###\"/${EDGETEPVLANID}/" \
--e "s/\"###UPLINK01VLANID###\"/${T0ULVLANID01}/" \
--e "s/\"###UPLINK02VLANID###\"/${T0ULVLANID02}/" \
--e "s/###T0UPLINKIP01###/${T0IP01}/" \
--e "s/###T0UPLINKIP02###/${T0IP03}/" \
--e "s/###T0UPLINKIP03###/${T0IP02}/" \
--e "s/###T0UPLINKIP04###/${T0IP04}/" \
--e "s/###T0ULGW01###/${T0ULGW01}/" \
--e "s/###T0ULGW02###/${T0ULGW02}/" \
--e "s/\"###CPODROUTERASN###\"/${ASNCPOD}/" \
--e "s/###T0NAME###/${T0NAME}/" \
--e "s/###T1NAME###/${T1NAME}/" \
-${SCRIPT}
+sed -i -e "s/###EDGECLUSTERNAME###/${EDGECLUSTERNAME}/g" ${SCRIPT}
+sed -i -e "s/###PASSWORD###/${PASSWORD}/" ${SCRIPT}
+sed -i -e "s/${SCRIPT}"###ASNNUMBER###${SCRIPT}"/${ASNNSXT}/" ${SCRIPT}
+sed -i -e "s/###EDGE01FQDN###/${EDGE01FQDN}/" ${SCRIPT}
+sed -i -e "s/###EDGE02FQDN###/${EDGE02FQDN}/" ${SCRIPT}
+sed -i -e "s/###EDGE01MGMTIP###/${EN01IP}/" ${SCRIPT}
+sed -i -e "s/###EDGE02MGMTIP###/${EN02IP}/" ${SCRIPT}
+sed -i -e "s/###MGMTGW###/${ENMGMTGW}/" ${SCRIPT}
+sed -i -e "s/###MGMTPORTGROUPNAME###/${MGMTPORTGROUPNAME}/" ${SCRIPT}
+sed -i -e "s/###EDGE01TEPIP01###/${EDGE01TEPIP01}/" ${SCRIPT}
+sed -i -e "s/###EDGE01TEPIP02###/${EDGE01TEPIP02}/" ${SCRIPT}
+sed -i -e "s/###EDGE02TEPIP01###/${EDGE02TEPIP01}/" ${SCRIPT}
+sed -i -e "s/###EDGE02TEPIP02###/${EDGE02TEPIP02}/" ${SCRIPT}
+sed -i -e "s/###EDGETEPGW###/${EDGETEPGW}/" ${SCRIPT}
+sed -i -e "s/${SCRIPT}"###EDGETEPVLANID###${SCRIPT}"/${EDGETEPVLANID}/" ${SCRIPT}
+sed -i -e "s/${SCRIPT}"###UPLINK01VLANID###${SCRIPT}"/${T0ULVLANID01}/" ${SCRIPT}
+sed -i -e "s/${SCRIPT}"###UPLINK02VLANID###${SCRIPT}"/${T0ULVLANID02}/" ${SCRIPT}
+sed -i -e "s/###T0UPLINKIP01###/${T0IP01}/" ${SCRIPT}
+sed -i -e "s/###T0UPLINKIP02###/${T0IP03}/" ${SCRIPT}
+sed -i -e "s/###T0UPLINKIP03###/${T0IP02}/" ${SCRIPT}
+sed -i -e "s/###T0UPLINKIP04###/${T0IP04}/" ${SCRIPT}
+sed -i -e "s/###T0ULGW01###/${T0ULGW01}/" ${SCRIPT}
+sed -i -e "s/###T0ULGW02###/${T0ULGW02}/" ${SCRIPT}
+sed -i -e "s/${SCRIPT}"###CPODROUTERASN###${SCRIPT}"/${ASNCPOD}/" ${SCRIPT}
+sed -i -e "s/###T0NAME###/${T0NAME}/" ${SCRIPT}
+sed -i -e "s/###T1NAME###/${T1NAME}/" ${SCRIPT}
+
 
 echo "JSON is genereated: ${SCRIPT} and placed in directory: ${SCRIPT_DIR}."

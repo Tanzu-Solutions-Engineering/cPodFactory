@@ -806,6 +806,34 @@ sddc_edgecluster_get(){
 	esac
 }
 
+sddc_edgecluster_validate(){
+    EDGECLUSTERJSONPATH="${1}"
+
+	#returns json
+    RESPONSE=$(curl -s -k -w '####%{response_code}'  -H "Authorization: Bearer ${TOKEN}" -H 'Content-Type: application/json' -H 'Accept: application/json'  -d @${EDGECLUSTERJSONPATH} -X POST https://sddc.${NAME_LOWER}.${ROOT_DOMAIN}/v1/edge-clusters/validations)
+
+	HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+	case $HTTPSTATUS in
+		2[0-9][0-9])    
+			EDGECLUSTERJSON=$(echo "${RESPONSE}" |awk -F '####' '{print $1}')
+            echo "${EDGECLUSTERJSON}" > /tmp/scripts/sddc-edgecluster-create-status-$$.json
+			echo "${EDGECLUSTERJSON}"
+			;;
+		4[0-9][0-9])    
+            DUMPFILE="/tmp/scripts/sddc-edgecluster-httpstatus-create-4xx-$$.txt"
+            echo "${RESPONSE}" > "${DUMPFILE}"
+            echo "PARAMS - ${NAME_LOWER} ${PASSWORD} ${VALIDATIONID} " >>  "${DUMPFILE}"
+   			echo "{\"executionStatus\": \"$HTTPSTATUS - Bad Request\"}"
+			;;
+		5[0-9][0-9])    
+            echo "${RESPONSE}" > /tmp/scripts/sddc-edgecluster-httpstatus-create-5xx-$$.txt
+   			echo "{\"executionStatus\": \"$HTTPSTATUS - Server Error \"}"
+			;;
+		*)      
+			echo ${RESPONSE} |awk -F '####' '{print $1}'
+			;;
+	esac
+}
 sddc_edgecluster_create(){
     EDGECLUSTERJSONPATH="${1}"
 

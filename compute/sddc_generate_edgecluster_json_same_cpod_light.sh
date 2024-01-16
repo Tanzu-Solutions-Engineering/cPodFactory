@@ -19,7 +19,7 @@ CPOD_NAME=$( echo ${1} | tr '[:lower:]' '[:upper:]' )
 NAME_LOWER=$( echo ${HEADER}-${CPOD_NAME} | tr '[:upper:]' '[:lower:]' )
 
 VLAN=$( grep -m 1 "${NAME_LOWER}\s" /etc/hosts | awk '{print $1}' | cut -d "." -f 4 )
-sed -i VLAN_MGMT="${VLAN}"
+VLAN_MGMT="${VLAN}"
 SUBNET=$( ./${COMPUTE_DIR}/cpod_ip.sh ${1} )
 VLAN_SHIFT=$( expr ${VLAN} + ${VLAN_SHIFT} )
 
@@ -172,7 +172,7 @@ EDGE01TEPIP02="10.${VLAN}.${EDGETEPVLAN}.${EN01IP_IP2}"
 EDGE02TEPIP01="10.${VLAN}.${EDGETEPVLAN}.${EN02IP_IP}"
 EN02IP_IP2=$((EN01IP_IP+10))
 EDGE02TEPIP02="10.${VLAN}.${EDGETEPVLAN}.${EN02IP_IP2}"
-EDGETEPGW="10.${VLAN}.${EDGETEPVLANID}.1"
+EDGETEPGW="10.${VLAN}.${EDGETEPVLAN}.1"
 T0NAME="${WLDNAME}-t0"
 T1NAME="${WLDNAME}-t1"
 
@@ -182,8 +182,8 @@ sed -i -e "s/###PASSWORD###/${PASSWORD}/" ${SCRIPT}
 sed -i -e "s/\"###ASNNUMBER###\"/${ASNNSXT}/" ${SCRIPT}
 sed -i -e "s/###EDGE01FQDN###/${EDGE01FQDN}/" ${SCRIPT}
 sed -i -e "s/###EDGE02FQDN###/${EDGE02FQDN}/" ${SCRIPT}
-sed -i -e "s/###EDGE01MGMTIP###/${EN01IP}/" ${SCRIPT}
-sed -i -e "s/###EDGE02MGMTIP###/${EN02IP}/" ${SCRIPT}
+sed -i -e "s-###EDGE01MGMTIP###-${EN01IP}-" ${SCRIPT}
+sed -i -e "s-###EDGE02MGMTIP###-${EN02IP}-" ${SCRIPT}
 sed -i -e "s/###MGMTGW###/${ENMGMTGW}/" ${SCRIPT}
 sed -i -e "s/###MGMTPORTGROUPNAME###/${MGMTPORTGROUPNAME}/" ${SCRIPT}
 sed -i -e "s/###EDGE01TEPIP01###/${EDGE01TEPIP01}/" ${SCRIPT}

@@ -66,11 +66,11 @@ PASSWORD=$( ${EXTRA_DIR}/passwd_for_cpod.sh ${CPOD_NAME} )
 DNSCOUNT=$(ssh -o LogLevel=error -o StrictHostKeyChecking=no "${NAME_LOWER}" "cat /etc/hosts" |grep -c "${WLDNAME}")
 if [[ $DNSCOUNT -gt 0 ]]
 then
-	echo "$DNSCOUNT dns entries found for ${WLDNAME}"
-	echo "bailing out"
-	exit
+	echo "$DNSCOUNT dns entries found for ${WLDNAME} - proceeding"
 else
-	echo "no dns entries found for ${WLDNAME} - proceeding"
+	echo "no dns entries found for ${WLDNAME} "
+        echo "bailing out"
+	exit
 fi
 
 # Edge cluster params

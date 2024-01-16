@@ -58,7 +58,7 @@ TOKEN=$(sddc_get_token "${NAME_LOWER}" "${PASSWORD}" )
 
 # Checking not running edgecluster
 EDGECLUSTERS=$(sddc_edgecluster_get)
-if [ $(echo "${EDGECLUSTERS}" | jq '.elements[]') != "" ]
+if [[ $(echo "${EDGECLUSTERS}" | jq '.elements[]') != "" ]]
 then
         echo "There is an existing edge cluster defined"
         echo

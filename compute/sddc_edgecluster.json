@@ -20,6 +20,7 @@
         "edgeTep2IP": "###EDGE01TEPIP01###",
         "edgeTepGateway": "###EDGETEPGW###",
         "edgeTepVlan": "###EDGETEPVLANID###",
+        "clusterId": "###CLUSTERID###",
         "interRackCluster": false,
         "uplinkNetwork": [
           {
@@ -48,6 +49,7 @@
         "edgeTep2IP": "###EDGE02TEPIP01###",
         "edgeTepGateway": "###EDGETEPGW###",
         "edgeTepVlan": "###EDGETEPVLANID###",
+        "clusterId": "###CLUSTERID###",
         "interRackCluster": false,
         "uplinkNetwork": [
           {

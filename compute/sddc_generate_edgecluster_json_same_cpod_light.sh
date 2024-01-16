@@ -17,7 +17,6 @@ EDGECLUSTER_JSON_TEMPLATE=./compute/sddc_edgecluster.json
 #Management Domain CPOD
 CPOD_NAME=$( echo ${1} | tr '[:lower:]' '[:upper:]' )
 NAME_LOWER=$( echo ${HEADER}-${CPOD_NAME} | tr '[:upper:]' '[:lower:]' )
-
 VLAN=$( grep -m 1 "${NAME_LOWER}\s" /etc/hosts | awk '{print $1}' | cut -d "." -f 4 )
 VLAN_MGMT="${VLAN}"
 SUBNET=$( ./${COMPUTE_DIR}/cpod_ip.sh ${1} )
@@ -160,8 +159,8 @@ mkdir -p ${SCRIPT_DIR}
 cp ${EDGECLUSTER_JSON_TEMPLATE} ${SCRIPT}
 
 EDGECLUSTERNAME="${WLDNAME}-edgecluster"
-EDGE01FQDN="en01-${WLDNAME}.${NAME_LOWER}.${DOMAIN}"
-EDGE02FQDN="en02-${WLDNAME}.${NAME_LOWER}.${DOMAIN}"
+EDGE01FQDN="en01-${WLDNAME}.${NAME_LOWER}.${ROOT_DOMAIN}"
+EDGE02FQDN="en02-${WLDNAME}.${NAME_LOWER}.${ROOT_DOMAIN}"
 EN01IP="${EN01IP}/24"
 EN02IP="${EN02IP}/24"
 ENMGMTGW=$(echo "${EN01IP}" | awk -F "." '{print $1"."$2"."$3".1"}')

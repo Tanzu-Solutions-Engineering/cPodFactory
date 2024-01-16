@@ -113,15 +113,15 @@ echo
 echo checking bgp on cpodrouter
 echo
 
-ASNCPOD=$(get_cpod_asn ${CPOD_NAME_LOWER})
+ASNCPOD=$(get_cpod_asn ${NAME_LOWER})
 ASNNSXT=$((ASNCPOD + 1000))
-CPODBGPTABLE=$(get_cpodrouter_bgp_neighbors_table ${CPOD_NAME_LOWER})
+CPODBGPTABLE=$(get_cpodrouter_bgp_neighbors_table ${NAME_LOWER})
 #test if already configured
 IPTEST=$(echo "${CPODBGPTABLE}" |grep ${T0IP01})
 if [ "${IPTEST}" == "" ];
 then
         echo "  adding ${T0IP01} bgp neighbor"
-        add_cpodrouter_bgp_neighbor "${T0IP01}" "${ASNNSXT}" "${CPOD_NAME_LOWER}"
+        add_cpodrouter_bgp_neighbor "${T0IP01}" "${ASNNSXT}" "${NAME_LOWER}"
 else
         echo "  ${T0IP01} already defined as bgp neighbor"
 fi
@@ -130,7 +130,7 @@ IPTEST=$(echo "${CPODBGPTABLE}" |grep ${T0IP02})
 if [ "${IPTEST}" == "" ];
 then
         echo "  adding ${T0IP02} bgp neighbor"
-        add_cpodrouter_bgp_neighbor "${T0IP02}" "${ASNNSXT}" "${CPOD_NAME_LOWER}"
+        add_cpodrouter_bgp_neighbor "${T0IP02}" "${ASNNSXT}" "${NAME_LOWER}"
 else
         echo "  ${T0IP02} already defined as bgp neighbor"
 fi
@@ -139,7 +139,7 @@ IPTEST=$(echo "${CPODBGPTABLE}" |grep ${T0IP03})
 if [ "${IPTEST}" == "" ];
 then
         echo "  adding ${T0IP03} bgp neighbor"
-        add_cpodrouter_bgp_neighbor "${T0IP03}" "${ASNNSXT}" "${CPOD_NAME_LOWER}"
+        add_cpodrouter_bgp_neighbor "${T0IP03}" "${ASNNSXT}" "${NAME_LOWER}"
 else
         echo "  ${T0IP03} already defined as bgp neighbor"
 fi
@@ -148,7 +148,7 @@ IPTEST=$(echo "${CPODBGPTABLE}" |grep ${T0IP04})
 if [ "${IPTEST}" == "" ];
 then
         echo "  adding ${T0IP04} bgp neighbor"
-        add_cpodrouter_bgp_neighbor "${T0IP04}" "${ASNNSXT}" "${CPOD_NAME_LOWER}"
+        add_cpodrouter_bgp_neighbor "${T0IP04}" "${ASNNSXT}" "${NAME_LOWER}"
 else
         echo "  ${T0IP04} already defined as bgp neighbor"
 fi

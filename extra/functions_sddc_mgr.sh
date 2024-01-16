@@ -714,23 +714,23 @@ sddc_loop_wait_commissioning(){
 
 sddc_edgecluster_get(){
 	#returns json
-    	RESPONSE=$(curl -s -k -w '####%{response_code}'  -H "Authorization: Bearer ${TOKEN}" -H 'Content-Type: application/json' -H 'Accept: application/json' -X GET https://sddc.${NAME_LOWER}.${ROOT_DOMAIN}/v1/edge-clusters)
+    RESPONSE=$(curl -s -k -w '####%{response_code}'  -H "Authorization: Bearer ${TOKEN}" -H 'Content-Type: application/json' -H 'Accept: application/json' -X GET https://sddc.${NAME_LOWER}.${ROOT_DOMAIN}/v1/edge-clusters)
 
 	HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
 	case $HTTPSTATUS in
 		2[0-9][0-9])    
-			VALIDATIONJSON=$(echo "${RESPONSE}" |awk -F '####' '{print $1}')
-            echo "${VALIDATIONJSON}" > /tmp/scripts/cloudbuilder-validation-status-$$.json
-			echo "${VALIDATIONJSON}"
+			EDGECLUSTERJSON=$(echo "${RESPONSE}" |awk -F '####' '{print $1}')
+            echo "${EDGECLUSTERJSON}" > /tmp/scripts/sddc-edgecluster-status-$$.json
+			echo "${EDGECLUSTERJSON}"
 			;;
 		4[0-9][0-9])    
-            DUMPFILE="/tmp/scripts/cloudbuilder-validation-httpstatus-4xx-$$.txt"
+            DUMPFILE="/tmp/scripts/sddc-edgecluster-httpstatus-4xx-$$.txt"
             echo "${RESPONSE}" > "${DUMPFILE}"
             echo "PARAMS - ${NAME_LOWER} ${PASSWORD} ${VALIDATIONID} " >>  "${DUMPFILE}"
    			echo "{executionStatus: \"$HTTPSTATUS - Bad Request\"}"
 			;;
 		5[0-9][0-9])    
-            echo "${RESPONSE}" > /tmp/scripts/cloudbuilder-validation-httpstatus-5xx-$$.txt
+            echo "${RESPONSE}" > /tmp/scripts/sddc-edgecluster-httpstatus-5xx-$$.txt
    			echo "{executionStatus: \"$HTTPSTATUS - Server Error \"}"
 			;;
 		*)      

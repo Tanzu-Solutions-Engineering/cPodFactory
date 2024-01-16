@@ -712,6 +712,33 @@ sddc_loop_wait_commissioning(){
     sddc_get_commission_result_table "${COMMISSIONID}"
 }
 
+sddc_clusters_get(){
+	#returns json
+    RESPONSE=$(curl -s -k -w '####%{response_code}'  -H "Authorization: Bearer ${TOKEN}" -H 'Content-Type: application/json' -H 'Accept: application/json' -X GET https://sddc.${NAME_LOWER}.${ROOT_DOMAIN}/v1/clusters)
+
+	HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+	case $HTTPSTATUS in
+		2[0-9][0-9])    
+			CLUSTERJSON=$(echo "${RESPONSE}" |awk -F '####' '{print $1}')
+            echo "${CLUSTERJSON}" > /tmp/scripts/sddc-cluster-status-$$.json
+			echo "${CLUSTERJSON}"
+			;;
+		4[0-9][0-9])    
+            DUMPFILE="/tmp/scripts/sddc-cluster-httpstatus-4xx-$$.txt"
+            echo "${RESPONSE}" > "${DUMPFILE}"
+            echo "PARAMS - ${NAME_LOWER} ${PASSWORD} ${VALIDATIONID} " >>  "${DUMPFILE}"
+   			echo "{\"executionStatus\": \"$HTTPSTATUS - Bad Request\"}"
+			;;
+		5[0-9][0-9])    
+            echo "${RESPONSE}" > /tmp/scripts/sddc-cluster-httpstatus-5xx-$$.txt
+   			echo "{\"executionStatus\": \"$HTTPSTATUS - Server Error \"}"
+			;;
+		*)      
+			echo ${RESPONSE} |awk -F '####' '{print $1}'
+			;;
+	esac
+}
+
 sddc_edgecluster_get(){
 	#returns json
     RESPONSE=$(curl -s -k -w '####%{response_code}'  -H "Authorization: Bearer ${TOKEN}" -H 'Content-Type: application/json' -H 'Accept: application/json' -X GET https://sddc.${NAME_LOWER}.${ROOT_DOMAIN}/v1/edge-clusters)

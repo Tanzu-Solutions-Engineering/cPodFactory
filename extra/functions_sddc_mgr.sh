@@ -879,7 +879,7 @@ sddc_loop_wait_edgecluster_validation(){
             EXECUTIONSTATUS=$(echo "${RESPONSE}" | jq -r '.executionStatus')
             RESULTSTATUS=$(echo "${RESPONSE}" | jq -r '.resultStatus')
             
-            sddc_edgecluster_create  "${VALIDATIONID}"
+            sddc_get_edgecluster_validation_result_table  "${VALIDATIONID}"
 
         if [[ "${RESULTSTATUS}" == "FAILED" ]] 
         then 
@@ -893,7 +893,7 @@ sddc_loop_wait_edgecluster_validation(){
         sleep 4
     done
 
-    sddc_edgecluster_create  "${VALIDATIONID}"
+    sddc_get_edgecluster_validation_result_table  "${VALIDATIONID}"
     
 }
 

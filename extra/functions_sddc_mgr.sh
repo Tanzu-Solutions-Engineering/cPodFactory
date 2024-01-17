@@ -860,6 +860,8 @@ sddc_get_edgecluster_validation_result_table(){
 sddc_loop_wait_edgecluster_validation(){
     VALIDATIONID="${1}"
 
+    #start the timer
+    START=$( date +%s )
     echo "Checking Validation ID : ${VALIDATIONID}"
     CURRENTSTATE=""
     CURRENTSTEP=""
@@ -878,7 +880,12 @@ sddc_loop_wait_edgecluster_validation(){
         else
             EXECUTIONSTATUS=$(echo "${RESPONSE}" | jq -r '.executionStatus')
             RESULTSTATUS=$(echo "${RESPONSE}" | jq -r '.resultStatus')
-            
+            CURRENT=$( date +%s )
+            TIME=$(( "${CURRENT}" - "${START}" ))
+            TIME=$(date -d@$TIME -u +%Hh%Mm%Ss)
+            clear
+            echo " Validation run time : ${TIME}"
+
             sddc_get_edgecluster_validation_result_table  "${VALIDATIONID}"
         fi
         if [[ "${RESULTSTATUS}" == "FAILED" ]] 
@@ -890,11 +897,11 @@ sddc_loop_wait_edgecluster_validation(){
             exit 1
         fi
 #        printf '.' >/dev/tty
-        sleep 4
+        sleep 3
     done
-
-    sddc_get_edgecluster_validation_result_table  "${VALIDATIONID}"
-    
+    clear
+    echo " Validation run time : ${TIME}"
+    sddc_get_edgecluster_validation_result_table  "${VALIDATIONID}"  
 }
 
 sddc_edgecluster_create(){

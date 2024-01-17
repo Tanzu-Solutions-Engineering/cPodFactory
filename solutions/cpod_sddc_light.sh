@@ -68,9 +68,9 @@ echo
 test_params_file ${VERSION}
 
 echo
-echo "=================================="
-echo "=== creating cpod / VCF / WLD  ==="
-echo "=================================="
+echo "================================================"
+echo "=== creating cpod / VCF / WLD / Edge cluster ==="
+echo "================================================"
 echo
 
 cpodctl create $NAME 4 $3
@@ -83,6 +83,8 @@ cpodctl cloudbuilder $NAME $3
 sleep 30
 ./compute/sddc_add_hosts_same_cpod.sh  $NAME
 ./compute/sddc_create_wld_same_cpod_light.sh $NAME wld01 wld-cl01
+./compute/sddc_generate_edgecluster_json_same_cpod.sh $NAME wld01 wld-cl01
+./compute/sddc_create_wld_edgecluster_same_cpod.sh vcf51 wld01 
 
 #get data
 CPOD_NAME=$( echo ${NAME} | tr '[:lower:]' '[:upper:]' )

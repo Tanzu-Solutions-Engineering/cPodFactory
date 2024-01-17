@@ -880,7 +880,7 @@ sddc_loop_wait_edgecluster_validation(){
             RESULTSTATUS=$(echo "${RESPONSE}" | jq -r '.resultStatus')
             
             sddc_get_edgecluster_validation_result_table  "${VALIDATIONID}"
-
+        fi
         if [[ "${RESULTSTATUS}" == "FAILED" ]] 
         then 
             echo

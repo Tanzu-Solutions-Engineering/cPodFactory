@@ -868,7 +868,7 @@ sddc_loop_wait_edgecluster_validation(){
     while [[ "$EXECUTIONSTATUS" != "COMPLETED" ]]
     do      
         RESPONSE=$(sddc_get_edgecluster_validation_status "${VALIDATIONID}")
-        echo "${RESPONSE}" |jq .
+        #echo "${RESPONSE}" |jq .
         if [[ "${RESPONSE}" == *"ERROR"* ]] || [[ "${RESPONSE}" == "" ]]
         then
             echo
@@ -878,19 +878,9 @@ sddc_loop_wait_edgecluster_validation(){
         else
             EXECUTIONSTATUS=$(echo "${RESPONSE}" | jq -r '.executionStatus')
             RESULTSTATUS=$(echo "${RESPONSE}" | jq -r '.resultStatus')
-            SUBTASK=$(echo "${RESPONSE}" | jq -r '.validationChecks[] | select ( .resultStatus | contains("IN_PROGRESS")) |.name')
+            
+            sddc_edgecluster_create  "${VALIDATIONID}"
 
-            if [[ "${SUBTASK}" != "${CURRENTSTEP}" ]] 
-            then
-                if [ "${CURRENTSTEP}" != ""  ]
-                then
-                    FINALSTATUS=$(echo "${RESPONSE}" | jq -r '.validationChecks[]| select ( .name == "'"${CURRENTSTEP}"'") |.status')
-                    printf "\t%s" "${FINALSTATUS}"
-                fi
-                printf "\n\t\t%s" "${SUBTASK}"
-                CURRENTSTEP="${SUBTASK}"
-            fi
-        fi
         if [[ "${RESULTSTATUS}" == "FAILED" ]] 
         then 
             echo
@@ -899,8 +889,8 @@ sddc_loop_wait_edgecluster_validation(){
             echo "stopping script"
             exit 1
         fi
-        printf '.' >/dev/tty
-        sleep 2
+#        printf '.' >/dev/tty
+        sleep 4
     done
 
     sddc_edgecluster_create  "${VALIDATIONID}"

@@ -847,12 +847,12 @@ sddc_get_edgecluster_validation_result_table(){
     RESPONSE=$(sddc_get_edgecluster_validation_status "${VALIDATIONID}")
 
     echo
-    echo "Succesfull tasks"
+    echo "Validations list"
     echo
-    echo "${RESPONSE}" | jq -r '["Name","Status"],["----","------"],(.validationCheck[] | [.description,.resultStatus] )| @tsv' | column -t -s $'\t'
+    echo "${RESPONSE}" | jq -r '["Name","Status"],["----","------"],(.validationChecks[] | [.description,.resultStatus] )| @tsv' | column -t -s $'\t'
 
     echo
-    echo "Commission Status"
+    echo "Validation Status"
     echo
     echo "${RESPONSE}" | jq -r '["Name","executionStatus","resultStatus"],[.description,.executionStatus,.resultStatus]| @tsv'  | column -t -s $'\t'
 }

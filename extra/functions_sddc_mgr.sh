@@ -860,15 +860,15 @@ sddc_get_edgecluster_validation_result_table(){
 sddc_loop_wait_edgecluster_validation(){
     VALIDATIONID="${1}"
 
+    echo "Checking Validation ID : ${VALIDATIONID}"
     CURRENTSTATE=""
     CURRENTSTEP=""
-    CURRENTMAINTASK=""
     EXECUTIONSTATUS=""
     RESULTSTATUS=""
     while [[ "$EXECUTIONSTATUS" != "COMPLETED" ]]
     do      
         RESPONSE=$(sddc_get_edgecluster_validation_status "${VALIDATIONID}")
-        #echo "${RESPONSE}" |jq .
+        echo "${RESPONSE}" |jq .
         if [[ "${RESPONSE}" == *"ERROR"* ]] || [[ "${RESPONSE}" == "" ]]
         then
             echo
@@ -878,14 +878,8 @@ sddc_loop_wait_edgecluster_validation(){
         else
             EXECUTIONSTATUS=$(echo "${RESPONSE}" | jq -r '.executionStatus')
             RESULTSTATUS=$(echo "${RESPONSE}" | jq -r '.resultStatus')
-            MAINTASK=$(echo "${RESPONSE}" | jq -r '.description')
             SUBTASK=$(echo "${RESPONSE}" | jq -r '.validationChecks[] | select ( .resultStatus | contains("IN_PROGRESS")) |.name')
 
-            if [[ "${MAINTASK}" != "${CURRENTMAINTASK}" ]] 
-            then
-                printf "\t%s" "${MAINTASK}"
-                CURRENTMAINTASK="${MAINTASK}"
-            fi	
             if [[ "${SUBTASK}" != "${CURRENTSTEP}" ]] 
             then
                 if [ "${CURRENTSTEP}" != ""  ]
@@ -908,21 +902,10 @@ sddc_loop_wait_edgecluster_validation(){
         printf '.' >/dev/tty
         sleep 2
     done
-    RESPONSE=$(sddc_get_edgecluster_validation_status "${VALIDATIONID}")
-    RESULTSTATUS=$(echo "${RESPONSE}" | jq -r '.resultStatus')
 
-    echo
-    echo "Host Validation Result Status : $RESULTSTATUS"
-
-    if [ "${RESULTSTATUS}" != "SUCCEEDED" ]
-    then
-        echo "Validation not succesful. Quitting"
-        exit
-    fi
-
+    sddc_edgecluster_create  "${VALIDATIONID}"
+    
 }
-
-
 
 sddc_edgecluster_create(){
     EDGECLUSTERJSONPATH="${1}"

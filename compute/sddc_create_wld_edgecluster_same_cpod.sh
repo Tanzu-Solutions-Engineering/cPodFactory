@@ -78,3 +78,14 @@ echo
 EDGEVALIDATEID=$(echo "${EDGEVALIDATE}" | jq -r '.id')
 
 sddc_loop_wait_edgecluster_validation "${EDGEVALIDATEID}"
+
+echo
+echo "Creating Edge Cluster"
+EDGECREATE=$(sddc_edgecluster_create "${SCRIPT}")
+
+echo "$EDGECREATE" 
+echo
+EDGECREATEID=$(echo "${EDGECREATE}" | jq -r '.id')
+
+sddc_loop_wait_commissioning "${EDGECREATEID}"
+

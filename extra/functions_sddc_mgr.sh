@@ -884,7 +884,7 @@ sddc_loop_wait_edgecluster_validation(){
             TIME=$(( "${CURRENT}" - "${START}" ))
             TIME=$(date -d@$TIME -u +%Hh%Mm%Ss)
             clear
-            echo " Validation run time : ${TIME}"
+            echo "Validation run time : ${TIME}"
 
             sddc_get_edgecluster_validation_result_table  "${VALIDATIONID}"
         fi
@@ -900,7 +900,7 @@ sddc_loop_wait_edgecluster_validation(){
         sleep 3
     done
     clear
-    echo " Validation run time : ${TIME}"
+    echo "Validation run time : ${TIME}"
     sddc_get_edgecluster_validation_result_table  "${VALIDATIONID}"  
 }
 

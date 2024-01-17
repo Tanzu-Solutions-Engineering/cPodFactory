@@ -26,14 +26,14 @@
           {
             "uplinkVlan": "###UPLINK01VLANID###",
             "uplinkInterfaceIP": "###T0UPLINKIP01###",
-            "peerIP": "###T0ULGW01###",
+            "peerIP": "###BGPPEER01###",
             "asnPeer": "###CPODROUTERASN###",
             "bgpPeerPassword": ""
           },
           {
             "uplinkVlan": "###UPLINK02VLANID###",
             "uplinkInterfaceIP": "###T0UPLINKIP02###",
-            "peerIP": "###T0ULGW02###",
+            "peerIP": "###BGPPEER02###",
             "asnPeer": "###CPODROUTERASN###",
             "bgpPeerPassword": ""
           }
@@ -55,14 +55,14 @@
           {
             "uplinkVlan": "###UPLINK01VLANID###",
             "uplinkInterfaceIP": "###T0UPLINKIP03###",
-            "peerIP": "###T0ULGW01###",
+            "peerIP": "###BGPPEER01###",
             "asnPeer": "###CPODROUTERASN###",
             "bgpPeerPassword": ""
           },
           {
             "uplinkVlan": "###UPLINK02VLANID###",
             "uplinkInterfaceIP": "###T0UPLINKIP04###",
-            "peerIP": "###T0ULGW02###",
+            "peerIP": "###BGPPEER02###",
             "asnPeer": "###CPODROUTERASN###",
             "bgpPeerPassword": ""
           }

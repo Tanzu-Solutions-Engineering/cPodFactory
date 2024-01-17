@@ -206,6 +206,8 @@ T0IP01="${T0IP01}/24"
 T0IP02="${T0IP02}/24"
 T0IP03="${T0IP03}/24"
 T0IP04="${T0IP04}/24"
+BGPPEER01="${T0ULGW01}/24"
+BGPPEER02="${T0ULGW02}/24"
 
 # Generate JSON for cloudbuilder
 sed -i -e "s/###EDGECLUSTERNAME###/${EDGECLUSTERNAME}/g" \
@@ -231,6 +233,8 @@ sed -i -e "s/###EDGECLUSTERNAME###/${EDGECLUSTERNAME}/g" \
 -e "s-###T0UPLINKIP04###-${T0IP04}-" \
 -e "s/###T0ULGW01###/${T0ULGW01}/" \
 -e "s/###T0ULGW02###/${T0ULGW02}/" \
+-e "s-###BGPPEER01###-${BGPPEER01}-" \
+-e "s-###BGPPEER02###-${BGPPEER02}-" \
 -e "s/\"###CPODROUTERASN###\"/${ASNCPOD}/" \
 -e "s/###CLUSTERID###/${CLUSTERID}/" \
 -e "s/###T0NAME###/${T0NAME}/" \

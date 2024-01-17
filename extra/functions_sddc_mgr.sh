@@ -450,17 +450,17 @@ sddc_get_validation_result_table(){
     echo
     echo "Succesfull tasks"
     echo
-    echo "${RESPONSE}" | jq -r '["Name","Status"],["----","------"],(.subTasks[] | select ( .status | contains("SUCCESSFUL")) | [.name,.status] )| @tsv' | column -t -s $'\t'
+    echo "${RESPONSE}" | jq -r '["Name","Status"],["----","------"],(.validationCheck[] | select ( .status | contains("SUCCESSFUL")) | [.name,.status] )| @tsv' | column -t -s $'\t'
 
     echo
     echo "Pending tasks"
     echo
-    echo "${RESPONSE}" | jq -r '["Name","Status"],["----","------"],(.subTasks[] | select ( .status | contains("PENDING")) | [.name,.status] )| @tsv' | column -t -s $'\t'
+    echo "${RESPONSE}" | jq -r '["Name","Status"],["----","------"],(.validationCheck[] | select ( .status | contains("PENDING")) | [.name,.status] )| @tsv' | column -t -s $'\t'
 
     echo
     echo "Failed tasks"
     echo
-    echo "${RESPONSE}" | jq -r '["Name","Status"],["----","------"],(.subTasks[] | select ( .status | contains("FAILED")) | [.name,.status] )| @tsv' | column -t -s $'\t'
+    echo "${RESPONSE}" | jq -r '["Name","Status"],["----","------"],(.validationCheck[] | select ( .status | contains("FAILED")) | [.name,.status] )| @tsv' | column -t -s $'\t'
 
     echo
     echo "Commission Status"
@@ -840,6 +840,86 @@ sddc_get_edgecluster_validation_status(){
 	VALIDATIONRESULT=$(curl -s -k -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}" -X GET  https://sddc.${NAME_LOWER}.${ROOT_DOMAIN}/v1/edge-clusters/validations/${VALIDATIONID})
 	echo "${VALIDATIONRESULT}" > /tmp/scripts/domain-validation-test.json
 	echo "${VALIDATIONRESULT}"
+}
+
+sddc_get_edgecluster_validation_result_table(){
+    VALIDATIONID="${1}"
+    RESPONSE=$(sddc_get_edgecluster_validation_status "${VALIDATIONID}")
+
+    echo
+    echo "Succesfull tasks"
+    echo
+    echo "${RESPONSE}" | jq -r '["Name","Status"],["----","------"],(.validationCheck[] | [.description,.resultStatus] )| @tsv' | column -t -s $'\t'
+
+    echo
+    echo "Commission Status"
+    echo
+    echo "${RESPONSE}" | jq -r '["Name","executionStatus","resultStatus"],[.description,.executionStatus,.resultStatus]| @tsv'  | column -t -s $'\t'
+}
+
+sddc_loop_wait_edgecluster_validation(){
+    VALIDATIONID="${1}"
+
+    CURRENTSTATE=""
+    CURRENTSTEP=""
+    CURRENTMAINTASK=""
+    EXECUTIONSTATUS=""
+    RESULTSTATUS=""
+    while [[ "$EXECUTIONSTATUS" != "COMPLETED" ]]
+    do      
+        RESPONSE=$(sddc_get_edgecluster_validation_status "${VALIDATIONID}")
+        #echo "${RESPONSE}" |jq .
+        if [[ "${RESPONSE}" == *"ERROR"* ]] || [[ "${RESPONSE}" == "" ]]
+        then
+            echo
+            echo "problem getting deployment ${VALIDATIONID} status : "
+            echo "${RESPONSE}"		
+            RESULTSTATUS=$(echo "${RESPONSE}" | jq -r '.resultStatus')
+        else
+            EXECUTIONSTATUS=$(echo "${RESPONSE}" | jq -r '.executionStatus')
+            RESULTSTATUS=$(echo "${RESPONSE}" | jq -r '.resultStatus')
+            MAINTASK=$(echo "${RESPONSE}" | jq -r '.description')
+            SUBTASK=$(echo "${RESPONSE}" | jq -r '.validationChecks[] | select ( .resultStatus | contains("IN_PROGRESS")) |.name')
+
+            if [[ "${MAINTASK}" != "${CURRENTMAINTASK}" ]] 
+            then
+                printf "\t%s" "${MAINTASK}"
+                CURRENTMAINTASK="${MAINTASK}"
+            fi	
+            if [[ "${SUBTASK}" != "${CURRENTSTEP}" ]] 
+            then
+                if [ "${CURRENTSTEP}" != ""  ]
+                then
+                    FINALSTATUS=$(echo "${RESPONSE}" | jq -r '.validationChecks[]| select ( .name == "'"${CURRENTSTEP}"'") |.status')
+                    printf "\t%s" "${FINALSTATUS}"
+                fi
+                printf "\n\t\t%s" "${SUBTASK}"
+                CURRENTSTEP="${SUBTASK}"
+            fi
+        fi
+        if [[ "${RESULTSTATUS}" == "FAILED" ]] 
+        then 
+            echo
+            echo "FAILED"
+            echo "${VALIDATIONRESULT}" | jq .
+            echo "stopping script"
+            exit 1
+        fi
+        printf '.' >/dev/tty
+        sleep 2
+    done
+    RESPONSE=$(sddc_get_edgecluster_validation_status "${VALIDATIONID}")
+    RESULTSTATUS=$(echo "${RESPONSE}" | jq -r '.resultStatus')
+
+    echo
+    echo "Host Validation Result Status : $RESULTSTATUS"
+
+    if [ "${RESULTSTATUS}" != "SUCCEEDED" ]
+    then
+        echo "Validation not succesful. Quitting"
+        exit
+    fi
+
 }
 
 

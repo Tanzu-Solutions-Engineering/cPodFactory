@@ -73,11 +73,11 @@ cloudbuilder_get_deployment_status() {
             DUMPFILE="/tmp/scripts/cloudbuilder-deployment-httpstatus-4xx-$$.txt"
             echo "${RESPONSE}" > "${DUMPFILE}"
             echo "PARAMS - ${NAME_LOWER} ${PASSWORD} ${DEPLOYMENTID} " >>  "${DUMPFILE}"
-   			echo "{\"executionStatus\": \"$HTTPSTATUS - Bad Request\"}"
+   			echo "{\"httpStatus\": \"$HTTPSTATUS - Bad Request\"}"
 			;;
 		5[0-9][0-9])    
             echo "${RESPONSE}" > /tmp/scripts/cloudbuilder-deployment-httpstatus-5xx-$$.txt
-   			echo "{\"executionStatus\": \"$HTTPSTATUS - Server Error \"}"
+   			echo "{\"httpStatus\": \"$HTTPSTATUS - Server Error \"}"
 			;;
 		*)      
 			echo ${RESPONSE} |awk -F '####' '{print $1}'
@@ -104,11 +104,11 @@ cloudbuilder_get_validation_status() {
             DUMPFILE="/tmp/scripts/cloudbuilder-validation-httpstatus-4xx-$$.txt"
             echo "${RESPONSE}" > "${DUMPFILE}"
             echo "PARAMS - ${NAME_LOWER} ${PASSWORD} ${VALIDATIONID} " >>  "${DUMPFILE}"
-   			echo "{\"executionStatus\": \"$HTTPSTATUS - Bad Request\"}"
+   			echo "{\"httpStatus\": \"$HTTPSTATUS - Bad Request\"}"
 			;;
 		5[0-9][0-9])    
             echo "${RESPONSE}" > /tmp/scripts/cloudbuilder-validation-httpstatus-5xx-$$.txt
-   			echo "{\"executionStatus\": \"$HTTPSTATUS - Server Error \"}"
+   			echo "{\"httpStatus\": \"$HTTPSTATUS - Server Error \"}"
 			;;
 		*)      
 			echo ${RESPONSE} |awk -F '####' '{print $1}'
@@ -187,7 +187,7 @@ cloudbuilder_loop_wait_deployment_status(){
     while [[ "$STATUS" != "COMPLETED_WITH_SUCCESS" ]]
     do      
         RESPONSE=$(cloudbuilder_get_deployment_status "${NAME_LOWER}" "${PASSWORD}" "${DEPLOYMENTID}")
-        if [[ "${RESPONSE}" == *"ERROR - HTTPSTATUS"* ]] || [[ "${RESPONSE}" == "" ]]
+        if [[ "${RESPONSE}" == *"httpStatus"* ]] || [[ "${RESPONSE}" == "" ]]
         then
             echo "problem getting deployment ${DEPLOYMENTID} status : "
             echo "${RESPONSE}"		
@@ -240,7 +240,7 @@ cloudbuilder_loop_wait_validation_status(){
     while [[ "$STATUS" != "COMPLETED" ]]
     do      
         RESPONSE=$(cloudbuilder_get_validation_status "${NAME_LOWER}" "${PASSWORD}" "${VALIDATIONID}")
-        if [[ "${RESPONSE}" == *"ERROR - HTTPSTATUS"* ]] || [[ "${RESPONSE}" == "" ]]
+        if [[ "${RESPONSE}" == *"httpStatus"* ]] || [[ "${RESPONSE}" == "" ]]
         then
             echo "problem getting validation  ${VALIDATIONID} status : "
             echo "${RESPONSE}"		
@@ -282,11 +282,9 @@ sddc_get_manager_status() {
     NAME_LOWER="${1}"
     PASSWORD="${2}"
 
-    #returns json
     RESPONSE=$(curl -s -k -w '####%{response_code}' -X POST -H "Content-Type: application/json" -d '{"password":"'${PASSWORD}'","username":"administrator@'${NAME_LOWER}.${ROOT_DOMAIN}'"}' https://sddc.${NAME_LOWER}.${ROOT_DOMAIN}/v1/tokens )
     HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
     case $HTTPSTATUS in
-
             20[0-9])    
                     echo "READY"
                     ;;
@@ -296,7 +294,6 @@ sddc_get_manager_status() {
             *)      
                     echo ${RESPONSE} |awk -F '####' '{print $1}'
                     ;;
-
         esac
 }
 
@@ -385,9 +382,29 @@ sddc_get_hosts_validation_status(){
 
 sddc_get_commission_status(){
     COMMISSIONID="${1}"
-	COMMISSIONRESULT=$(curl -s -k -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}" -X GET  https://sddc.${NAME_LOWER}.${ROOT_DOMAIN}/v1/tasks/${COMMISSIONID})
-	echo "${COMMISSIONRESULT}" > /tmp/scripts/commissionresult.json
-	echo "${COMMISSIONRESULT}"
+	RESPONSE=$(curl -s -k -w '####%{response_code}' -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}" -X GET  https://sddc.${NAME_LOWER}.${ROOT_DOMAIN}/v1/tasks/${COMMISSIONID})
+	HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+	RESULT=$(echo ${RESPONSE} |awk -F '####' '{print $1}')
+
+	case $HTTPSTATUS in
+		2[0-9][0-9])    
+			echo "${RESULT}"
+			;;
+		4[0-9][0-9])    
+            DUMPFILE="/tmp/scripts/sddc-get_commission-httpstatus-4xx-$$.txt"
+            echo "${RESULT}" > "${DUMPFILE}"
+            echo "PARAMS - ${COMMISSIONID}" >>  "${DUMPFILE}"
+   			echo "{\"httpStatus\": \"$HTTPSTATUS - Bad Request\"}"
+			;;
+		5[0-9][0-9])    
+            echo "${RESULT}" > /tmp/scripts/sddc-get_commission-httpstatus-5xx-$$.txt
+   			echo "{\"httpStatus\": \"$HTTPSTATUS - Server Error \"}"
+			;;
+		*)      
+			echo ${RESULT} |awk -F '####' '{print $1}'
+			;;
+	esac
+
 }
 
 sddc_get_license_keys_full(){
@@ -508,11 +525,11 @@ sddc_retry_commission(){
             DUMPFILE="/tmp/scripts/sddc-task-retry-httpstatus-4xx-$$.txt"
             echo "${RESULT}" > "${DUMPFILE}"
             echo "PARAMS - ${COMMISSIONID}" >>  "${DUMPFILE}"
-   			echo "{\"executionStatus\": \"$HTTPSTATUS - Bad Request\"}"
+   			echo "{\"httpStatus\": \"$HTTPSTATUS - Bad Request\"}"
 			;;
 		5[0-9][0-9])    
             echo "${RESULT}" > /tmp/scripts/sddc-task-retry-httpstatus-5xx-$$.txt
-   			echo "{\"executionStatus\": \"$HTTPSTATUS - Server Error \"}"
+   			echo "{\"httpStatus\": \"$HTTPSTATUS - Server Error \"}"
 			;;
 		*)      
 			echo ${RESULT} |awk -F '####' '{print $1}'
@@ -523,7 +540,7 @@ sddc_retry_commission(){
 sddc_loop_wait_domain_validation(){
     VALIDATIONID="${1}"
     RESPONSE=$(sddc_get_domain_validation_status "${VALIDATIONID}")
-    if [[ "${RESPONSE}" == *"ERROR - HTTPSTATUS"* ]] || [[ "${RESPONSE}" == "" ]]
+    if [[ "${RESPONSE}" == *"httpStatus"* ]] || [[ "${RESPONSE}" == "" ]]
     then
         echo "problem getting initial validation ${VALIDATIONID} status : "
         echo "${RESPONSE}"
@@ -539,7 +556,7 @@ sddc_loop_wait_domain_validation(){
     do      
         RESPONSE=$(sddc_get_domain_validation_status "${VALIDATIONID}")
         #echo "${RESPONSE}" |jq .
-        if [[ "${RESPONSE}" == *"ERROR"* ]] || [[ "${RESPONSE}" == "" ]]
+        if [[ "${RESPONSE}" == *"httpStatus"* ]] || [[ "${RESPONSE}" == "" ]]
         then
             echo
             echo "problem getting deployment ${VALIDATIONID} status : "
@@ -602,7 +619,7 @@ sddc_loop_wait_hosts_validation(){
     do      
         RESPONSE=$(sddc_get_hosts_validation_status "${VALIDATIONID}")
         #echo "${RESPONSE}" |jq .
-        if [[ "${RESPONSE}" == *"ERROR"* ]] || [[ "${RESPONSE}" == "" ]]
+        if [[ "${RESPONSE}" == *"httpStatus"* ]] || [[ "${RESPONSE}" == "" ]]
         then
             echo
             echo "problem getting deployment ${VALIDATIONID} status : "
@@ -666,7 +683,7 @@ sddc_loop_wait_commissioning(){
     do      
         RESPONSE=$(sddc_get_commission_status "${COMMISSIONID}")
         #echo "${RESPONSE}" |jq .
-        if [[ "${RESPONSE}" == *"ERROR"* ]] || [[ "${RESPONSE}" == "" ]]
+        if [[ "${RESPONSE}" == *"httpStatus"* ]] || [[ "${RESPONSE}" == "" ]]
         then
             echo "problem getting deployment ${COMMISSIONID} status : "
             echo "${RESPONSE}"		
@@ -727,11 +744,11 @@ sddc_domains_get(){
             DUMPFILE="/tmp/scripts/sddc-domains-httpstatus-4xx-$$.txt"
             echo "${RESPONSE}" > "${DUMPFILE}"
             echo "PARAMS - ${NAME_LOWER} ${PASSWORD} ${VALIDATIONID} " >>  "${DUMPFILE}"
-   			echo "{\"executionStatus\": \"$HTTPSTATUS - Bad Request\"}"
+   			echo "{\"httpStatus\": \"$HTTPSTATUS - Bad Request\"}"
 			;;
 		5[0-9][0-9])    
             echo "${RESPONSE}" > /tmp/scripts/sddc-cluster-httpstatus-5xx-$$.txt
-   			echo "{\"executionStatus\": \"$HTTPSTATUS - Server Error \"}"
+   			echo "{\"httpStatus\": \"$HTTPSTATUS - Server Error \"}"
 			;;
 		*)      
 			echo ${RESPONSE} |awk -F '####' '{print $1}'
@@ -760,11 +777,11 @@ sddc_clusters_get(){
             DUMPFILE="/tmp/scripts/sddc-cluster-httpstatus-4xx-$$.txt"
             echo "${RESPONSE}" > "${DUMPFILE}"
             echo "PARAMS - ${NAME_LOWER} ${PASSWORD} ${VALIDATIONID} " >>  "${DUMPFILE}"
-   			echo "{\"executionStatus\": \"$HTTPSTATUS - Bad Request\"}"
+   			echo "{\"httpStatus\": \"$HTTPSTATUS - Bad Request\"}"
 			;;
 		5[0-9][0-9])    
             echo "${RESPONSE}" > /tmp/scripts/sddc-cluster-httpstatus-5xx-$$.txt
-   			echo "{\"executionStatus\": \"$HTTPSTATUS - Server Error \"}"
+   			echo "{\"httpStatus\": \"$HTTPSTATUS - Server Error \"}"
 			;;
 		*)      
 			echo ${RESPONSE} |awk -F '####' '{print $1}'
@@ -794,11 +811,11 @@ sddc_edgecluster_get(){
             DUMPFILE="/tmp/scripts/sddc-edgecluster-httpstatus-4xx-$$.txt"
             echo "${RESPONSE}" > "${DUMPFILE}"
             echo "PARAMS - ${NAME_LOWER} ${PASSWORD} ${VALIDATIONID} " >>  "${DUMPFILE}"
-   			echo "{\"executionStatus\": \"$HTTPSTATUS - Bad Request\"}"
+   			echo "{\"httpStatus\": \"$HTTPSTATUS - Bad Request\"}"
 			;;
 		5[0-9][0-9])    
             echo "${RESPONSE}" > /tmp/scripts/sddc-edgecluster-httpstatus-5xx-$$.txt
-   			echo "{\"executionStatus\": \"$HTTPSTATUS - Server Error \"}"
+   			echo "{\"httpStatus\": \"$HTTPSTATUS - Server Error \"}"
 			;;
 		*)      
 			echo ${RESPONSE} |awk -F '####' '{print $1}'
@@ -823,11 +840,11 @@ sddc_edgecluster_validate(){
             DUMPFILE="/tmp/scripts/sddc-edgecluster-httpstatus-validate-4xx-$$.txt"
             echo "${RESPONSE}" > "${DUMPFILE}"
             echo "PARAMS - ${NAME_LOWER} ${PASSWORD} ${VALIDATIONID} " >>  "${DUMPFILE}"
-   			echo "{\"executionStatus\": \"$HTTPSTATUS - Bad Request\"}"
+   			echo "{\"httpStatus\": \"$HTTPSTATUS - Bad Request\"}"
 			;;
 		5[0-9][0-9])    
             echo "${RESPONSE}" > /tmp/scripts/sddc-edgecluster-httpstatus-validate-5xx-$$.txt
-   			echo "{\"executionStatus\": \"$HTTPSTATUS - Server Error \"}"
+   			echo "{\"httpStatus\": \"$HTTPSTATUS - Server Error \"}"
 			;;
 		*)      
 			echo ${RESPONSE} |awk -F '####' '{print $1}'
@@ -852,11 +869,11 @@ sddc_retry_task(){
             DUMPFILE="/tmp/scripts/sddc-task-httpstatus-validate-4xx-$$.txt"
             echo "${RESPONSE}" > "${DUMPFILE}"
             echo "PARAMS - ${NAME_LOWER} ${PASSWORD} ${TASKID} " >>  "${DUMPFILE}"
-   			echo "{\"executionStatus\": \"$HTTPSTATUS - Bad Request\"}"
+   			echo "{\"httpStatus\": \"$HTTPSTATUS - Bad Request\"}"
 			;;
 		5[0-9][0-9])    
             echo "${RESPONSE}" > /tmp/scripts/sddc-task-httpstatus-validate-5xx-$$.txt
-   			echo "{\"executionStatus\": \"$HTTPSTATUS - Server Error \"}"
+   			echo "{\"httpStatus\": \"$HTTPSTATUS - Server Error \"}"
 			;;
 		*)      
 			echo ${RESPONSE} |awk -F '####' '{print $1}'
@@ -901,7 +918,7 @@ sddc_loop_wait_edgecluster_validation(){
     do      
         RESPONSE=$(sddc_get_edgecluster_validation_status "${VALIDATIONID}")
         #echo "${RESPONSE}" |jq .
-        if [[ "${RESPONSE}" == *"ERROR"* ]] || [[ "${RESPONSE}" == "" ]]
+        if [[ "${RESPONSE}" == *"httpStatus"* ]] || [[ "${RESPONSE}" == "" ]]
         then
             echo
             echo "problem getting deployment ${VALIDATIONID} status : "
@@ -951,11 +968,11 @@ sddc_edgecluster_create(){
             DUMPFILE="/tmp/scripts/sddc-edgecluster-httpstatus-create-4xx-$$.txt"
             echo "${RESPONSE}" > "${DUMPFILE}"
             echo "PARAMS - ${NAME_LOWER} ${PASSWORD} ${VALIDATIONID} " >>  "${DUMPFILE}"
-   			echo "{\"executionStatus\": \"$HTTPSTATUS - Bad Request\"}"
+   			echo "{\"httpStatus\": \"$HTTPSTATUS - Bad Request\"}"
 			;;
 		5[0-9][0-9])    
             echo "${RESPONSE}" > /tmp/scripts/sddc-edgecluster-httpstatus-create-5xx-$$.txt
-   			echo "{\"executionStatus\": \"$HTTPSTATUS - Server Error \"}"
+   			echo "{\"httpStatus\": \"$HTTPSTATUS - Server Error \"}"
 			;;
 		*)      
 			echo ${RESPONSE} |awk -F '####' '{print $1}'

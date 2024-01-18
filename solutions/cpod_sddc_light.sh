@@ -72,6 +72,7 @@ echo "================================================"
 echo "=== creating cpod / VCF / WLD / Edge cluster ==="
 echo "================================================"
 echo
+echo "Provisioning this lab takes a bit less than 6 hours."
 
 cpodctl create $NAME 4 $3
 cpodctl cloudbuilder $NAME $3

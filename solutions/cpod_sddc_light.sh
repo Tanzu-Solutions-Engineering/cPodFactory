@@ -84,7 +84,7 @@ sleep 30
 ./compute/sddc_add_hosts_same_cpod.sh  $NAME
 ./compute/sddc_create_wld_same_cpod_light.sh $NAME wld01 wld-cl01
 ./compute/sddc_generate_edgecluster_json_same_cpod.sh $NAME wld01 wld-cl01
-./compute/sddc_create_wld_edgecluster_same_cpod.sh vcf51 wld01 
+./compute/sddc_create_wld_edgecluster_same_cpod.sh $NAME wld01 
 
 #get data
 CPOD_NAME=$( echo ${NAME} | tr '[:lower:]' '[:upper:]' )

@@ -25,7 +25,7 @@ echo
 echo "Select ESX Template"
 echo
 
-TEMPLATES=$(govc ls /${VCENTER_DATACENTER}/vm/${TEMPLATE_FOLDER} |grep ESX | rev | cut -d"/" -f1 |rev )
+TEMPLATES=$(govc ls /${VCENTER_DATACENTER}/vm/${TEMPLATE_FOLDER} | rev | cut -d"/" -f1 |rev )
 TEMPLATES=${TEMPLATES}" Quit"
 
 select TEMPLATE in ${TEMPLATES}; do 

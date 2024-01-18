@@ -19,6 +19,8 @@ $rootDomain = "###ROOT_DOMAIN###"
 $asn = "###ASN###"
 $owner = "###OWNER###"
 $startNumESX = ###STARTNUMESX###
+$vsanGB1 = 64
+$vsanGB2 = 128
 
 $OwnerTag = "cPodOwner"
 $CreateTag = "cPodCreateDate"
@@ -108,10 +110,9 @@ For ($i=$startNumESX; $i -le $LASTESX; $i++) {
 	$ESXVM | New-TagAssignment -Tag $CreateTag
 
 	# Adding Disk(s) for vVsan
-	$ESXVM | New-HardDisk -StorageFormat Thin -CapacityGB 128
-	$ESXVM | New-HardDisk -StorageFormat Thin -CapacityGB 128
-	$ESXVM | New-HardDisk -StorageFormat Thin -CapacityGB 512
-	$ESXVM | New-HardDisk -StorageFormat Thin -CapacityGB 512
+	$ESXVM | New-HardDisk -StorageFormat Thin -CapacityGB $vsanGB1
+	$ESXVM | New-HardDisk -StorageFormat Thin -CapacityGB $vsanGB2
+	$ESXVM | New-HardDisk -StorageFormat Thin -CapacityGB $vsanGB2
 
 	# Local Datastore for VCSA
 	#$ESXVM | New-HardDisk -StorageFormat Thin -CapacityGB 50 

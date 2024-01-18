@@ -835,6 +835,36 @@ sddc_edgecluster_validate(){
 	esac
 }
 
+sddc_retry_task(){
+    TASKID="${1}"
+
+	#returns json
+    RESPONSE=$(curl -s -k -w '####%{response_code}'  -H "Authorization: Bearer ${TOKEN}" -H 'Content-Type: application/json' -H 'Accept: application/json' -X PATCH https://sddc.${NAME_LOWER}.${ROOT_DOMAIN}/v1/tasks/${TASKID})
+
+	HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+	case $HTTPSTATUS in
+		2[0-9][0-9])    
+			TASKJSON=$(echo "${RESPONSE}" |awk -F '####' '{print $1}')
+            echo "${TASKJSON}" > /tmp/scripts/sddc-task-status-$$.json
+			echo "${TASKJSON}"
+			;;
+		4[0-9][0-9])    
+            DUMPFILE="/tmp/scripts/sddc-task-httpstatus-validate-4xx-$$.txt"
+            echo "${RESPONSE}" > "${DUMPFILE}"
+            echo "PARAMS - ${NAME_LOWER} ${PASSWORD} ${TASKID} " >>  "${DUMPFILE}"
+   			echo "{\"executionStatus\": \"$HTTPSTATUS - Bad Request\"}"
+			;;
+		5[0-9][0-9])    
+            echo "${RESPONSE}" > /tmp/scripts/sddc-task-httpstatus-validate-5xx-$$.txt
+   			echo "{\"executionStatus\": \"$HTTPSTATUS - Server Error \"}"
+			;;
+		*)      
+			echo ${RESPONSE} |awk -F '####' '{print $1}'
+			;;
+	esac
+}
+
+
 sddc_get_edgecluster_validation_status(){
 	VALIDATIONID="${1}"
 	VALIDATIONRESULT=$(curl -s -k -H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}" -X GET  https://sddc.${NAME_LOWER}.${ROOT_DOMAIN}/v1/edge-clusters/validations/${VALIDATIONID})

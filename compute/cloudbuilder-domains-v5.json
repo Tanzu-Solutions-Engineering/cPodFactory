@@ -1,0 +1,176 @@
+
+{
+  "domainName": "###WLD_NAME###",
+  "orgName": "vmware",
+  "computeSpec": {
+    "clusterSpecs": [
+      {
+        "name": "###CLUSTERNAME###",
+        "advancedOptions": {
+          "highAvailability": {
+            "enabled": true
+          }
+        },
+        "datastoreSpec": {
+          "vsanDatastoreSpec": {
+            "licenseKey": "###LIC_VSAN###",
+            "datastoreName": "###WLD_NAME###-###CLUSTERNAME###-vsan01",
+            "failuresToTolerate": 1,
+            "esaConfig" : {
+              "enabled" : false
+            },
+            "dedupAndCompressionEnabled": false
+          }
+        },
+        "networkSpec": {
+          "nsxClusterSpec": {
+            "nsxTClusterSpec": {
+              "uplinkProfiles": [
+                {
+                  "name": "###WLD_NAME###-###CLUSTERNAME###-vds-uplink-profile-1",
+                  "teamings": [
+                    {
+                      "policy": "LOADBALANCE_SRCID",
+                      "activeUplinks": [
+                        "uplink-1",
+                        "uplink-2"
+                      ],
+                      "standByUplinks": null
+                    }
+                  ],
+                  "transportVlan": 9999
+                }
+              ]
+            }
+          },
+          "vdsSpecs": [
+            {
+              "name": "###WLD_NAME###-###CLUSTERNAME###-vds-01",
+              "mtu": 1500,
+              "portGroupSpecs": [
+                {
+                  "name": "###WLD_NAME###-###CLUSTERNAME###-vds-01-pg-mgmt",
+                  "mtu": 1500,
+                  "transportType": "MANAGEMENT",
+                  "activeUplinks": [
+                    "uplink1",
+                    "uplink2"
+                  ],
+                  "standByUplinks": null,
+                  "teamingPolicy": "loadbalance_loadbased"
+                },
+                {
+                  "name": "###WLD_NAME###-###CLUSTERNAME###-vds-01-pg-vmotion",
+                  "mtu": 1500,
+                  "transportType": "VMOTION",
+                  "activeUplinks": [
+                    "uplink1",
+                    "uplink2"
+                  ],
+                  "standByUplinks": null,
+                  "teamingPolicy": "loadbalance_loadbased"
+                },
+                {
+                  "name": "###WLD_NAME###-###CLUSTERNAME###-vds-01-pg-vsan",
+                  "mtu": 1500,
+                  "transportType": "VSAN",
+                  "activeUplinks": [
+                    "uplink1",
+                    "uplink2"
+                  ],
+                  "standByUplinks": null,
+                  "teamingPolicy": "loadbalance_loadbased"
+                }
+              ],
+              "nsxtSwitchConfig": {
+                "transportZones": [
+                  {
+                    "name": "overlay-tz-###WLD_NAME###",
+                    "transportType": "OVERLAY"
+                  }
+                ],
+                "hostSwitchOperationalMode": "STANDARD"
+              }
+            }
+          ],
+          "networkProfiles": [
+            {
+              "name": "networkConfigProfile",
+              "isDefault": true,
+              "nsxtHostSwitchConfigs": [
+                {
+                  "vdsName": "###WLD_NAME###-###CLUSTERNAME###-vds-01",
+                  "uplinkProfileName": "###WLD_NAME###-###CLUSTERNAME###-vds-uplink-profile-1",
+                  "vdsUplinkToNsxUplink": [
+                    {
+                      "vdsUplinkName": "uplink1",
+                      "nsxUplinkName": "uplink-1"
+                    },
+                    {
+                      "vdsUplinkName": "uplink2",
+                      "nsxUplinkName": "uplink-2"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "hostSpecs": [],
+        "clusterImageId": "e86e6a24-7fca-4598-8277-77b4dc44d2ce"
+      }
+    ]
+  },
+  "nsxTSpec": {
+    "licenseKey": "###LIC_NSXT###",
+    "nsxManagerAdminPassword": "###PASSWORD###",
+    "nsxManagerAuditPassword": "###PASSWORD###",
+    "vip": "###NSXTVIP###",
+    "vipFqdn": "nsx01-###WLD_NAME###.###CPOD###.###DOMAIN###",
+    "formFactor": "small",
+    "nsxtManagerSize": "small",
+    "nsxManagerSpecs": [
+      {
+        "name": "nsx01a-###WLD_NAME###",
+        "networkDetailsSpec": {
+          "ipAddress": "###NSX01AIP###",
+          "dnsName": "nsx01a-###WLD_NAME###.###CPOD###.###DOMAIN###",
+          "gateway": "###SUBNET###.1",
+          "subnetMask": "255.255.255.0"
+        }
+      },
+      {
+        "name": "nsx01b-###WLD_NAME###",
+        "networkDetailsSpec": {
+          "ipAddress": "###NSX01BIP###",
+          "dnsName": "nsx01b-###WLD_NAME###.###CPOD###.###DOMAIN###",
+          "gateway": "###SUBNET###.1",
+          "subnetMask": "255.255.255.0"
+        }
+      },
+      {
+        "name": "nsx01c-###WLD_NAME###",
+        "networkDetailsSpec": {
+          "ipAddress": "###NSX01CIP###",
+          "dnsName": "nsx01c-###WLD_NAME###.###CPOD###.###DOMAIN###",
+          "gateway": "###SUBNET###.1",
+          "subnetMask": "255.255.255.0"
+        }
+      }
+    ]
+  },
+  "subscriptionLicense": null,
+  "vcenterSpec": {
+    "name": "vcsa-###WLD_NAME###",
+    "rootPassword": "###PASSWORD###",
+    "datacenterName": "###WLD_NAME###-DC",
+    "vmSize": "small",
+    "storageSize": "lstorage",
+    "networkDetailsSpec": {
+      "ipAddress": "###VCENTERIP###",
+      "dnsName": "vcsa-###WLD_NAME###.###CPOD###.###DOMAIN###",
+      "gateway": "###SUBNET###.1",
+      "subnetMask": "255.255.255.0"
+    }
+  }
+}

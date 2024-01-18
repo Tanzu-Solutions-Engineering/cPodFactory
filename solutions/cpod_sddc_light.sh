@@ -68,15 +68,24 @@ echo
 test_params_file ${VERSION}
 
 echo
-echo "====================================="
-echo "=== creating cpod / vsan / NLB  ==="
-echo "====================================="
+echo "================================================"
+echo "=== creating cpod / VCF / WLD / Edge cluster ==="
+echo "================================================"
 echo
+echo "Provisioning this lab takes a bit less than 6 hours."
 
 cpodctl create $NAME 4 $3
 cpodctl cloudbuilder $NAME $3
+./compute/sddc_cloudbuilder_set_small_settings.sh $NAME
 ./compute/sddc_generate_ems.sh $NAME
 ./compute/sddc_deploy_wld0_CB.sh $NAME
+./compute/sddc_manager_set_small_settings.sh  $NAME
+./add_host.sh $NAME 4 $3
+sleep 30
+./compute/sddc_add_hosts_same_cpod.sh  $NAME
+./compute/sddc_create_wld_same_cpod_light.sh $NAME wld01 wld-cl01
+./compute/sddc_generate_edgecluster_json_same_cpod.sh $NAME wld01 wld-cl01
+./compute/sddc_create_wld_edgecluster_same_cpod.sh $NAME wld01 
 
 #get data
 CPOD_NAME=$( echo ${NAME} | tr '[:lower:]' '[:upper:]' )

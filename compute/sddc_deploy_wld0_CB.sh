@@ -7,6 +7,7 @@
 # source helper functions
 . ./env
 source ./extra/functions.sh
+source ./extra/functions_sddc_mgr.sh
 
 #input validation check
 if [ $# -ne 1 ]; then
@@ -25,6 +26,12 @@ SUBNET=$( ./"${COMPUTE_DIR}"/cpod_ip.sh "${1}" )
 PASSWORD=$( ${EXTRA_DIR}/passwd_for_cpod.sh ${CPOD_NAME} ) 
 SCRIPT_DIR=/tmp/scripts
 SCRIPT=/tmp/scripts/cloudbuilder-${NAME_LOWER}.json
+
+if [ ! -f "$SCRIPT" ]; then
+    echo "$SCRIPT does not exist."
+	exit 1
+fi
+
 TIMEOUT=0
 
 # with NSX, VLAN Management is untagged
@@ -68,51 +75,39 @@ done
 echo "sleeping a bit to make sure the API is ready."
 sleep 10
 
-echo "API on cloudbuilder ${URL} is ready... thunderbirds are go!"
+echo "API on cloudbuilder ${URL} is ready..."
 
+echo
+echo "Checking running validations"
+VALIDATIONLIST=$(cloudbuilder_check_validation_list  "${NAME_LOWER}" "${PASSWORD}")
+#echo "${VALIDATIONLIST}"
+VALIDATIONINPROGRESS=$(echo "$VALIDATIONLIST" | jq '. |select (.status == "IN_PROGRESS")| .id')
+if [ "$VALIDATIONINPROGRESS" != "" ]
+then
+	echo "Current validation in progress ID : $VALIDATIONINPROGRESS"
+	echo "Bailing out ..."
+	exit 1
+else
+	echo "thunderbirds are go!"
+fi
 #validate the EMS.json - for some reason this has to be done in 2 steps
 
 VALIDATIONID=$(curl -s -k -u ${AUTH} -H 'Content-Type: application/json' -H 'Accept: application/json' -d @${SCRIPT} -X POST ${URL}/v1/sddcs/validations)
 #echo "The validation returns: ${VALIDATIONID}"
-VALIDATIONID=$(echo $VALIDATIONID | jq .id)
+VALIDATIONID=$(echo $VALIDATIONID | jq -r .id)
 #echo "The validation after jq returns: ${VALIDATIONID}"
 if [ -z "$VALIDATIONID" ]; then
   echo "Error: The validation ID is empty..."
   exit 1
 fi
 echo "The validation with id: ${VALIDATIONID} has started"
-
-#check the validation
-VALIDATIONSTATUS=$(curl -s -k -u ${AUTH} -X GET ${URL}/v1/sddcs/validations | jq -r ".elements[] | select(.id == ${VALIDATIONID}) | .resultStatus")
-
-if [ -z "$VALIDATIONSTATUS" ]; then
-  echo "Error: The validation status is empty..."
-  exit 1
-fi
-
-echo "The validation with id: ${VALIDATIONID} has the status ${VALIDATIONSTATUS}..."
-
-#wait for the validation to finish
-while [ ${VALIDATIONSTATUS} != "SUCCEEDED" ]
-	do
-	VALIDATIONSTATUS=$(curl -s -k -u ${AUTH} -X GET ${URL}/v1/sddcs/validations | jq -r ".elements[] | select(.id == ${VALIDATIONID}) | .resultStatus")
-	echo "The validation with id: ${VALIDATIONID} has the status ${VALIDATIONSTATUS}..."
-	sleep 10
-	TIMEOUT=$((TIMEOUT + 1))
-	if [ $TIMEOUT -ge 48 ]; then
-		echo "bailing out..."
-		exit 1
-	fi
-	if [ "$VALIDATIONSTATUS" == "FAILED" ]; then
-		echo "bailing out..."
-		exit 1
-	fi
-done
+echo 
+cloudbuilder_loop_wait_validation_status "${NAME_LOWER}" "${PASSWORD}" "${VALIDATIONID}"
 
 #proceeding with deployment
 echo "Proceeding with Bringup using ${SCRIPT}."
 
-BRINGUPID=$(curl -s -k -u ${AUTH} -H 'Content-Type: application/json' -H 'Accept: application/json' -d @${SCRIPT} -X POST ${URL}/v1/sddcs | jq '.id')
+BRINGUPID=$(curl -s -k -u ${AUTH} -H 'Content-Type: application/json' -H 'Accept: application/json' -d @${SCRIPT} -X POST ${URL}/v1/sddcs | jq -r '.id')
 
 if [ -z "$BRINGUPID" ]; then
   echo "Error: The bringup id  is empty..."
@@ -121,29 +116,7 @@ fi
 
 echo "The deployment with id: ${BRINGUPID} has started"
 
-#check the bringup status via cURL 
-BRINGUPSTATUS=$(curl -s -k -u ${AUTH} -X GET ${URL}/v1/sddcs | jq -r ".elements[] | select(.id == ${BRINGUPID}) | .status")
-
-if [ -z "$BRINGUPSTATUS" ]; then
-  echo "Error: The bringup status is empty..."
-  exit 1
-fi
-
-while [ ${BRINGUPSTATUS} != "COMPLETED_WITH_SUCCESS" ]
-do
-	#check the bringup status via cURL
-	BRINGUPSTATUS=$(curl -s -k -u ${AUTH} -X GET ${URL}/v1/sddcs | jq -r ".elements[] | select(.id == ${BRINGUPID}) | .status")
-	echo "The bringup with id: ${BRINGUPID} has the status ${BRINGUPSTATUS}...."
-	sleep 10
-	TIMEOUT=$((TIMEOUT + 1))
-	if [ $TIMEOUT -ge 1440 ]; then
-		echo "this is taking over 4 hours, bailing out..."
-		exit 1
-	fi
-	if [ "$BRINGUPSTATUS" == "COMPLETED_WITH_FAILURE" ]; then
-		echo "The deployment failed..."
-		exit 1
-	fi
-done
+echo
+cloudbuilder_loop_wait_deployment_status "${NAME_LOWER}" "${PASSWORD}" "${BRINGUPID}"
 
 echo "all done... do i get a cookie now?"

@@ -213,3 +213,19 @@ list_cpod_esx_hosts() {
         ssh -o LogLevel=error -o StrictHostKeyChecking=no ${1} "cat /etc/hosts" |grep esx | awk '{print $2}' | xargs -I _ echo "_.${1}.${ROOT_DOMAIN}"
 }
 
+check_license_file(){
+        # param : "V7" or "V8"
+
+        if [ ! -f ./licenses.key ]; then
+                echo "./licenses.key does not exist. please create one by using the licenses.key.template as reference"
+                exit 1
+        else
+                source ./licenses.key
+        fi
+        
+	if [[ $(cat ./licenses.key |grep $1 |grep XXXXX |wc -l) -gt 0 ]]; then
+		echo "./licenses.key includes undefined license keys :"
+		cat ./licenses.key |grep $1 |grep XXXXX 
+		exit 1
+	fi 
+}

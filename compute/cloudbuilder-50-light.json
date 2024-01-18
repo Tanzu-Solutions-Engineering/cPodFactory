@@ -1,0 +1,263 @@
+{
+  "subscriptionLicensing": false,
+  "skipEsxThumbprintValidation": true,
+  "managementPoolName": "np01",
+  "sddcManagerSpec": {
+    "secondUserCredentials": {
+      "username": "vcf",
+      "password": "###PASSWORD###"
+    },
+    "ipAddress": "###SUBNET###.11",
+    "netmask": "255.255.255.0",
+    "hostname": "sddc",
+    "rootUserCredentials": {
+      "username": "root",
+      "password": "###PASSWORD###"
+    },
+    "localUserPassword": "###PASSWORD###",
+    "vcenterId": "vcenter-1"
+  },
+  "sddcId": "###CPOD###",
+  "esxLicense": "###LIC_ESX###",
+  "taskName": "workflowconfig/workflowspec-ems.json",
+  "ceipEnabled": false,
+  "fipsEnabled": false,
+  "ntpServers": [
+    "###SUBNET###.1"
+  ],
+  "dnsSpec": {
+    "subdomain": "###CPOD###.###DOMAIN###",
+    "domain": "###CPOD###.###DOMAIN###",
+    "nameserver": "###SUBNET###.1"
+  },
+  "networkSpecs": [
+    {
+      "networkType": "MANAGEMENT",
+      "subnet": "###SUBNET###.0/24",
+      "gateway": "###SUBNET###.1",
+      "vlanId": "###VLAN_MGMT###",
+      "mtu": "1500",
+      "portGroupKey": "cl01-vds01-pg-mgmt",
+      "standbyUplinks": [],
+      "activeUplinks": [
+        "uplink1",
+        "uplink2"
+      ]
+    },
+    {
+      "networkType": "VMOTION",
+      "subnet": "10.###VLAN###.1.0/24",
+      "gateway": "10.###VLAN###.1.1",
+      "vlanId": "###VMOTIONVLANID###",
+      "mtu": "1500",
+      "portGroupKey": "cl01-vds01-pg-vmotion",
+      "association": "dc01",
+      "includeIpAddressRanges": [
+        {
+          "endIpAddress": "10.###VLAN###.1.254",
+          "startIpAddress": "10.###VLAN###.1.2"
+        }
+      ],
+      "standbyUplinks": [],
+      "activeUplinks": [
+        "uplink1",
+        "uplink2"
+      ]
+    },
+    {
+      "networkType": "VSAN",
+      "subnet": "10.###VLAN###.2.0/24",
+      "gateway": "10.###VLAN###.2.1",
+      "vlanId": "###VSANVLANID###",
+      "mtu": "1500",
+      "portGroupKey": "cl01-vds01-pg-vsan",
+      "includeIpAddressRanges": [
+        {
+          "endIpAddress": "10.###VLAN###.2.254",
+          "startIpAddress": "10.###VLAN###.2.2"
+        }
+      ],
+      "standbyUplinks": [],
+      "activeUplinks": [
+        "uplink1",
+        "uplink2"
+      ]
+    }
+  ],
+  "nsxtSpec": {
+    "nsxtManagerSize": "small",
+    "formFactor": "small",
+    "nsxtManagers": [
+      {
+        "hostname": "nsx01a",
+        "ip": "###SUBNET###.6"
+      }
+    ],
+    "rootNsxtManagerPassword": "###PASSWORD###",
+    "nsxtAdminPassword": "###PASSWORD###",
+    "nsxtAuditPassword": "###PASSWORD###",
+    "rootLoginEnabledForNsxtManager": "true",
+    "sshEnabledForNsxtManager": "true",
+    "overLayTransportZone": {
+      "zoneName": "###CPOD###-tz-overlay01",
+      "networkName": "netName-overlay"
+    },
+    "vlanTransportZone": {
+      "zoneName": "###VLAN###-tz-vlan01",
+      "networkName": "netName-vlan"
+    },
+    "vip": "###SUBNET###.5",
+    "vipFqdn": "nsx01",
+    "nsxtLicense": "###LIC_NSXT###",
+    "transportVlanId": "###TRANSPORTVLANID###"
+  },
+  "vsanSpec": {
+    "vsanName": "vsan-1",
+    "licenseFile": "###LIC_VSAN###",
+    "vsanDedup": "false",
+    "datastoreName": "cl01-ds-vsan01"
+  },
+  "dvSwitchVersion": "7.0.0",
+  "dvsSpecs": [
+    {
+      "dvsName": "cl01-vds01",
+      "vcenterId": "vcenter-1",
+      "vmnics": [
+        "vmnic0",
+        "vmnic1"
+      ],
+      "mtu": 1600,
+      "networks": [
+        "MANAGEMENT",
+        "VMOTION",
+        "VSAN"
+      ],
+      "niocSpecs": [
+        {
+          "trafficType": "VSAN",
+          "value": "HIGH"
+        },
+        {
+          "trafficType": "VMOTION",
+          "value": "LOW"
+        },
+        {
+          "trafficType": "VDP",
+          "value": "LOW"
+        },
+        {
+          "trafficType": "VIRTUALMACHINE",
+          "value": "HIGH"
+        },
+        {
+          "trafficType": "MANAGEMENT",
+          "value": "NORMAL"
+        },
+        {
+          "trafficType": "NFS",
+          "value": "LOW"
+        },
+        {
+          "trafficType": "HBR",
+          "value": "LOW"
+        },
+        {
+          "trafficType": "FAULTTOLERANCE",
+          "value": "LOW"
+        },
+        {
+          "trafficType": "ISCSI",
+          "value": "LOW"
+        }
+      ],
+      "isUsedByNsxt": true
+    }
+  ],
+  "clusterSpec": {
+    "clusterName": "cl01",
+    "vcenterName": "vcenter-1",
+    "clusterEvcMode": "",
+    "vmFolders": {
+      "MANAGEMENT": "###CPOD###-fd-mgmt",
+      "NETWORKING": "###CPOD###-fd-nsx",
+      "EDGENODES": "###CPOD###-vcf-fd-edge"
+    }
+  },
+  "pscSpecs": [
+    {
+      "pscId": "psc-1",
+      "vcenterId": "vcenter-1",
+      "adminUserSsoPassword": "###PASSWORD###",
+      "pscSsoSpec": {
+        "ssoDomain": "###CPOD###.###DOMAIN###"
+      }
+    }
+  ],
+  "vcenterSpec": {
+    "vcenterIp": "###SUBNET###.4",
+    "vcenterHostname": "vcsa",
+    "vcenterId": "vcenter-1",
+    "licenseFile": "###LIC_VCSA###",
+    "vmSize": "small",
+    "storageSize": "",
+    "rootVcenterPassword": "###PASSWORD###"
+  },
+  "hostSpecs": [
+    {
+      "association": "dc01",
+      "ipAddressPrivate": {
+        "ipAddress": "###SUBNET###.21"
+      },
+      "hostname": "esx01",
+      "credentials": {
+        "username": "root",
+        "password": "###PASSWORD###"
+      },
+      "vSwitch": "vSwitch0",
+      "serverId": "host-1"
+    },
+    {
+      "association": "dc01",
+      "ipAddressPrivate": {
+        "ipAddress": "###SUBNET###.22"
+      },
+      "hostname": "esx02",
+      "credentials": {
+        "username": "root",
+        "password": "###PASSWORD###"
+      },
+      "vSwitch": "vSwitch0",
+      "serverId": "host-2"
+    },
+    {
+      "association": "dc01",
+      "ipAddressPrivate": {
+        "ipAddress": "###SUBNET###.23"
+      },
+      "hostname": "esx03",
+      "credentials": {
+        "username": "root",
+        "password": "###PASSWORD###"
+      },
+      "vSwitch": "vSwitch0",
+      "serverId": "host-3"
+    },
+    {
+      "association": "dc01",
+      "ipAddressPrivate": {
+        "ipAddress": "###SUBNET###.24"
+      },
+      "hostname": "esx04",
+      "credentials": {
+        "username": "root",
+        "password": "###PASSWORD###"
+      },
+      "vSwitch": "vSwitch0",
+      "serverId": "host-4"
+    }
+  ],
+  "excludedComponents": [
+    "AVN",
+    "EBGP"
+  ]
+}

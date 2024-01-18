@@ -115,9 +115,18 @@ for ((i=1; i<=NUM_ESX; i++)); do
   do
     # code to be executed while $DHCPIP is empty
     echo "Waiting for $ESXHOST to get a DHCP IP..."
-    DHCPIP=$( govc vm.ip "$VMNAME" )
+    DHCPIP=$( govc vm.ip -v4 "$VMNAME" )
     echo "DHCPIP is now: $DHCPIP"
-    sleep 10
+    TESTIPV6=$(echo "${DHCPI}" |grep ":" | wc -l)
+    echo 
+    if [[ ${TESTIPV6} -gt 0 ]]    
+    then
+      echo "IPV6 detected"
+      DHCPIP=""
+      sleep 10
+    else
+      echo "IPV6 NOT detected"
+    fi
     TIMEOUT=$((TIMEOUT + 1))
     if [ $TIMEOUT -ge 10 ]; then
       echo "bailing out..."
@@ -157,7 +166,7 @@ for ((i=1; i<=NUM_ESX; i++)); do
 	sshpass -p "${ROOT_PASSWD}" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=error root@"${DHCPIP}" "esxcli network ip dns search add -d ${DOMAIN}"
 	echo "$ESXHOST --- setting ssd with ssdcript in ./install/ssd_esx_tag.sh ---"
 	sshpass -p "${ROOT_PASSWD}" scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=error ./install/ssd_esx_tag.sh root@"${DHCPIP}":/tmp/ssd_esx_tag.sh
-	sshpass -p "${ROOT_PASSWD}" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=error root@"${DHCPIP}" "/tmp/ssd_esx_tag.sh"
+	sshpass -p "${ROOT_PASSWD}" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=error root@"${DHCPIP}" "sh /tmp/ssd_esx_tag.sh"
 	echo "$ESXHOST --- setting password ---"
 	sshpass -p "${ROOT_PASSWD}" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=error root@"${DHCPIP}" "printf \"${GEN_PASSWORD}\n${GEN_PASSWORD}\n\" | passwd root "
 	echo "$ESXHOST --- setting host IP to final IP: $IP ---"

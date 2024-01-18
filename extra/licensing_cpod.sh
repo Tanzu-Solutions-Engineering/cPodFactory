@@ -98,7 +98,7 @@ remove_eval_license() {
 	echo 
 	echo "Removing Eval license if applicable "
 	echo 
-	TESTEVAL=$(govc license.ls |grep 00000|wc -l)
+	TESTEVAL=$(govc license.ls |grep -c "00000")
 	if [[ ${TESTEVAL} -gt 0 ]];
 	then
 		govc license.remove "00000-00000-00000-00000-00000"

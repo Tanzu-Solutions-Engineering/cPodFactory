@@ -1,0 +1,75 @@
+{
+    "edgeClusterName": "###EDGECLUSTERNAME###",
+    "edgeClusterType": "NSX-T",
+    "edgeRootPassword": "###PASSWORD###",
+    "edgeAdminPassword": "###PASSWORD###",
+    "edgeAuditPassword": "###PASSWORD###",
+    "edgeFormFactor": "LARGE",
+    "tier0ServicesHighAvailability": "ACTIVE_ACTIVE",
+    "mtu": 1700,
+    "tier0RoutingType": "EBGP",
+    "asn": "###ASNNUMBER###",
+    "edgeNodeSpecs": [
+      {
+        "edgeNodeName": "###EDGE01FQDN###",
+        "managementIP": "###EDGE01MGMTIP###",
+        "managementGateway": "###MGMTGW###",
+        "vmManagementPortgroupVlan": 0,
+        "vmManagementPortgroupName": "###MGMTPORTGROUPNAME###",
+        "edgeTep1IP": "###EDGE01TEPIP01###",
+        "edgeTep2IP": "###EDGE01TEPIP02###",
+        "edgeTepGateway": "###EDGETEPGW###",
+        "edgeTepVlan": "###EDGETEPVLANID###",
+        "clusterId": "###CLUSTERID###",
+        "interRackCluster": false,
+        "uplinkNetwork": [
+          {
+            "uplinkVlan": "###UPLINK01VLANID###",
+            "uplinkInterfaceIP": "###T0UPLINKIP01###",
+            "peerIP": "###BGPPEER01###",
+            "asnPeer": "###CPODROUTERASN###",
+            "bgpPeerPassword": ""
+          },
+          {
+            "uplinkVlan": "###UPLINK02VLANID###",
+            "uplinkInterfaceIP": "###T0UPLINKIP02###",
+            "peerIP": "###BGPPEER02###",
+            "asnPeer": "###CPODROUTERASN###",
+            "bgpPeerPassword": ""
+          }
+        ]
+      },
+      {
+        "edgeNodeName": "###EDGE02FQDN###",
+        "managementIP": "###EDGE02MGMTIP###",
+        "managementGateway": "###MGMTGW###",
+        "vmManagementPortgroupVlan": 0,
+        "vmManagementPortgroupName": "###MGMTPORTGROUPNAME###",
+        "edgeTep1IP": "###EDGE02TEPIP01###",
+        "edgeTep2IP": "###EDGE02TEPIP02###",
+        "edgeTepGateway": "###EDGETEPGW###",
+        "edgeTepVlan": "###EDGETEPVLANID###",
+        "clusterId": "###CLUSTERID###",
+        "interRackCluster": false,
+        "uplinkNetwork": [
+          {
+            "uplinkVlan": "###UPLINK01VLANID###",
+            "uplinkInterfaceIP": "###T0UPLINKIP03###",
+            "peerIP": "###BGPPEER01###",
+            "asnPeer": "###CPODROUTERASN###",
+            "bgpPeerPassword": ""
+          },
+          {
+            "uplinkVlan": "###UPLINK02VLANID###",
+            "uplinkInterfaceIP": "###T0UPLINKIP04###",
+            "peerIP": "###BGPPEER02###",
+            "asnPeer": "###CPODROUTERASN###",
+            "bgpPeerPassword": ""
+          }
+        ]
+      }
+    ],
+    "tier0Name": "###T0NAME###",
+    "tier1Name": "###T1NAME###",
+    "edgeClusterProfileType": "DEFAULT"
+  }

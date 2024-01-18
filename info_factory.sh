@@ -9,6 +9,8 @@ CPODS=$(cat /etc/hosts |grep cpod- | wc -l)
 echo =====================
 echo "CPODS in AZ-${SPEC} : ${CPODS}" 
 echo =====================
+echo "  govc version : $(govc version)"
+echo =====================
 echo ESXi Hosts Status Info
 echo
 govc ls host | xargs govc ls -json  | jq -r '.elements[].Object| select (.Self.Type == "HostSystem") | [.Name, .Runtime.ConnectionState, .Runtime.PowerState] |@tsv '

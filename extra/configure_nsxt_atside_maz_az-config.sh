@@ -216,12 +216,12 @@ echo
 
 
 # VDS UUID
-# govc ls -json=true network |jq -r '.elements[] | select ( .Object.Summary.ProductInfo.Name == "DVS") |  .Object.Summary.Uuid'
+# govc ls -json=true network |jq -r '.elements[] | select ( .Object.summary.productInfo.name == "DVS") |  .Object.summary.uuid' #govc jq checked
 
 #VDSUUID=$(govc find / -type DistributedVirtualSwitch | xargs -n1 govc dvs.portgroup.info | grep DvsUuid | uniq | cut -d":" -f2 | awk '{$1=$1;print}')
 echo "govc test"
 govc env
-VDSUUID=$(govc ls -json=true network |jq -r '.elements[] | select ( .Object.Summary.ProductInfo.Name == "DVS" and .Object.Summary.Name == "dvs-maz") |  .Object.Summary.Uuid')
+VDSUUID=$(govc ls -json=true network |jq -r '.elements[] | select ( .Object.summary.productInfo.name == "DVS" and .Object.summary.name == "dvs-maz") |  .Object.summary.uuid') #govc jq checked
 echo "  VDS UUID : ${VDSUUID}"
 if [ "${VDSUUID}" == "" ]
 then
@@ -230,7 +230,7 @@ then
 fi
 
 echo "Getting VDS uplinks"
-readarray -t VDSUPLINKS < <(govc ls -json=true network |jq -r '.elements[] | select ( .Object.Summary.ProductInfo.Name == "DVS" and .Object.Summary.Name == "dvs-maz") |  .Object.Config.UplinkPortPolicy.UplinkPortName[]')
+readarray -t VDSUPLINKS < <(govc ls -json=true network |jq -r '.elements[] | select ( .Object.summary.productInfo.name == "DVS" and .Object.summary.name == "dvs-maz") |  .Object.config.uplinkPortPolicy.uplinkPortName[]') #govc jq checked
 echo "  VDS UPLINKS : " 
 echo "${VDSUPLINKS[@]}"
 if [ "${VDSUPLINKS}" == "" ]
@@ -382,17 +382,17 @@ else
 fi
 
 # Datastore ID
-# govc datastore.info -json=true vsanDatastore |jq -r .Datastores[].Self.Value
-STORAGE_ID=$(govc datastore.info -json=true "${AZCPOD_NAME_LOWER}-vsanDatastore" |jq -r .Datastores[].Self.Value)
+# govc datastore.info -json=true vsanDatastore |jq -r .datastores[].Self.value #govc jq checked
+STORAGE_ID=$(govc datastore.info -json=true "${AZCPOD_NAME_LOWER}-vsanDatastore" |jq -r .datastores[].Self.value) #govc jq checked
 echo " STORAGE_ID : ${STORAGE_ID}"
 
 # Portgroup ID
-# govc ls -json=true network |jq -r '.elements[].Object.Summary | select (.Name =="vlan-0-mgmt") | .Network.Value'
+# govc ls -json=true network |jq -r '.elements[].Object.summary | select (.name =="vlan-0-mgmt") | .network.value' #govc jq checked
 # 
-MANAGEMENT_NETWORK_ID=$(govc ls -json=true network |jq -r '.elements[].Object.Summary | select (.Name =="'${AZCPOD_NAME_LOWER}'-mgmt") | .Network.Value')
+MANAGEMENT_NETWORK_ID=$(govc ls -json=true network |jq -r '.elements[].Object.summary | select (.name =="'${AZCPOD_NAME_LOWER}'-mgmt") | .network.value') #govc jq checked
 if [ "${MANAGEMENT_NETWORK_ID}" == "" ]
 then
-        MANAGEMENT_NETWORK_ID=$(govc ls -json=true network |jq -r '.elements[].Object.Summary | select (.Name =="VM Network") | .Network.Value')
+        MANAGEMENT_NETWORK_ID=$(govc ls -json=true network |jq -r '.elements[].Object.summary | select (.name =="VM Network") | .network.value') #govc jq checked
 fi
 echo " MANAGEMENT_NETWORK_ID : ${MANAGEMENT_NETWORK_ID}"
 

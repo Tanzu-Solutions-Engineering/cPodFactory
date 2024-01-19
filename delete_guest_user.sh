@@ -22,10 +22,11 @@ userdel  $1 -f -r
 
 END=$( date +%s )
 TIME=$( expr ${END} - ${START} )
+TIME=$(date -d@$TIME -u +%Hh%Mm%Ss)
 
 echo
 echo "=========================="
 echo "=== user deleted  ========"
-echo "=== In ${TIME} Seconds ==="
+echo "=== In ${TIME}  "
 echo "=========================="
 

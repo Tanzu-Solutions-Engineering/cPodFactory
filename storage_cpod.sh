@@ -29,8 +29,8 @@ for CPOD in ${CPODS}; do
         VMS=$(govc find ${CPOD} -type VirtualMachine)        
         for VM in ${VMS}; do
                 echo "${VM}"
-                STORAGEJSON=$(govc vm.info -json  ${VM} | jq -r '.VirtualMachines[].Storage.PerDatastoreUsage[]')
-                USEDVMSTORAGERAW=$(echo ${STORAGEJSON} | jq -r .Committed)
+                STORAGEJSON=$(govc vm.info -json  ${VM} | jq -r '.virtualMachines[].storage.perDatastoreUsage[]') # govc jq checked
+                USEDVMSTORAGERAW=$(echo ${STORAGEJSON} | jq -r .committed) # govc jq checked
                 USEDVMSTORAGEGB=$(calc0 $USEDVMSTORAGERAW / 1024 / 1024 / 1024 )
                 USEDCPOD=$(calc0 ${USEDCPOD} + ${USEDVMSTORAGERAW})
                 VMSHORTNAME=$(echo "${VM}" | rev | cut -d "/" -f1 | rev)

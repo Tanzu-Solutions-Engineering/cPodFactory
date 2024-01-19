@@ -90,7 +90,7 @@ TIME=$(date -d@$TIME -u +%Hh%Mm%Ss)
 echo
 echo "============================="
 echo "===  creation is finished ==="
-echo "=== In ${TIME} ==="
+echo "=== In ${TIME} "
 echo "============================="
 
 echo "=== connect to cpod sddc ==="

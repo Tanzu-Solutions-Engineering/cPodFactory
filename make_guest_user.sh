@@ -32,11 +32,12 @@ echo "$1:${GEN_PASSWORD}" | chpasswd
 
 END=$( date +%s )
 TIME=$( expr ${END} - ${START} )
+TIME=$(date -d@$TIME -u +%Hh%Mm%Ss)
 
 echo
 echo "==============================================="
 echo "===  user created"
-echo "===  In ${TIME} Seconds"
+echo "===  In ${TIME} "
 echo "==============================================="
 echo "===  user name : $1"
 echo "===  user password : ${GEN_PASSWORD}"

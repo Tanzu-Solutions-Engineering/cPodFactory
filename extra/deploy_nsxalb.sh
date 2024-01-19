@@ -118,11 +118,12 @@ add_to_cpodrouter_hosts "10.${VLAN}.1.10" "nsxalb01"
 
 END=$( date +%s )
 TIME=$( expr ${END} - ${START} )
+TIME=$(date -d@$TIME -u +%Hh%Mm%Ss)
 
 echo
 echo "==================================="
-echo "=== NSX ALB Deployment finished ==="
-echo "=== In ${TIME} Seconds ==="
+echo "=== NSX ALB Deployment finished "
+echo "=== In ${TIME} "
 echo "==================================="
 
 export LOGGING=""

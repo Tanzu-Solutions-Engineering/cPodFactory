@@ -114,7 +114,9 @@ main() {
 	echo "=== Deployment is finished."
 	END=$( date +%s )
 	TIME=$( expr ${END} - ${START} )
-	echo "In ${TIME} Seconds."
+	TIME=$(date -d@$TIME -u +%Hh%Mm%Ss)
+
+	echo "In ${TIME} "
 	./${EXTRA_DIR}/post_slack.sh ":thumbsup: cPod *${1}* has been successfully created in *${TIME}s*"
 
 	exit_gate 0

@@ -72,11 +72,12 @@ cpodctl vcsa $1 $3
 ./extra/configure_nsxalb_atside.sh $1 $3
 END=$( date +%s )
 TIME=$( expr ${END} - ${START} )
+TIME=$(date -d@$TIME -u +%Hh%Mm%Ss)
 
 echo
 echo "============================="
 echo "===  creation is finished"
-echo "=== In ${TIME} Seconds"
+echo "=== In ${TIME} "
 echo "============================="
 
 echo "=== connect to cpod vcsa"

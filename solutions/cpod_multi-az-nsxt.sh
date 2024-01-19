@@ -88,11 +88,12 @@ cpodctl create ${AZ3CPOD} 4 $3
 
 END=$( date +%s )
 TIME=$( expr ${END} - ${START} )
+TIME=$(date -d@$TIME -u +%Hh%Mm%Ss)
 
 echo
 echo "============================="
 echo "===  creation is finished ==="
-echo "=== In ${TIME} Seconds ==="
+echo "=== In ${TIME} "
 echo "============================="
 
 echo

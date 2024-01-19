@@ -79,11 +79,13 @@ PASSWORD=$( ${EXTRA_DIR}/passwd_for_cpod.sh ${CPOD_NAME} )
 
 END=$( date +%s )
 TIME=$( expr ${END} - ${START} )
+TIME=$(date -d@$TIME -u +%Hh%Mm%Ss)
+
 
 echo
 echo "============================="
 echo "===  creation is finished ==="
-echo "=== In ${TIME} Seconds ==="
+echo "=== In ${TIME} "
 echo "============================="
 
 echo "=== connect to cpod vcsa ==="

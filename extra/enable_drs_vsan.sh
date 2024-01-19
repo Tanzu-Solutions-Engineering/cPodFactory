@@ -77,9 +77,10 @@ docker run --interactive --tty --dns=${DNS} --entrypoint="/usr/bin/pwsh" -v /tmp
 
 END=$( date +%s )
 TIME=$( expr ${END} - ${START} )
+TIME=$(date -d@$TIME -u +%Hh%Mm%Ss)
 
 echo
 echo "========================================="
-echo "=== VSAN enabling is finished ==="
-echo "=== In ${TIME} Seconds ==="
+echo "=== VSAN enabling is finished "
+echo "=== In ${TIME} "
 echo "========================================="

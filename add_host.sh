@@ -203,11 +203,13 @@ done
 #end the timer and wrapup
 END=$( date +%s )
 TIME=$(( "${END}" - "${START}" ))
+TIME=$(date -d@$TIME -u +%Hh%Mm%Ss)
+
 
 echo
 echo "============================="
-echo "===  creation is finished ==="
-echo "=== In ${TIME} Seconds ==="
+echo "===  creation is finished "
+echo "=== In ${TIME} "
 echo "============================="
 
 export LOGGING=""

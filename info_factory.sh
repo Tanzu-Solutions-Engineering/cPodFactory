@@ -13,13 +13,13 @@ echo "govc version : $(govc version)"
 echo =====================
 echo "ESXi Hosts Status Info"
 echo
-govc ls host | xargs govc ls -json  | jq -r '.elements[].Object| select (.Self.Type == "HostSystem") | [.Name, .Runtime.ConnectionState, .Runtime.PowerState] |@tsv '
+govc ls host | xargs govc ls -json  | jq -r '.elements[].Object| select (.Self.type == "HostSystem") | [.name, .runtime.connectionState, .runtime.powerState] |@tsv '  #govc jq checked
 echo
 echo =====================
 echo "Storage Info"
 echo
 #govc datastore.info ${DATASTORE} | grep -e Name -e Capacity -e Free
-govc datastore.info -json  |jq -r '["Name","Capacity","Free","Used%" ], (.Datastores[].Summary | select ( .MultipleHostAccess == true ) |  [.Name, (.Capacity/1024/1024/1024|floor), (.FreeSpace/1024/1024/1024|floor), (((.Capacity-.FreeSpace)*100/.Capacity)|floor)] )|@tsv ' | column -t
+govc datastore.info -json  |jq -r '["Name","Capacity","Free","Used%" ], (.datastores[].summary | select ( .multipleHostAccess == true ) |  [.name, (.capacity/1024/1024/1024|floor), (.freeSpace/1024/1024/1024|floor), (((.capacity-.freeSpace)*100/.capacity)|floor)] )|@tsv ' | column -t  #govc jq checked
 
 DATASTOREFREE=$(govc datastore.info ${DATASTORE} | grep Free | sed -e "s/^.*://" -e "s/GB//" -e "s/ //g")
 DATASTOREFREE=$( echo "${DATASTOREFREE}/1" | bc )

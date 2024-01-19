@@ -18,52 +18,6 @@ else
         . ./${COMPUTE_DIR}/cpod-xxx_env
 fi
 
-### Functions ###
-
-guess_param() {
-	# ${1} string to look into for known parameters
-	return_value=""
-	case ${1} in
-		*"ceip"*)
-			return_value="False"
-			;;
-		*"net.mode"*)
-			return_value="static"
-			;;
-		*"addr.family"*)
-			return_value="ipv4"
-			;;
-		*"ip"*|*"addr"*)
-			return_value=${IP}
-			;;
-		*"prefix"*)
-			return_value="24"
-			;;
-		*"netmask"*)
-			return_value="255.255.255.0"
-			;;
-		*"gateway"*|*"default_gw"*|*"default-gw"*)
-			return_value=${GATEWAY}
-			;;
-		*"hostname"*|*"fqdn"*)
-			return_value=${HOSTNAME}.${DOMAIN}
-			;;
-		*"dns_domain"*|*"dnsDomain"*|*"DOMAIN"*|*"searchpath"*|*"domain"*)
-			return_value=${DOMAIN}
-			;;
-		*"dns_server"*|*"DNS"*|*"dns"*)
-			return_value=${GATEWAY}
-			;;
-		*"ntp"*|*"NTP"*)
-			return_value=${GATEWAY}
-			;;
-		*"password"*|*"passwd"*|*"pwd"*)
-			return_value=${PASSWORD}
-			;;
-esac
-	echo $return_value   
-}
-
 ### Local vars ###
 
 #AUTH_DOMAIN="vsphere.local"
@@ -203,7 +157,7 @@ govc import.spec "${OVA}"  | jq . > /tmp/photon.jq
 
 cat /tmp/photon.jq | jq '.NetworkMapping[].Network="'${PORTGROUP}'"' > /tmp/photon-2.jq
 
-HOST=$(govc find -dc="${GOVC_DC}" -type h -json=true /${GOVC_DC}/host/$CLUSTER | jq -r '.[0]')
+HOST=$(govc find -dc="${GOVC_DC}" -type h -json=true /${GOVC_DC}/host/$CLUSTER | jq -r '.[0]') #govc jq checked
 
 govc import.ova -options=/tmp/photon-2.jq  -host=${HOST} -pool=/${GOVC_DC}/host/$CLUSTER/Resources -dc=/${GOVC_DC} -folder=/${GOVC_DC}/vm/${FOLDER} -ds=/${GOVC_DC}/datastore/${DATASTORE} -name=${VMNAME}  ${OVA}
 

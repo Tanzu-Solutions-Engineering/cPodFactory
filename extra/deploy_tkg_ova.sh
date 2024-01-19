@@ -159,6 +159,7 @@ cat /tmp/photon.jq | jq '.NetworkMapping[].Network="'${PORTGROUP}'"' > /tmp/phot
 
 HOST=$(govc find -dc="${GOVC_DC}" -type h -json=true /${GOVC_DC}/host/$CLUSTER | jq -r '.[0]') #govc jq checked
 
+echo "Importing $OVA as $VMNAME"
 govc import.ova -options=/tmp/photon-2.jq  -host=${HOST} -pool=/${GOVC_DC}/host/$CLUSTER/Resources -dc=/${GOVC_DC} -folder="/${GOVC_DC}/vm/${FOLDER}" -ds=/${GOVC_DC}/datastore/${DATASTORE} -name=${VMNAME}  ${OVA}
 
 govc vm.markastemplate -dc=/${GOVC_DC} ${VMNAME}

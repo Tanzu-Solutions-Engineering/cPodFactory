@@ -500,10 +500,16 @@ echo " STORAGE_ID : ${STORAGE_ID}"
 
 # Portgroup ID
 # 
-MANAGEMENT_NETWORK_ID=$(govc ls -json=true network |jq -r '.elements[].object.summary | select (.name =="vlan-0-mgmt") | .network.value')  #govc jq checked
+MANAGEMENT_NETWORK_ID=$(govc ls -json=true network |jq -r '.elements[].Object.summary | select (.name =="vlan-0-mgmt") | .network.value')  #govc jq checked
 if [ "${MANAGEMENT_NETWORK_ID}" == "" ]
 then
         MANAGEMENT_NETWORK_ID=$(govc ls -json=true network |jq -r '.elements[].Object.summary | select (.name =="VM Network") | .network.value') #govc jq checked
+        if [ "${MANAGEMENT_NETWORK_ID}" == "" ]
+        then
+                echo "Problem getting MANAGEMENT_NETWORK_ID"
+                echo " bailing out"
+                exit 1
+        fi
 fi
 
 OVLYTZID=$(get_transport_zone_uniqueid "overlay-tz")

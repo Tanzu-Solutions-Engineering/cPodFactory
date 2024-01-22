@@ -79,18 +79,61 @@ test_owner() {
 main() {
 	CPOD_NAME="cpod-$1"
 	CPOD_NAME_HIGH=$( echo ${CPOD_NAME} | tr '[:lower:]' '[:upper:]' )
-        CPOD_NAME_LOWER=$( echo ${CPOD_NAME} | tr '[:upper:]' '[:lower:]' )
+    CPOD_NAME_LOWER=$( echo ${CPOD_NAME} | tr '[:upper:]' '[:lower:]' )
 	NAME_HIGH=$( echo $1 | tr '[:lower:]' '[:upper:]' )
 
 	test_owner ${2}
 
+	#test if more than 1 cpod with same header.
+	CPODCOUNT=$( cat ${HOSTS} | grep -c ${CPOD_NAME_LOWER})
+
+	if [[ $CPODCOUNT -gt 0 ]]
+	then
+		if [[ $CPODCOUNT -gt 1 ]]
+		then
+			echo "more than 1 cpod found. please check names"
+			echo "Please select CPOD instance to delete"
+		    SAVEIFS=$IFS
+		    IFS=$(echo -en "\n\b")
+
+			CPODLIST=$(cat ${HOSTS} | grep ${CPOD_NAME_LOWER}  |awk '{print $1 " " $2}')
+			select CHOSENCPOD in ${CPODLIST}; do 
+				if [ "${TEMPLATE}" = "Quit" ]; then 
+				exit
+				fi
+				echo "you selected cpod  : ${CHOSENCPOD}"
+				break
+			done
+			IP=$( echo ${CHOSENCPOD} | cut -d " "  -f1 )
+			CPOD_NAME=$( echo ${CHOSENCPOD} | cut -d " "  -f2 )
+			NAME_HIGH=${CPOD_NAME#"cpod-"}
+    		CPOD_NAME_LOWER=$( echo ${CPOD_NAME} | tr '[:upper:]' '[:lower:]' )
+
+		    IFS=$SAVEIFS
+		else
+			#check name
+			FOUNDNAME=$(cat ${HOSTS} | grep ${CPOD_NAME_LOWER} | cut -f2)
+			if [[ "${FOUNDNAME}" == "${CPOD_NAME_LOWER}" ]]
+			then
+				IP=$( cat ${HOSTS} | grep ${CPOD_NAME_LOWER} | cut -f1 )
+			else
+				echo "no cpod found with that name"
+				exit 1
+			fi
+		fi
+	else
+		echo "no cpod found with that name"
+		exit 1
+	fi
 	./extra/post_slack.sh "Deleting cPod *${NAME_HIGH}*"
 
 	echo "=== Deleting cPod called '${NAME_HIGH}'."
 
-	IP=$( cat ${HOSTS} | grep ${CPOD_NAME_LOWER} | cut -f1 )
+#	IP=$( cat ${HOSTS} | grep ${CPOD_NAME_LOWER} | cut -f1 )
 	TMP=$( echo ${IP} | cut -d"." -f4 )
 	ASN=$( expr ${ASN} + ${TMP} )
+
+	echo "$NAME_HIGH - $IP - $TMP - $ASN"
 
 	mutex
 		#bgp_delete_peer ${IP}

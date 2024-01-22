@@ -22,11 +22,12 @@ ssh root@forty-two "mount /tmp/cpod-template/${shortIsoFileName} /media/ -o loop
 scp root@forty-two:/media/vcsa/*.ova ${CPODEDGE_DATASTORE}
 ssh root@forty-two "umount /media/"
 ssh root@forty-two "rm /tmp/cpod-template/${shortIsoFileName}"
+END=$( date +%s )
+TIME=$( expr ${END} - ${START} )
+TIME=$(date -d@$TIME -u +%Hh%Mm%Ss)
 
 echo
 echo "========================================="
 echo "=== OVA extraction is finished ==="
-END=$( date +%s )
-TIME=$( expr ${END} - ${START} )
-echo "=== In ${TIME} Seconds ==="
+echo "=== In ${TIME} "
 echo "========================================="

@@ -105,9 +105,10 @@ restart_cpodrouter_dnsmasq ${CPOD_NAME_LOWER}
 
 END=$( date +%s )
 TIME=$( expr ${END} - ${START} )
+TIME=$(date -d@$TIME -u +%Hh%Mm%Ss)
 
 echo
 echo "====================================="
 echo "=== VDSwitch creation is finished ==="
-echo "=== In ${TIME} Seconds ==="
+echo "=== In ${TIME} "
 echo "====================================="

@@ -245,10 +245,12 @@ docker run --interactive --tty --dns=${DNS} --entrypoint="/usr/bin/pwsh" -v /tmp
 #govc vm.network.change -vm /intel-DC/vm/Templates/testme -net Dummy ethernet-1
 
 #rm -fr ${SCRIPT}
-echo
-echo "========================================="
-echo "=== New template Creation is finished ==="
 END=$( date +%s )
 TIME=$( expr ${END} - ${START} )
-echo "=== In ${TIME} Seconds ==="
+TIME=$(date -d@$TIME -u +%Hh%Mm%Ss)
+
+echo
+echo "========================================="
+echo "=== New template Creation is finished "
+echo "=== In ${TIME} "
 echo "========================================="

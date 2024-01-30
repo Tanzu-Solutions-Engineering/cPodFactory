@@ -43,7 +43,7 @@ PASSWORD=$( ${EXTRA_DIR}/passwd_for_cpod.sh ${CPOD_NAME} )
 
 # Check WLD exists in DNS entries
 
-DNSCOUNT=$(ssh -o LogLevel=error -o StrictHostKeyChecking=no "${NAME_LOWER}" "cat /etc/hosts" |grep "en" | grep -v "-")
+DNSCOUNT=$(ssh -o LogLevel=error -o StrictHostKeyChecking=no "${NAME_LOWER}" "cat /etc/hosts" |grep "en" | grep -v -c "-")
 if [[ $DNSCOUNT -gt 0 ]]
 then
 	echo "$DNSCOUNT dns entries found for management domain edge cluster - proceeding"

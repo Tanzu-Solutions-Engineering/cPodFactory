@@ -138,7 +138,7 @@ echo checking bgp on cpodrouter
 echo
 
 ASNCPOD=$(get_cpod_asn ${NAME_LOWER})
-ASNNSXT=$((ASNCPOD + 1000))
+ASNNSXT=$((ASNCPOD + 1200))
 CPODBGPTABLE=$(get_cpodrouter_bgp_neighbors_table ${NAME_LOWER})
 #test if already configured
 IPTEST=$(echo "${CPODBGPTABLE}" |grep ${T0IP01})

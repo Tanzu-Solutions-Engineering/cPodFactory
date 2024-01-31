@@ -68,9 +68,11 @@ echo
 echo 
 echo "Select vm to console login"
 echo
- 
+
+SAVEIFS=$IFS
+IFS=$(echo -en "\n\b")
+
 VMS=$(govc find / -type m | grep -v "vCLS" |sort)
-VMS=${VMS}" Quit"
 
 select VM in ${VMS}; do 
     if [ "${VM}" = "Quit" ]; then 
@@ -79,6 +81,7 @@ select VM in ${VMS}; do
     echo "you selected VM : ${VM}"
     break
 done
+IFS=$SAVEIFS
 
 # Select user
 echo 

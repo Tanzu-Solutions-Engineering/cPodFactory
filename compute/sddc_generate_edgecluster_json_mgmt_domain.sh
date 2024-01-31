@@ -7,7 +7,7 @@
 
 . ./env
 
-[ "$1" == "" ] ] && echo "usage: $0 <name_of_vcf_cpod> "  && echo "usage example: $0 vcf45" && exit 1
+[ "$1" == "" ] && echo "usage: $0 <name_of_vcf_cpod> "  && echo "usage example: $0 vcf45" && exit 1
 
 source ./extra/functions.sh
 
@@ -84,9 +84,9 @@ fi
 # Edge TEP EDGETEPVLANID = 4
 # Tier 0 uplink T0ULVLANID01 = 5
 # Tier 0 uplink T0ULVLANID01 = 6
-EDGETEPVLAN=4
-T0ULVLAN01=5
-T0ULVLAN02=6
+EDGETEPVLAN=7
+T0ULVLAN01=8
+T0ULVLAN02=9
 
 if [[ ${VLAN} -gt 40 ]]; then
         EDGETEPVLANID="${VLAN}${EDGETEPVLAN}"
@@ -138,7 +138,7 @@ echo checking bgp on cpodrouter
 echo
 
 ASNCPOD=$(get_cpod_asn ${NAME_LOWER})
-ASNNSXT=$((ASNCPOD + 1200))
+ASNNSXT=$((ASNCPOD + 2000))
 CPODBGPTABLE=$(get_cpodrouter_bgp_neighbors_table ${NAME_LOWER})
 #test if already configured
 IPTEST=$(echo "${CPODBGPTABLE}" |grep ${T0IP01})

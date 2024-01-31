@@ -177,6 +177,8 @@ else
         echo "  ${T0IP04} already defined as bgp neighbor"
 fi
 
+MGMTCLUSTERID=$(sddc_management_cluster_id_get)
+MGMTPORTGROUPNAME=$(sddc_cluster_vdses_get "${MGMTCLUSTERID}" | jq '.[].portGroups[] | select ( .transportType == "VM_MANAGEMENT") | .name')
 # Create Edgecluster JSON
 SCRIPT=/tmp/scripts/edgecluster-managementdomain-${NAME_LOWER}.json
 mkdir -p ${SCRIPT_DIR}
@@ -188,7 +190,6 @@ EDGE02FQDN="en02.${NAME_LOWER}.${ROOT_DOMAIN}"
 EN01IP="${EN01IP}/24"
 EN02IP="${EN02IP}/24"
 ENMGMTGW=$(echo "${EN01IP}" | awk -F "." '{print $1"."$2"."$3".1"}')
-MGMTPORTGROUPNAME="mgmt-cl01-vds-01-pg-mgmt-edge"
 EDGE01TEPIP01="10.${VLAN}.${EDGETEPVLAN}.${EN01IP_IP}/24"
 EN01IP_IP2=$((EN01IP_IP+10))
 EDGE01TEPIP02="10.${VLAN}.${EDGETEPVLAN}.${EN01IP_IP2}/24"

@@ -178,7 +178,7 @@ else
 fi
 
 MGMTCLUSTERID=$(sddc_management_cluster_id_get)
-MGMTPORTGROUPNAME=$(sddc_cluster_vdses_get "${MGMTCLUSTERID}" | jq '.[].portGroups[] | select ( .transportType == "VM_MANAGEMENT") | .name')
+MGMTPORTGROUPNAME=$(sddc_cluster_vdses_get "${MGMTCLUSTERID}" | jq -r '.[].portGroups[] | select ( .transportType == "VM_MANAGEMENT") | .name')
 # Create Edgecluster JSON
 SCRIPT=/tmp/scripts/edgecluster-managementdomain-${NAME_LOWER}.json
 mkdir -p ${SCRIPT_DIR}

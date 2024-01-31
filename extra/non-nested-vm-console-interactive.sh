@@ -41,7 +41,6 @@ VMFILTER=${1}
 SAVEIFS=$IFS
 IFS=$(echo -en "\n\b")
 VMS=$(govc find / -type m | grep -v "vCLS" |grep -i "${VMFILTER}" |sort)
-VMS=${VMS}" Quit"
 select VM in ${VMS}; do 
     if [ "${VM}" = "Quit" ]; then 
       exit

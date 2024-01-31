@@ -125,10 +125,10 @@ echo "Proceeding to console login"
 
 if [ "$VM" != "" ]
 then
-    govc vm.keystrokes -vm $VM -s "${USER}"
-    govc vm.keystrokes -vm $VM -c KEY_ENTER
-    govc vm.keystrokes -vm $VM -s "${PASSWORD}"
-    govc vm.keystrokes -vm $VM -c KEY_ENTER
+    govc vm.keystrokes -vm "${VM}" -s "${USER}"
+    govc vm.keystrokes -vm "${VM}" -c KEY_ENTER
+    govc vm.keystrokes -vm "${VM}" -s "${PASSWORD}"
+    govc vm.keystrokes -vm "${VM}" -c KEY_ENTER
 
     echo "console login done. please check via firefox"
 else
@@ -144,7 +144,7 @@ while true
 do
   echo
   read -r COMMAND
-  govc vm.keystrokes -vm $VM -s "${COMMAND}"
-  govc vm.keystrokes -vm $VM -c KEY_ENTER
+  govc vm.keystrokes -vm "${VM}" -s "${COMMAND}"
+  govc vm.keystrokes -vm "${VM}"-c KEY_ENTER
 
 done

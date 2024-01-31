@@ -795,6 +795,34 @@ sddc_clusters_get(){
 	esac
 }
 
+sddc_cluster_vdses_get(){
+    CLUSTERID=${1}
+	#returns json
+    RESPONSE=$(curl -s -k -w '####%{response_code}'  -H "Authorization: Bearer ${TOKEN}" -H 'Content-Type: application/json' -H 'Accept: application/json' -X GET https://sddc.${NAME_LOWER}.${ROOT_DOMAIN}/v1/clusters/${CLUSTERID}/vdses)
+
+	HTTPSTATUS=$(echo ${RESPONSE} |awk -F '####' '{print $2}')
+	case $HTTPSTATUS in
+		2[0-9][0-9])    
+			DOMAINSJSON=$(echo "${RESPONSE}" |awk -F '####' '{print $1}')
+            echo "${DOMAINSJSON}" > /tmp/scripts/sddc-cluster-vdses-$$.json
+			echo "${DOMAINSJSON}"
+			;;
+		4[0-9][0-9])    
+            DUMPFILE="/tmp/scripts/sddc-cluster-vdses-httpstatus-4xx-$$.txt"
+            echo "${RESPONSE}" > "${DUMPFILE}"
+            echo "PARAMS - ${NAME_LOWER} ${PASSWORD} ${VALIDATIONID} " >>  "${DUMPFILE}"
+   			echo "{\"httpStatus\": \"$HTTPSTATUS - Bad Request\"}"
+			;;
+		5[0-9][0-9])    
+            echo "${RESPONSE}" > /tmp/scripts/sddc-cluster-vdses-httpstatus-5xx-$$.txt
+   			echo "{\"httpStatus\": \"$HTTPSTATUS - Server Error \"}"
+			;;
+		*)      
+			echo ${RESPONSE} |awk -F '####' '{print $1}'
+			;;
+	esac
+}
+
 sddc_management_cluster_id_get(){
     MGMTDOMAINID=$(sddc_domains_management_id_get)
     CLUSTERJSON=$(sddc_clusters_get)

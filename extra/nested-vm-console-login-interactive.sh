@@ -64,6 +64,26 @@ done
 set_govc_vcsa
 echo
 
+# Select DC
+echo 
+echo "Select datacenter"
+echo
+
+SAVEIFS=$IFS
+IFS=$(echo -en "\n\b")
+
+DCS=$(govc find -type d |sort)
+
+select DC in ${DCS}; do 
+    if [ "${DC}" = "Quit" ]; then 
+      exit
+    fi
+    echo "you selected DC : ${DC}"
+    break
+done
+IFS=$SAVEIFS
+GOVC_DATACENTER="${DC}"
+
 # Select VM
 echo 
 echo "Select vm to console login"
@@ -144,7 +164,14 @@ while true
 do
   echo
   read -r COMMAND
-  govc vm.keystrokes -vm "${VM}" -s "${COMMAND}"
-  govc vm.keystrokes -vm "${VM}"-c KEY_ENTER
 
+  case "${COMMAND}" in
+    "")
+      govc vm.keystrokes -vm "${VM}" -c KEY_ENTER
+      ;;
+    *)
+      govc vm.keystrokes -vm "${VM}" -s "${COMMAND}"
+      govc vm.keystrokes -vm "${VM}"-c KEY_ENTER
+      ;;
+  esac
 done

@@ -108,7 +108,7 @@ echo
 echo "Select user to login with"
 echo
 
-USERS="root admin administrator@${CPOD_NAME}.${ROOT_DOMAIN} Quit"
+USERS="root admin administrator@${CPOD_NAME}.${ROOT_DOMAIN} Other Quit"
 
 select USER in ${USERS}; do 
     if [ "${USER}" = "Quit" ]; then 

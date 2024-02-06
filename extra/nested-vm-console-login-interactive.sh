@@ -175,7 +175,7 @@ do
       ;;
     *)
       govc vm.keystrokes -dc="${DC}" -vm "${VM}" -s "${COMMAND}"
-      govc vm.keystrokes -dc="${DC}" -vm "${VM}"-c KEY_ENTER
+      govc vm.keystrokes -dc="${DC}" -vm "${VM}" -c KEY_ENTER
       ;;
   esac
 done

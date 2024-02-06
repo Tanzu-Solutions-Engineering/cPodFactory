@@ -114,6 +114,10 @@ select USER in ${USERS}; do
     if [ "${USER}" = "Quit" ]; then 
       exit
     fi
+    if [ "${USER}" = "Other" ]; then 
+      echo "Please enter user : "
+      read -r USER
+    fi
     echo "you selected USER : ${USER}"
     break
 done
@@ -145,10 +149,10 @@ echo "Proceeding to console login"
 
 if [ "$VM" != "" ]
 then
-    govc vm.keystrokes -vm "${VM}" -s "${USER}"
-    govc vm.keystrokes -vm "${VM}" -c KEY_ENTER
-    govc vm.keystrokes -vm "${VM}" -s "${PASSWORD}"
-    govc vm.keystrokes -vm "${VM}" -c KEY_ENTER
+    govc vm.keystrokes -dc="${DC}" -vm "${VM}" -s "${USER}"
+    govc vm.keystrokes -dc="${DC}" -vm "${VM}" -c KEY_ENTER
+    govc vm.keystrokes -dc="${DC}" -vm "${VM}" -s "${PASSWORD}"
+    govc vm.keystrokes -dc="${DC}" -vm "${VM}" -c KEY_ENTER
 
     echo "console login done. please check via firefox"
 else
@@ -167,11 +171,11 @@ do
 
   case "${COMMAND}" in
     "")
-      govc vm.keystrokes -vm "${VM}" -c KEY_ENTER
+      govc vm.keystrokes -dc="${DC}" -vm "${VM}" -c KEY_ENTER
       ;;
     *)
-      govc vm.keystrokes -vm "${VM}" -s "${COMMAND}"
-      govc vm.keystrokes -vm "${VM}"-c KEY_ENTER
+      govc vm.keystrokes -dc="${DC}" -vm "${VM}" -s "${COMMAND}"
+      govc vm.keystrokes -dc="${DC}" -vm "${VM}"-c KEY_ENTER
       ;;
   esac
 done

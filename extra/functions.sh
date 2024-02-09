@@ -172,7 +172,7 @@ add_cpod_vlanx() {
         echo
         echo "check subnet existance"
         echo
-        ip route |grep "10.${CPODVLAN}.${SUBNET}.0"
+        ssh -o LogLevel=error -o StrictHostKeyChecking=no ${CPODNAME} "ip route |grep 10.${CPODVLAN}.${SUBNET}."
 }
 
 get_last_ip() {

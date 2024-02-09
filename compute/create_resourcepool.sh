@@ -47,7 +47,7 @@ docker run --rm --dns=${DNS} --entrypoint="/usr/bin/pwsh" -v /tmp/scripts:/tmp/s
 CPODROUTER=$( echo "${HEADER}-${1}" | tr '[:upper:]' '[:lower:]' )
 
 #wait for cpodrouter ssh to become available 
-sleep 30
+sleep 10
 while [ "$SSHOK" != 0 ]
 do  
     SSHOK=$( ssh -o "StrictHostKeyChecking=no" -o "ConnectTimeout=5" -o "UserKnownHostsFile=/dev/null" -o "LogLevel=error" root@"${CPODROUTER}" exit >/dev/null 2>&1; echo $? ) 
@@ -59,11 +59,6 @@ do
         exit 1  
     fi 
 done
-echo "eth interface check :"
-ssh -o LogLevel=error -o StrictHostKeyChecking=no root@"$CPODROUTER" "ip link | grep eth |grep mtu"
-echo
-echo ssh -o LogLevel=error -o StrictHostKeyChecking=no root@"$CPODROUTER" "ip link | grep eth | grep mtu  | cut -d ':' -f2 |tr -d ' ' | cut -d '@' -f1 |xargs -n1 ip link set mtu 9000 dev "
-
 ssh -o LogLevel=error -o StrictHostKeyChecking=no root@"$CPODROUTER" "ip link | grep eth | grep mtu  | cut -d ':' -f2 |tr -d ' ' | cut -d '@' -f1 |xargs -n1 ip link set mtu 9000 dev "
 ssh -o LogLevel=error -o StrictHostKeyChecking=no root@"$CPODROUTER" "ip link | grep eth | grep mtu "
   

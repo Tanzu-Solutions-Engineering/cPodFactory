@@ -122,3 +122,7 @@ for ((i=1; i<=NUM_ESX; i++)); do
   #set the next esxi for next loop
   STARTNUMESX=$(( STARTNUMESX+1 ))
 done
+
+#set mtu 9000 on all cpodrouter interfaces
+ssh -o LogLevel=error -o StrictHostKeyChecking=no root@"$CPODROUTER" "ip link | grep eth | grep mtu | awk '{print $2}' | cut -d '@' -f1 | cut -d ':' -f1 |xargs -n1 ip link set mtu 9000 dev"
+  

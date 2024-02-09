@@ -59,7 +59,7 @@ if [ $TIMEOUT -ge 20 ]; then
 fi 
 done
 
-ssh -o LogLevel=error -o StrictHostKeyChecking=no root@"$CPODROUTER" "ip link | grep eth | grep mtu | awk '{print $2}' | cut -d ':' -f2 | cut -d '@' -f1 |xargs -n1 ip link set mtu 9000 dev"
+ssh -o LogLevel=error -o StrictHostKeyChecking=no root@"$CPODROUTER" "ip link | grep eth | grep mtu | awk '{print $2}' | cut -d ':' -f2 |tr -d ' ' | cut -d '@' -f1 |xargs -n1 ip link set mtu 9000 dev"
 ssh -o LogLevel=error -o StrictHostKeyChecking=no root@"$CPODROUTER" "ip link | grep eth | grep mtu "
   
 #rm -fr ${SCRIPT}

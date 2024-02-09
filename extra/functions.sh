@@ -150,7 +150,7 @@ add_cpod_vlanx() {
                 [1-8][0-9]|9[0-5])
                         VLAN="${CPODVLAN}${SUBNET}"
                         if [ ${CPODVLAN} -gt 40 ]; then
-                                VLAN=$((CPODVLAN+SUBNET))
+                                VLAN=$((CPODVLAN*10+SUBNET))
                         else
                                 VLAN=${CPODVLAN}${SUBNET}
                         fi
@@ -168,6 +168,11 @@ add_cpod_vlanx() {
 	ssh -o LogLevel=error -o StrictHostKeyChecking=no ${CPODNAME} "ip addr add 10.${CPODVLAN}.${SUBNET}.1/24 dev ${INTERFACE}.${VLAN}"
 	ssh -o LogLevel=error -o StrictHostKeyChecking=no ${CPODNAME} "ip link set mtu 9000 dev ${INTERFACE}.${VLAN}"
 	ssh -o LogLevel=error -o StrictHostKeyChecking=no ${CPODNAME} "ip link set up ${INTERFACE}.${VLAN}"
+
+        echo
+        echo "check subnet existance"
+        echo
+        ip route |grep "10.${CPODVLAN}.${SUBNET}.0"
 }
 
 get_last_ip() {

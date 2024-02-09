@@ -114,6 +114,11 @@ enable_dhcp_cpod_vlanx() {
 	#restart_cpodrouter_dnsmasq ${2}    
 }
 
+is_integer() {
+    [[ $1 =~ ^[0-9]+$ ]]
+}
+
+
 add_cpod_vlanx() {
 	# ${1} : internal cpod vlan (1-8) to create
 	# ${2} : cpod_name_lower
@@ -123,24 +128,32 @@ add_cpod_vlanx() {
         CPODNAME="${2}"
 	CPODVLAN=$( grep -m 1 "${CPODNAME}\s" /etc/hosts | awk '{print $1}' | cut -d "." -f 4 )
         SUBNET="${1}"
+        INTERFACE=eth2
+        if ! is_integer "$SUBNET"; then
+                echo "Error: Input is not an integer."
+                exit 1
+        fi
 
         # check if subent route already exists.
         TESTSUBNET=$(ip route |grep -c "10.${CPODVLAN}.${SUBNET}.0")
         [[ $TESTSUBNET -gt 0 ]] && echo "route 10.${CPODVLAN}.${SUBNET}.0 already exists" && exit
 
-        # proceed with vlan/route creation on cpodrouter
-        case ${VLANSUBNET} in
+        # check vlan/subnet validity
+        case $SUBNET in
                 [0-9])
                         if [ ${CPODVLAN} -gt 40 ]; then
                                 VLAN=${CPODVLAN}${SUBNET}
                         else
                                 VLAN=${CPODVLAN}0${SUBNET}
                         fi
-                        echo " VLAN = ${VLAN}"
                         ;;
-                [10-90])
-                        VLAN="${VLANID}${SUBNET}"
-                        echo " VLAN = ${VLAN}"
+                [1-8][0-9]|9[0-5])
+                        VLAN="${CPODVLAN}${SUBNET}"
+                        if [ ${CPODVLAN} -gt 40 ]; then
+                                VLAN=$((CPODVLAN+SUBNET))
+                        else
+                                VLAN=${CPODVLAN}${SUBNET}
+                        fi
                         ;;
                 *)
                         echo "vlan out of range for cpodfactory"
@@ -148,11 +161,13 @@ add_cpod_vlanx() {
                         exit
                         ;;
         esac
+        # proceed with vlan/route creation on cpodrouter
+        echo " VLAN = ${VLAN}"
 
-	# ssh -o LogLevel=error -o StrictHostKeyChecking=no ${CPODNAME} "ip link add link ${INTERFACE} name eth2.${VLAN} type vlan id ${VLAN}"
-	# ssh -o LogLevel=error -o StrictHostKeyChecking=no ${CPODNAME} "ip addr add 10.${CPODVLAN}.${SUBNET}.1/24 dev ${INTERFACE}.${VLAN}"
-	# ssh -o LogLevel=error -o StrictHostKeyChecking=no ${CPODNAME} "ip link set mtu 9000 dev ${INTERFACE}.${VLAN}"
-	# ssh -o LogLevel=error -o StrictHostKeyChecking=no ${CPODNAME} "ip link set up ${INTERFACE}.${VLAN}"
+	ssh -o LogLevel=error -o StrictHostKeyChecking=no ${CPODNAME} "ip link add link ${INTERFACE} name eth2.${VLAN} type vlan id ${VLAN}"
+	ssh -o LogLevel=error -o StrictHostKeyChecking=no ${CPODNAME} "ip addr add 10.${CPODVLAN}.${SUBNET}.1/24 dev ${INTERFACE}.${VLAN}"
+	ssh -o LogLevel=error -o StrictHostKeyChecking=no ${CPODNAME} "ip link set mtu 9000 dev ${INTERFACE}.${VLAN}"
+	ssh -o LogLevel=error -o StrictHostKeyChecking=no ${CPODNAME} "ip link set up ${INTERFACE}.${VLAN}"
 }
 
 get_last_ip() {

@@ -126,7 +126,7 @@ add_cpod_vlanx() {
 
         # check if subent route already exists.
         TESTSUBNET=$(ip route |grep -c "10.${CPODVLAN}.${SUBNET}.0")
-        [[ $TESTSUBNET -gt 0 ]] && echo "route 10.${CPODVLAN}.${SUBNET}.0 already exists" && exit 1
+        [[ $TESTSUBNET -gt 0 ]] && echo "route 10.${CPODVLAN}.${SUBNET}.0 already exists" && exit
 
         # proceed with vlan/route creation on cpodrouter
         case ${VLANSUBNET} in
@@ -145,7 +145,7 @@ add_cpod_vlanx() {
                 *)
                         echo "vlan out of range for cpodfactory"
                         echo "bailing out"
-                        exit 1
+                        exit
                         ;;
         esac
 

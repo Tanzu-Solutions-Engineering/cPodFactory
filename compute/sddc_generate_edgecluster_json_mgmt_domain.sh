@@ -88,6 +88,9 @@ EDGETEPVLAN=7
 T0ULVLAN01=8
 T0ULVLAN02=9
 
+#add vlan 9 to cpod
+add_cpod_vlanx 9  "${NAME_LOWER}"
+
 if [[ ${VLAN} -gt 40 ]]; then
         EDGETEPVLANID="${VLAN}${EDGETEPVLAN}"
         T0ULVLANID01="${VLAN}${T0ULVLAN01}"

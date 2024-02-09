@@ -162,7 +162,7 @@ add_cpod_vlanx() {
                         ;;
         esac
         # proceed with vlan/route creation on cpodrouter
-        echo " VLAN = ${VLAN}"
+        echo " creating VLAN : ${VLAN}"
 
 	ssh -o LogLevel=error -o StrictHostKeyChecking=no ${CPODNAME} "ip link add link ${INTERFACE} name eth2.${VLAN} type vlan id ${VLAN}"
 	ssh -o LogLevel=error -o StrictHostKeyChecking=no ${CPODNAME} "ip addr add 10.${CPODVLAN}.${SUBNET}.1/24 dev ${INTERFACE}.${VLAN}"

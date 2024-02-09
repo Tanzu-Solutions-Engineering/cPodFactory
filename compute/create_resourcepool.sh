@@ -62,7 +62,9 @@ done
 echo "eth interface check :"
 ssh -o LogLevel=error -o StrictHostKeyChecking=no root@"$CPODROUTER" "ip link | grep eth |grep mtu"
 echo
-ssh -o LogLevel=error -o StrictHostKeyChecking=no root@"$CPODROUTER" "ip link | grep eth | grep mtu | awk '{print $2}' | cut -d ':' -f2 |tr -d ' ' | cut -d '@' -f1 |xargs -n1 ip link set mtu 9000 dev "
+echo ssh -o LogLevel=error -o StrictHostKeyChecking=no root@"$CPODROUTER" "ip link | grep eth | grep mtu  | cut -d ':' -f2 |tr -d ' ' | cut -d '@' -f1 |xargs -n1 ip link set mtu 9000 dev "
+
+ssh -o LogLevel=error -o StrictHostKeyChecking=no root@"$CPODROUTER" "ip link | grep eth | grep mtu  | cut -d ':' -f2 |tr -d ' ' | cut -d '@' -f1 |xargs -n1 ip link set mtu 9000 dev "
 ssh -o LogLevel=error -o StrictHostKeyChecking=no root@"$CPODROUTER" "ip link | grep eth | grep mtu "
   
 #rm -fr ${SCRIPT}

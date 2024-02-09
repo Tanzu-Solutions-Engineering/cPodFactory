@@ -46,19 +46,22 @@ docker run --rm --dns=${DNS} --entrypoint="/usr/bin/pwsh" -v /tmp/scripts:/tmp/s
 #set mtu 9000 on all cpodrouter interfaces
 CPODROUTER=$( echo "${HEADER}-${1}" | tr '[:upper:]' '[:lower:]' )
 
-#wait for ESXCLI to become available 
+#wait for cpodrouter ssh to become available 
+sleep 30
 while [ "$SSHOK" != 0 ]
 do  
-SSHOK=$( ssh -o "StrictHostKeyChecking=no" -o "ConnectTimeout=5" -o "UserKnownHostsFile=/dev/null" -o "LogLevel=error" root@"${CPODROUTER}" exit >/dev/null 2>&1; echo $? ) 
-echo "SSH status $CPODROUTER ===$SSHOK==="
-sleep 10
-TIMEOUT=$((TIMEOUT + 1))
-if [ $TIMEOUT -ge 20 ]; then
-    echo "bailing out..."
-    exit 1  
-fi 
+    SSHOK=$( ssh -o "StrictHostKeyChecking=no" -o "ConnectTimeout=5" -o "UserKnownHostsFile=/dev/null" -o "LogLevel=error" root@"${CPODROUTER}" exit >/dev/null 2>&1; echo $? ) 
+    echo "SSH status $CPODROUTER ===$SSHOK==="
+    [ "$SSHOK" != 0 ] && sleep 10
+    TIMEOUT=$((TIMEOUT + 1))
+    if [ $TIMEOUT -ge 20 ]; then
+        echo "bailing out..."
+        exit 1  
+    fi 
 done
-
+echo "eth interface count :"
+ssh -o LogLevel=error -o StrictHostKeyChecking=no root@"$CPODROUTER" "ip link | grep -c eth"
+echo
 ssh -o LogLevel=error -o StrictHostKeyChecking=no root@"$CPODROUTER" "ip link | grep eth | grep mtu | awk '{print $2}' | cut -d ':' -f2 |tr -d ' ' | cut -d '@' -f1 |xargs -n1 ip link set mtu 9000 dev"
 ssh -o LogLevel=error -o StrictHostKeyChecking=no root@"$CPODROUTER" "ip link | grep eth | grep mtu "
   

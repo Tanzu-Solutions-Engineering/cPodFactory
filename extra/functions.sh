@@ -136,39 +136,42 @@ add_cpod_vlanx() {
 
         # check if subent route already exists.
         TESTSUBNET=$(ip route |grep -c "10.${CPODVLAN}.${SUBNET}.0")
-        [[ $TESTSUBNET -gt 0 ]] && echo "route 10.${CPODVLAN}.${SUBNET}.0 already exists" && exit
+        if  [[ $TESTSUBNET -gt 0 ]]
+        then 
+                echo "route 10.${CPODVLAN}.${SUBNET}.0 already exists"
+        else
 
-        # check vlan/subnet validity
-        case $SUBNET in
-                [0-9])
-                        if [ ${CPODVLAN} -gt 40 ]; then
-                                VLAN=${CPODVLAN}${SUBNET}
-                        else
-                                VLAN=${CPODVLAN}0${SUBNET}
-                        fi
-                        ;;
-                [1-8][0-9]|9[0-5])
-                        VLAN="${CPODVLAN}${SUBNET}"
-                        if [ ${CPODVLAN} -gt 40 ]; then
-                                VLAN=$((CPODVLAN*10+SUBNET))
-                        else
-                                VLAN=${CPODVLAN}${SUBNET}
-                        fi
-                        ;;
-                *)
-                        echo "vlan out of range for cpodfactory"
-                        echo "bailing out"
-                        exit
-                        ;;
-        esac
-        # proceed with vlan/route creation on cpodrouter
-        echo " creating VLAN : ${VLAN}"
+                # check vlan/subnet validity
+                case $SUBNET in
+                        [0-9])
+                                if [ ${CPODVLAN} -gt 40 ]; then
+                                        VLAN=${CPODVLAN}${SUBNET}
+                                else
+                                        VLAN=${CPODVLAN}0${SUBNET}
+                                fi
+                                ;;
+                        [1-8][0-9]|9[0-5])
+                                VLAN="${CPODVLAN}${SUBNET}"
+                                if [ ${CPODVLAN} -gt 40 ]; then
+                                        VLAN=$((CPODVLAN*10+SUBNET))
+                                else
+                                        VLAN=${CPODVLAN}${SUBNET}
+                                fi
+                                ;;
+                        *)
+                                echo "vlan out of range for cpodfactory"
+                                echo "bailing out"
+                                exit
+                                ;;
+                esac
+                # proceed with vlan/route creation on cpodrouter
+                echo " creating VLAN : ${VLAN}"
 
-	ssh -o LogLevel=error -o StrictHostKeyChecking=no ${CPODNAME} "ip link add link ${INTERFACE} name eth2.${VLAN} type vlan id ${VLAN}"
-	ssh -o LogLevel=error -o StrictHostKeyChecking=no ${CPODNAME} "ip addr add 10.${CPODVLAN}.${SUBNET}.1/24 dev ${INTERFACE}.${VLAN}"
-	ssh -o LogLevel=error -o StrictHostKeyChecking=no ${CPODNAME} "ip link set mtu 9000 dev ${INTERFACE}.${VLAN}"
-	ssh -o LogLevel=error -o StrictHostKeyChecking=no ${CPODNAME} "ip link set up ${INTERFACE}.${VLAN}"
-
+                ssh -o LogLevel=error -o StrictHostKeyChecking=no ${CPODNAME} "ip link add link ${INTERFACE} name eth2.${VLAN} type vlan id ${VLAN}"
+                ssh -o LogLevel=error -o StrictHostKeyChecking=no ${CPODNAME} "ip addr add 10.${CPODVLAN}.${SUBNET}.1/24 dev ${INTERFACE}.${VLAN}"
+                ssh -o LogLevel=error -o StrictHostKeyChecking=no ${CPODNAME} "ip link set mtu 9000 dev ${INTERFACE}.${VLAN}"
+                ssh -o LogLevel=error -o StrictHostKeyChecking=no ${CPODNAME} "ip link set up ${INTERFACE}.${VLAN}"
+        fi
         echo
         echo "check subnet existance"
         echo

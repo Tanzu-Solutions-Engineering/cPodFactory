@@ -138,7 +138,7 @@ select PWD in ${PWDS}; do
       read -r PWD
     fi
     echo "you selected PWD : ${PWD}"
-    if [ "${PWD}" = "cpod-password" ]; then 
+    if [ "${PWD}" == "cpod-password" ]; then 
         PWD="${PASSWORD}"
     fi
     break

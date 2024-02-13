@@ -114,6 +114,70 @@ enable_dhcp_cpod_vlanx() {
 	#restart_cpodrouter_dnsmasq ${2}    
 }
 
+is_integer() {
+    [[ $1 =~ ^[0-9]+$ ]]
+}
+
+
+add_cpod_vlanx() {
+	# ${1} : internal cpod vlan (1-8) to create
+	# ${2} : cpod_name_lower
+	# example : add_cpod_vlanx 12 cpod-demo
+	# need to call restart_cpodrouter_dnsmasq() to make changes effective
+	[ "$1" == "" -o "$2" == ""  ] && echo "usage: add_cpod_vlanx  <(vlan) 1-8 > <cpod_name_lower>"  && echo "usage example: enable_dhcp_cpod_vlanx 8  cpod-demo" && exit 1
+        CPODNAME="${2}"
+	CPODVLAN=$( grep -m 1 "${CPODNAME}\s" /etc/hosts | awk '{print $1}' | cut -d "." -f 4 )
+        SUBNET="${1}"
+        INTERFACE=eth2
+        if ! is_integer "$SUBNET"; then
+                echo "Error: Input is not an integer."
+                exit 1
+        fi
+
+        # check if subent route already exists.
+        TESTSUBNET=$(ip route |grep -c "10.${CPODVLAN}.${SUBNET}.0")
+        if  [[ $TESTSUBNET -gt 0 ]]
+        then 
+                echo "route 10.${CPODVLAN}.${SUBNET}.0 already exists"
+        else
+
+                # check vlan/subnet validity
+                case $SUBNET in
+                        [0-9])
+                                if [ ${CPODVLAN} -gt 40 ]; then
+                                        VLAN=${CPODVLAN}${SUBNET}
+                                else
+                                        VLAN=${CPODVLAN}0${SUBNET}
+                                fi
+                                ;;
+                        [1-8][0-9]|9[0-5])
+                                VLAN="${CPODVLAN}${SUBNET}"
+                                if [ ${CPODVLAN} -gt 40 ]; then
+                                        VLAN=$((CPODVLAN*10+SUBNET))
+                                else
+                                        VLAN=${CPODVLAN}${SUBNET}
+                                fi
+                                ;;
+                        *)
+                                echo "vlan out of range for cpodfactory"
+                                echo "bailing out"
+                                exit
+                                ;;
+                esac
+                # proceed with vlan/route creation on cpodrouter
+                echo " creating VLAN : ${VLAN}"
+
+                ssh -o LogLevel=error -o StrictHostKeyChecking=no ${CPODNAME} "ip link add link ${INTERFACE} name eth2.${VLAN} type vlan id ${VLAN}"
+                ssh -o LogLevel=error -o StrictHostKeyChecking=no ${CPODNAME} "ip addr add 10.${CPODVLAN}.${SUBNET}.1/24 dev ${INTERFACE}.${VLAN}"
+                ssh -o LogLevel=error -o StrictHostKeyChecking=no ${CPODNAME} "ip link set mtu 9000 dev ${INTERFACE}.${VLAN}"
+                ssh -o LogLevel=error -o StrictHostKeyChecking=no ${CPODNAME} "ip link set up ${INTERFACE}.${VLAN}"
+        fi
+        echo
+        echo "check subnet existance"
+        echo
+        ssh -o LogLevel=error -o StrictHostKeyChecking=no ${CPODNAME} "ip route |grep 10.${CPODVLAN}.${SUBNET}."
+}
+
 get_last_ip() {
         # ${1} : subnet
         # ${2} : cpod_name_lower to query
